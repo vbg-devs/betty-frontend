@@ -1,73 +1,95 @@
 <template>
-  <div class="container">
-    <div>
-      <Logo />
-      <h1 class="title">
-        betty
-      </h1>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-      </div>
+  <div class="login-page">
+    <div class="logo">
+      <img src="@/assets/logo.svg" class="logo">
     </div>
+    <div id="firebaseui-auth-container"></div>
   </div>
 </template>
 
 <script>
-export default {}
+import firebase from 'firebase';
+import { FBUIApp } from '@/scripts/firebaseConfig';
+
+const uiConfig = {
+  signInSuccessUrl: `${window.location.protocol}//${window.location.host}/dashboard`,
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    // firebase.auth.EmailAuthProvider.PROVIDER_ID,
+  ],
+  signInFlow: 'popup',
+  tosUrl: '/',
+};
+export default {
+  layout: 'landingpage',
+  mounted() {
+    FBUIApp.start('#firebaseui-auth-container', uiConfig);
+  },
+  beforeDestroy() {
+    FBUIApp.reset();
+  },
+};
 </script>
 
 <style>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
+.login-page {
+  background: #003aff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
+  flex-direction: column;
 }
 
-.title {
-  font-family:
-    'Quicksand',
-    'Source Sans Pro',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+.firebaseui-container {
+  margin-top: 35px;
+}
+
+.firebaseui-idp-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.firebaseui-idp-button {
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  padding: 12px 25px;
+  border: none;
+  cursor: pointer;
+  transition: background ease 0.3s;
+}
+
+.firebaseui-idp-button:hover {
+  background: #eee !important;
+}
+
+.firebaseui-idp-icon-wrapper {
+  margin-right: 10px;
+}
+
+.firebaseui-idp-icon {
+  height: 32px;
+  width: auto;
   display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
 }
 
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
+.firebaseui-idp-text {
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  -webkit-font-smoothing: auto;
 }
 
-.links {
-  padding-top: 15px;
+.firebaseui-idp-text-short {
+  display: none;
 }
 </style>
