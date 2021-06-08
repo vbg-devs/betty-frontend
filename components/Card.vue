@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <header class="card__header">
+    <header class="card__header" @click="$emit('clicked')">
       <slot name="header"></slot>
     </header>
     <section class="card__body">

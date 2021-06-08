@@ -29,9 +29,9 @@ export default {
       return `${splitFullName[0].substring(0, 1)}${splitFullName[1].substring(0, 1)}`;
     },
     badgeColor() {
-      if (!this.name) return '#efefef';
-      if (this.name.length < 5) return '#efefef';
-      return this.stringToColour(this.name.toLowerCase());
+      if (!this.initial) return '#efefef';
+      if (this.initial.length < 5) return '#efefef';
+      return this.stringToColour(this.initial.toLowerCase());
     },
   },
   methods: {

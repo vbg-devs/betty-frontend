@@ -50,17 +50,26 @@
       <template v-else>
 
         <section class="modal__body">
-
-          <div class="row">
+          <div class="row row--center-v">
             <div class="column">
-              <div class="team">{{ homeTeam.name }}</div>
-              <input v-model="homeScore" type="number" class="bet-input">
+              <div class="team">
+                <team-logo :team="homeTeam" class="team__logo"></team-logo>
+              </div>
             </div>
             <div class="column column--wrap">
               -
             </div>
             <div class="column">
-              <div class="team">{{ awayTeam.name }}</div>
+              <div class="team">
+                <team-logo :team="awayTeam" class="team__logo"></team-logo>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column">
+              <input v-model="homeScore" type="number" class="bet-input">
+            </div>
+            <div class="column">
               <input v-model="awayScore" type="number" class="bet-input">
             </div>
           </div>
@@ -200,6 +209,15 @@ export default {
 .team {
   text-align: center;
   margin-bottom: 10px;
+}
+
+.team__logo {
+  display: block;
+  width: 64px;
+  height: auto;
+  border-radius: 50%;
+  margin: 0 auto;
+  margin-bottom: 5px;
 }
 
 .modal__title {

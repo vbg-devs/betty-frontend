@@ -3,7 +3,8 @@
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
-          <img src="https://via.placeholder.com/100x100" class="team__logo">
+          <team-logo :class="homeTeam"></team-logo>
+          <!-- <img src="https://via.placeholder.com/100x100" class="team__logo"> -->
         </div>
         <div class="game__column game__column--fill">
           {{ homeTeam.name }}
@@ -36,7 +37,7 @@
       </div>
       <div class="teams">
         <div class="team">
-          <img src="https://via.placeholder.com/100x100" class="team__logo">
+          <team-logo :team="homeTeam" class="team__logo"></team-logo>
           <div class="team__name">
             {{ homeTeam.name }}
           </div>
@@ -47,7 +48,7 @@
           <div class="score__label">{{ game.away_team_score }}</div>
         </div>
         <div class="team">
-          <img src="https://via.placeholder.com/100x100" class="team__logo">
+          <team-logo :team="awayTeam" class="team__logo"></team-logo>
           <div class="team__name">
             {{ awayTeam.name }}
           </div>
@@ -94,7 +95,7 @@ export default {
       return format(startDate, 'MMM dd HH:mm');
     },
     isLive() {
-      return this.game.id % 2 === 0;
+      return false;
     },
   },
 };

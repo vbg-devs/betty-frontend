@@ -247,4 +247,13 @@ body {
 .text-center {
   text-align: center;
 }
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s;
+}
+.page-enter,
+.page-leave-active {
+  opacity: 0;
+}
 </style>

@@ -13,14 +13,15 @@
         </div>
       </div>
       <div class="pools">
-        <div v-for="pool in pools" :key="pool.id" class="pool">
+        <pools :pools="pools"></pools>
+        <!-- <div v-for="pool in pools" :key="pool.id" class="pool">
           <div>
             <h3 class="pool__title">{{ pool.name }}</h3>
             <div>
               <game v-for="game in pool.games" :key="game.id" :game="game"></game>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </card>
   </div>
@@ -74,16 +75,16 @@ export default {
 </script>
 
 <style scoped lang="less">
-.pools {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0 -10px;
-}
+// .pools {
+//   display: flex;
+//   flex-wrap: wrap;
+//   margin: 0 -10px;
+// }
 
-.pool {
-  flex: 0 1 100%/3;
-  padding: 10px;
-}
+// .pool {
+//   flex: 0 1 100%/3;
+//   padding: 10px;
+// }
 
 .pool__title {
   margin-bottom: 25px;

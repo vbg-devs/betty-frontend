@@ -5,7 +5,7 @@
         <h3 class="pool__title">{{ pool.name }}</h3>
         <div class="games">
 
-          <game v-for="game in pool.games" :key="game.id" :clickable="true" :game="game" @click-game="clickGame"></game>
+          <game v-for="game in pool.games" :key="game.id" :clickable="true" :game="game" class="game-box" @click-game="clickGame"></game>
 
         </div>
       </div>
@@ -44,7 +44,7 @@ export default {
 
 .pool {
   margin-top: 20px;
-  border-bottom: 1px solid #f2f2f2;
+  // border-bottom: 1px solid #f2f2f2;
 }
 
 .pool__title {
@@ -58,4 +58,15 @@ export default {
 //   flex: 0 1 100%/3;
 //   padding: 10px;
 // }
+.game-box {
+  background: #fbfbfb;
+  padding: 10px !important;
+  margin-bottom: 10px;
+  border-radius: 3px;
+  transition: background ease 0.3s;
+
+  &:hover {
+    background: #f2f2f2;
+  }
+}
 </style>

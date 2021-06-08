@@ -8,9 +8,9 @@
     <div class="header-bar__item">
       <nuxt-link to="/dashboard/tournaments">Tournaments</nuxt-link>
     </div>
-    <div class="header-bar__item">
+    <!-- <div class="header-bar__item">
       <nuxt-link to="/dashboard/teams">Teams</nuxt-link>
-    </div>
+    </div> -->
     <div class="header-bar__item">
       <nuxt-link to="/dashboard/groups">My Groups</nuxt-link>
     </div>

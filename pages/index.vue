@@ -4,6 +4,7 @@
       <img src="@/assets/logo.svg" class="logo">
     </div>
     <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
   </div>
 </template>
 
@@ -16,6 +17,13 @@ import * as firebaseui from 'firebaseui';
 
 const uiConfig = {
   signInSuccessUrl: `${window.location.protocol}//${window.location.host}/dashboard`,
+  callbacks: {
+    uiShown() {
+      // The widget is rendered.
+      // Hide the loader.
+      document.getElementById('loader').style.display = 'none';
+    },
+  },
   signInOptions: [
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
     // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
