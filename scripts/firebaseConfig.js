@@ -7,4 +7,4 @@ const config = {
 };
 
 export const FBApp = firebase.initializeApp(config);
-export const FBUIApp = new firebaseui.auth.AuthUI(firebase.auth(FBApp));
+export const FBUIApp = (app) => new firebaseui.auth.AuthUI(firebase.auth(app));

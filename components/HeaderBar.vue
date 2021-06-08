@@ -1,7 +1,9 @@
 <template>
-  <header class="header-bar">
+  <header v-if="user" class="header-bar">
     <div class="header-bar__item">
-      <img src="@/assets/logo.svg" class="logo">
+      <nuxt-link to="/dashboard">
+        <img src="@/assets/logo.svg" class="logo">
+      </nuxt-link>
     </div>
     <div class="header-bar__item">
       <nuxt-link to="/dashboard/tournaments">Tournaments</nuxt-link>
@@ -20,7 +22,8 @@
 </template>
 
 <script>
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 export default {
   props: {

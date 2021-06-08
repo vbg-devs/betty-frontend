@@ -1,18 +1,10 @@
 /* eslint-disable no-shadow, no-param-reassign */
+import firebase from 'firebase/app';
+import 'firebase/auth';
+
 
 export const state = () => ({
-  groups: [
-    {
-      id: 1,
-      name: 'Amazing friends',
-      image_url: 'https://via.placeholder.com/250x250',
-      welcome_message: 'Hello world! Welcome to the annual round of “Max is probably gonna win this”-cup.',
-      owner: '1',
-      tournament_id: 1,
-      members: [{ id: 1, joined: new Date().toISOString() }],
-      invite_code: 'XXXXXX',
-    },
-  ],
+  groups: [],
 });
 
 export const getters = {
@@ -27,19 +19,37 @@ export const mutations = {
 };
 
 export const actions = {
-  // load({ rootState, commit }, payload) {
-  //   return new Promise((resolve, reject) => {
-  //     this.$axios.get('https://betty-prod.herokuapp.com/api/v1/teams', {
-  //       headers: {
-  //         Authorization: `Bearer ${payload.token || rootState.user.user.token}`,
-  //       },
-  //     }).then((response) => {
-  //       commit('ADD_GAMES', (response.data || []).map((x) => Object.freeze(x)));
-  //       resolve(response.data);
-  //     }).catch((err) => {
-  //       console.error('error loadModelVersionJobs', err);
-  //       reject(err);
-  //     });
-  //   });
-  // },
+  load({ commit }, payload) {
+    return new Promise((resolve, reject) => {
+      this.$axios.get('https://betty-prod.herokuapp.com/api/v1/groups', {
+        headers: {
+          Authorization: `Bearer ${payload.token}`,
+        },
+      }).then((response) => {
+        commit('ADD_GROUPS', (response.data || []).map((x) => Object.freeze(x)));
+        resolve(response.data);
+      }).catch((err) => {
+        console.error('error group/load', err);
+        reject(err);
+      });
+    });
+  },
+  async create({ commit }, payload) {
+    const user = firebase.auth().currentUser;
+    const token = await user.getIdToken();
+
+    return new Promise((resolve, reject) => {
+      this.$axios.post('https://betty-prod.herokuapp.com/api/v1/group', payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((response) => {
+        commit('ADD_GROUPS', [Object.freeze(response.data)]);
+        resolve(response.data);
+      }).catch((err) => {
+        console.error('error group/create', err);
+        reject(err);
+      });
+    });
+  },
 };

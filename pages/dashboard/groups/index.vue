@@ -3,18 +3,18 @@
     <h1 class="page-title">My Groups</h1>
     <div class="groups">
       <div v-for="group in groups" :key="group.id" class="group">
-        <nuxt-link :to="`/dashboard/groups/${group.id}`">{{ group.name }}</nuxt-link>
+        <group-list-item :group="group"></group-list-item>
       </div>
     </div>
-    <div class="empty">
+    <div v-if="groups.length === 0" class="empty">
       <img src="@/assets/group-empty.svg" class="empty__logo">
       <div class="empty__text">
         <p>You don’t have any groups yet.</p>
         <p>Invite a bunch of friends and get started!</p>
       </div>
-      <div class="empty__button">
-        <nuxt-link to="/dashboard/groups/create" class="button button--action">Start a group</nuxt-link>
-      </div>
+    </div>
+    <div class="empty__button">
+      <nuxt-link to="/dashboard/groups/create" class="button button--action">Start a group</nuxt-link>
     </div>
   </div>
 </template>
@@ -23,6 +23,7 @@
 import { mapGetters } from 'vuex'; //eslint-disable-line
 
 export default {
+  name: 'Groups',
   computed: {
     ...mapGetters({
       groups: 'group/all',
@@ -51,5 +52,17 @@ export default {
 .empty__button {
   display: flex;
   justify-content: center;
+  margin-top: 30px;
+}
+
+.groups {
+  display: flex;
+  margin: 0 -10px;
+  flex-wrap: wrap;
+}
+
+.group {
+  padding: 10px;
+  flex: 0 1 100%/3;
 }
 </style>

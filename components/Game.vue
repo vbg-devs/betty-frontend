@@ -1,34 +1,59 @@
 <template>
-  <div class="game">
-
-    <div class="game__information">
-      <div v-if="isLive" class="live-badge">
-        Live!
-      </div>
-      <div v-else>
-        {{ startDate }}
-      </div>
-
-    </div>
-    <div class="teams">
-      <div class="team">
-        <img src="https://via.placeholder.com/100x100" class="team__logo">
-        <div class="team__name">
+  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative}" @click="$emit('click-game', game)">
+    <template v-if="alternative">
+      <div class="game__row">
+        <div class="game__column">
+          <img src="https://via.placeholder.com/100x100" class="team__logo">
+        </div>
+        <div class="game__column game__column--fill">
           {{ homeTeam.name }}
         </div>
-      </div>
-      <div class="score">
-        <div class="score__label">{{ game.home_team_score }}</div>
-        <div class="score__divider">-</div>
-        <div class="score__label">{{ game.away_team_score }}</div>
-      </div>
-      <div class="team">
-        <img src="https://via.placeholder.com/100x100" class="team__logo">
-        <div class="team__name">
-          {{ awayTeam.name }}
+        <div class="game__column">
+          {{ game.home_team_score }}
         </div>
       </div>
-    </div>
+      <div class="game__row">
+        <div class="game__column">
+          <img src="https://via.placeholder.com/100x100" class="team__logo">
+        </div>
+        <div class="game__column game__column--fill">
+          {{ awayTeam.name }}
+        </div>
+        <div class="game__column">
+          {{ game.away_team_score }}
+        </div>
+      </div>
+    </template>
+    <template v-else>
+      <div class="game__information">
+        <div v-if="isLive" class="live-badge">
+          Live!
+        </div>
+        <div v-else>
+          {{ startDate }}
+        </div>
+
+      </div>
+      <div class="teams">
+        <div class="team">
+          <img src="https://via.placeholder.com/100x100" class="team__logo">
+          <div class="team__name">
+            {{ homeTeam.name }}
+          </div>
+        </div>
+        <div class="score">
+          <div class="score__label">{{ game.home_team_score }}</div>
+          <div class="score__divider">-</div>
+          <div class="score__label">{{ game.away_team_score }}</div>
+        </div>
+        <div class="team">
+          <img src="https://via.placeholder.com/100x100" class="team__logo">
+          <div class="team__name">
+            {{ awayTeam.name }}
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -41,6 +66,14 @@ export default {
     game: {
       type: Object,
       default: () => { },
+    },
+    clickable: {
+      type: Boolean,
+      default: false,
+    },
+    alternative: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
@@ -69,22 +102,30 @@ export default {
 
 <style lang="less" scoped>
 .game {
-  margin-bottom: 10px;
-  border-bottom: 1px solid #f2f2f2;
+  // margin-bottom: 10px;
+  // border-bottom: 1px solid #f2f2f2;
   padding: 10px 0;
   position: relative;
 
-  &:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
+  // &:last-child {
+  //   margin-bottom: 0;
+  //   padding-bottom: 0;
+  //   border-bottom: none;
+  // }
+}
+
+.game--alternative {
+  padding: 5px 0;
+}
+
+.game--clickable {
+  cursor: pointer;
 }
 
 .game__information {
   color: #aaa;
   font-size: 13px;
-  padding-bottom: 5px;
+  padding-bottom: 10px;
 }
 
 .teams {
@@ -127,9 +168,7 @@ export default {
 }
 
 .live-badge {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   color: #ccc;
   font-size: 13px;
   padding-left: 12px;
@@ -146,6 +185,24 @@ export default {
     box-shadow: 0px 0px 5px #78cc14;
     // animation: live 0.9s infinite alternate;
   }
+}
+
+.game__row {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.game__column {
+  .team__logo {
+    width: 24px;
+    margin-right: 10px;
+    margin-bottom: 0;
+  }
+}
+
+.game__column--fill {
+  flex: 1;
 }
 
 @keyframes live {

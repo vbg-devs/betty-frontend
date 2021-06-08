@@ -8,8 +8,11 @@
 </template>
 
 <script>
-import firebase from 'firebase';
-import { FBUIApp } from '@/scripts/firebaseConfig';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import * as firebaseui from 'firebaseui';
+
+// import { FBUIApp } from '@/scripts/firebaseConfig';
 
 const uiConfig = {
   signInSuccessUrl: `${window.location.protocol}//${window.location.host}/dashboard`,
@@ -22,12 +25,11 @@ const uiConfig = {
   tosUrl: '/',
 };
 export default {
-  layout: 'landingpage',
   mounted() {
-    FBUIApp.start('#firebaseui-auth-container', uiConfig);
+    new firebaseui.auth.AuthUI(firebase.auth(firebase)).start('#firebaseui-auth-container', uiConfig);
   },
   beforeDestroy() {
-    FBUIApp.reset();
+    // FBUIApp(firebase).reset();
   },
 };
 </script>

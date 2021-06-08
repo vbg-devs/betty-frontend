@@ -43,21 +43,80 @@
                   </div>
                 </div>
               </div>
+              <div class="column">
+                <div class="group__box">
+                  <h3 class="group__box__title">Invite code</h3>
+                  <div class="big big--smaller text-center">
+                    {{ group.invite_code }}
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
           <aside class="sidebar column column--wrap">
             <h2>Members</h2>
-            {{ group.members }}
+            <ul class="members">
+              <li v-for="member in group.members" :key="member.user_id">
+                {{ member.name }}
+              </li>
+            </ul>
           </aside>
         </div>
+        <h1>Games</h1>
+        <template v-if="tournamentDetails">
+          <pools :pools="pools" @click-game="clickGame"></pools>
+        </template>
       </section>
     </card>
+    <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peak="group.allow_sneak_peek" :bets="betsForGame" @close="gameBet = null"></bet-modal>
   </div>
 </template>
 
 <script>
+import firebase from 'firebase/app';
+import 'firebase/auth';
+
 export default {
+  name: 'GroupDetails',
+  data() {
+    return {
+      bets: [],
+      gameBet: null,
+    };
+  },
+  async fetch() {
+    const { $axios, route } = this.$nuxt.context;
+    const user = firebase.auth().currentUser;
+    const token = await user.getIdToken();
+
+    return new Promise((resolve) => {
+      $axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${route.params.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => {
+        this.bets = res.data;
+        resolve();
+      });
+    });
+  },
   computed: {
+    betsForGame() {
+      if (this.gameBet === null) return [];
+      return this.bets.filter((x) => x.game_id === this.gameBet.id)
+        .map((x) => ({ ...x, user: this.group.members.find((u) => u.user_id === x.user_id) }));
+    },
+    pools() {
+      if (!this.tournamentDetails) return [];
+      const pools = [];
+      this.tournamentDetails.pools.forEach((pool) => {
+        pools.push({
+          ...pool,
+          games: this.tournamentDetails.games.filter((x) => x.pool_id === pool.id),
+        });
+      });
+      return pools;
+    },
     group() {
       return this.$store.getters['group/byId'](parseFloat(this.$route.params.id));
     },
@@ -65,30 +124,33 @@ export default {
       if (!this.group) return null;
       return this.$store.getters['tournament/byId'](this.group.tournament_id);
     },
+    tournamentDetails() {
+      if (!this.tournament) return null;
+      return this.$store.getters['tournament/details'](this.tournament.id);
+    },
     games() {
-      const games = [];
-      for (let i = 0; i < 30; i += 1) {
-        games.push({
-          away_team_id: 11,
-          away_team_score: 0,
-          home_team_id: 22,
-          home_team_score: 0,
-          id: 1,
-          pool_id: 1,
-          start_date: '2021-06-11T00:00:00Z',
-          status: i % 3 === 0 ? 'complete' : null,
-          tournament_id: 1,
-        });
-      }
-      return games;
+      if (!this.tournamentDetails) return [];
+      return this.tournamentDetails.games;
     },
     completeGames() {
       return this.games.filter((x) => x.status === 'complete');
     },
     completeGamesPercentage() {
       if (this.completeGames.length === 0) return 0;
-
       return Math.round((this.completeGames.length / this.games.length) * 100);
+    },
+  },
+  watch: {
+    tournament: {
+      handler(newVal) {
+        this.$store.dispatch('tournament/loadDetails', { id: newVal.id });
+      },
+      immediate: true,
+    },
+  },
+  methods: {
+    clickGame(payload) {
+      this.gameBet = { ...payload, groupId: this.group.id };
     },
   },
 };
@@ -101,7 +163,7 @@ export default {
   border: 2px solid #fff;
   box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
   height: 140px;
-  width: auto;
+  width: 140px;
 }
 
 .welcome-message {

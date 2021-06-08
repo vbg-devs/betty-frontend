@@ -9,7 +9,8 @@
 </template>
 
 <script>
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 export default {
   name: 'UpdateProfileModal',
@@ -47,7 +48,7 @@ export default {
   },
   methods: {
     async save() {
-      const user = await firebase.auth().currentUser;
+      const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
       this.$axios.post('https://betty-prod.herokuapp.com/api/v1/user', {
         email: this.email,

@@ -1,6 +1,6 @@
 <template>
   <div>
-    YOU ARE LOGGED IN!
+    THIS IS INVIIITE!
   </div>
 </template>
 
@@ -12,12 +12,17 @@ export default {
   async mounted() {
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
-    this.$axios.get('https://betty-prod.herokuapp.com/api/v1/activitystream', {
+
+    this.$axios.post(`https://betty-prod.herokuapp.com/api/v1/group/${this.$route.params.code}`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }).then((res) => {
-      console.log(res.data);
+    }).then(() => {
+      this.$store.dispatch('group/load').then(() => {
+        this.$router.replace(`/dashboard/groups/${this.$route.params.id}`);
+      });
+    }).catch((err) => {
+      console.error(err);
     });
   },
 };

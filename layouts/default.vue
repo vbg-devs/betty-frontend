@@ -3,37 +3,53 @@
     <header-bar :user="user"></header-bar>
     <update-profile-modal @set-user="setUser"></update-profile-modal>
     <div class="container">
-      <Nuxt :user="user" />
+      <div v-if="!$fetchState.pending">
+        <Nuxt :user="user" />
+      </div>
     </div>
   </div>
 </template>
 <script>
-import firebase from 'firebase';
+// import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 export default {
-  name: 'DashboardLayout',
+  name: 'DefaultLayout',
   data() {
     return {
       user: null,
     };
   },
   async fetch() {
-    const { store, redirect } = this.$nuxt.context;
+    console.log('FEETCH!!!!!');
+    const { store, redirect, route } = this.$nuxt.context;
 
     const config = {
       apiKey: 'AIzaSyCK7EQZtS0JGRnS9WXdx3Ja4Sdl4914zpg',
       authDomain: 'betty-f676d.firebaseapp.com',
     };
-    return new Promise(() => {
+    return new Promise((resolve) => {
       firebase.initializeApp(config);
 
       firebase.auth().onAuthStateChanged(async (_user) => {
+        console.log(_user);
         if (_user) {
           const token = await _user.getIdToken();
-          store.dispatch('team/load', { token });
-          store.dispatch('tournament/load', { token });
+          const promises = [
+            store.dispatch('team/load', { token }),
+            store.dispatch('tournament/load', { token }),
+            store.dispatch('group/load', { token }),
+          ];
+          Promise.all(promises).then(() => {
+            resolve();
+          });
         } else {
-          redirect('/');
+          this.setUser(null);
+          if (route.path !== '/') {
+            redirect('/');
+          }
+          resolve();
         }
       });
     });
