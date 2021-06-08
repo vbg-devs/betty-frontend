@@ -18,6 +18,14 @@ import * as firebaseui from 'firebaseui';
 const uiConfig = {
   signInSuccessUrl: `${window.location.protocol}//${window.location.host}/dashboard`,
   callbacks: {
+    signInSuccessWithAuthResult(authResult, redirectUrl) { //eslint-disable-line
+      const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+      if (returnUrl) {
+        window.location.href = returnUrl;
+        return false;
+      }
+      return true;
+    },
     uiShown() {
       // The widget is rendered.
       // Hide the loader.

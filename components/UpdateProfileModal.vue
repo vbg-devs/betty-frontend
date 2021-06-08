@@ -34,6 +34,7 @@ export default {
         },
       }).then((res) => {
         this.$emit('set-user', res.data);
+        this.$store.dispatch('user/set', res.data);
         console.log(res);
       }).catch((err) => {
         if (err.response.status === 404) {

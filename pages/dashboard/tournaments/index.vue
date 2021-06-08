@@ -8,7 +8,7 @@
         <nuxt-link :to="`/dashboard/tournaments/${tournament.id}`">
           <card class="card--clickable">
             <img slot="header" src="@/assets/euroflag.jpeg" class="img img--full">
-            <h1>{{ tournament.name }}</h1>
+            {{ tournament.name }}
           </card>
         </nuxt-link>
       </section>

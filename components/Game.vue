@@ -55,6 +55,7 @@
         </div>
       </div>
     </template>
+    <slot></slot>
   </div>
 </template>
 

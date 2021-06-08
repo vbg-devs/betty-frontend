@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="pools">
-        <pools :pools="pools"></pools>
+        <pools :pools="pools" :clickable="false"></pools>
         <!-- <div v-for="pool in pools" :key="pool.id" class="pool">
           <div>
             <h3 class="pool__title">{{ pool.name }}</h3>

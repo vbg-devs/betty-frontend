@@ -1,5 +1,5 @@
 <template>
-  <img :src="logo" class="team-logo">
+  <div class="team-logo" :style="{'backgroundImage': `url(${logo})`}"></div>
 </template>
 
 <script>
@@ -23,5 +23,12 @@ export default {
 };
 </script>
 
-<style>
+<style lang="less" scoped>
+.team-logo {
+  border: 5px solid rgba(0, 0, 0, 0.08);
+  background-position: center;
+  width: 64px;
+  height: 64px;
+  background-repeat: no-repeat;
+}
 </style>

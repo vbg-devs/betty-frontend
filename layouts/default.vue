@@ -22,7 +22,6 @@ export default {
     };
   },
   async fetch() {
-    console.log('FEETCH!!!!!');
     const { store, redirect, route } = this.$nuxt.context;
 
     const config = {
@@ -33,7 +32,6 @@ export default {
       firebase.initializeApp(config);
 
       firebase.auth().onAuthStateChanged(async (_user) => {
-        console.log(_user);
         if (_user) {
           const token = await _user.getIdToken();
           const promises = [
@@ -45,8 +43,12 @@ export default {
             resolve();
           });
         } else {
-          this.setUser(null);
+          store.dispatch('user/set', null);
           if (route.path !== '/') {
+            if (route.path.includes('join')) {
+              redirect(`/?returnUrl=${route.path}`);
+              return;
+            }
             redirect('/');
           }
           resolve();
@@ -143,6 +145,11 @@ body {
 
 .button--action {
   background: #78cc14;
+}
+
+.button--disabled {
+  background: #ccc;
+  cursor: default;
 }
 
 .form-row {
@@ -255,5 +262,10 @@ body {
 .page-enter,
 .page-leave-active {
   opacity: 0;
+}
+
+a {
+  color: #333;
+  text-decoration: none;
 }
 </style>

@@ -5,7 +5,7 @@
         <img src="@/assets/euroflag.jpeg" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <div class="column column--wrap">
-            <img :src="group.image_url" class="group__image">
+            <div clas="" class="group__image" :style="{'backgroundImage': `url(${group.image_url})`}"></div>
           </div>
           <div class="column">
             <h1 class="card__header__title">
@@ -47,7 +47,22 @@
                 <div class="group__box">
                   <h3 class="group__box__title">Invite code</h3>
                   <div class="big big--smaller text-center">
-                    {{ group.invite_code }}
+                    <div class="row row--center-v">
+                      <div class="column">
+                        {{ group.invite_code }}
+                      </div>
+                      <div class="column column--wrap">
+                        <button class="invite-code-button" @click="copyInviteCode">
+                          <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -64,7 +79,7 @@
         </div>
         <h1>Games</h1>
         <template v-if="tournamentDetails">
-          <pools :pools="pools" @click-game="clickGame"></pools>
+          <pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></pools>
         </template>
       </section>
     </card>
@@ -82,6 +97,7 @@ export default {
     return {
       bets: [],
       gameBet: null,
+      copied: false,
     };
   },
   async fetch() {
@@ -149,6 +165,24 @@ export default {
     },
   },
   methods: {
+    copyInviteCode() {
+      const elem = document.createElement('input');
+      elem.value = `${window.location.href}/join/${this.group.invite_code}`; // this.shareUrl;
+      document.body.appendChild(elem);
+      const copyText = elem;
+
+      /* Select the text field */
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+
+      /* Copy the text inside the text field */
+      document.execCommand('copy');
+      document.body.removeChild(elem);
+      this.copied = true;
+      setTimeout(() => {
+        this.copied = false;
+      }, 1000);
+    },
     clickGame(payload) {
       this.gameBet = { ...payload, groupId: this.group.id };
     },
@@ -160,10 +194,12 @@ export default {
 .group__image {
   display: block;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 5px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
   height: 140px;
   width: 140px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .welcome-message {
@@ -205,7 +241,22 @@ export default {
   font-weight: bold;
 }
 
-/deep/ .progress-bar {
-  width: 60%;
+.invite-code-button {
+  border: none;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+
+  svg {
+    display: block;
+    // width: 18px;
+    // height: auto;
+  }
 }
 </style>
