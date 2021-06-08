@@ -1,6 +1,7 @@
 <template>
   <div>
     YOU ARE LOGGED IN!
+    <activity-feed />
   </div>
 </template>
 
