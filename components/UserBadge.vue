@@ -1,5 +1,5 @@
 <template>
-  <div class="user-badge" @click="$emit('click')">
+  <div class="user-badge" :class="{'user-badge--small': small}" @click="$emit('click')">
     <div v-if="hasImage" class="user-badge__image" :style="{'backgroundImage': `url(${user.image_url})`}">
 
     </div>
@@ -16,6 +16,10 @@ export default {
     user: {
       type: Object,
       default: () => { },
+    },
+    small: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
@@ -67,14 +71,35 @@ export default {
   background: #fff;
 }
 
+.user-badge__image {
+  height: 32px;
+  width: 32px;
+  background-repeat: no-repeat;
+  background-size: 32px;
+}
+
 .user-badge {
+  height: 42px;
+  width: 42px;
   border: 5px solid rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   transition: border-color ease 0.3s;
   cursor: pointer;
+  display: inline-block;
 
   &:hover {
     border-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.user-badge--small {
+  height: 32px;
+  width: 32px;
+
+  .user-badge__initial {
+    height: 22px;
+    width: 22px;
+    font-size: 14px;
   }
 }
 </style>

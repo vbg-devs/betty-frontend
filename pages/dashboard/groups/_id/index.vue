@@ -84,7 +84,15 @@
             <h2>Members</h2>
             <ul class="members">
               <li v-for="member in group.members" :key="member.user_id">
-                {{ member.name }}
+                <div class="member">
+                  <div class="member__icon">
+                    <user-badge :user="member" :small="true">
+                    </user-badge>
+                  </div>
+                  <div class="member__label">
+                    </user-badge>{{ member.name }}
+                  </div>
+                </div>
               </li>
             </ul>
           </aside>
@@ -329,5 +337,25 @@ export default {
 .share-link__action__icon {
   display: block;
   width: 18px;
+}
+
+.members {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.member__icon {
+  padding-right: 5px;
+}
+
+.member__label {
+  flex: 1;
 }
 </style>

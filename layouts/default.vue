@@ -1,13 +1,21 @@
 <template>
   <div class="page">
     <header-bar :user="user"></header-bar>
-    <update-profile-modal @set-user="setUser"></update-profile-modal>
-    <side-bar v-if="user"></side-bar>
-    <div class="container">
-      <div v-if="!$fetchState.pending">
-        <Nuxt :user="user" />
+    <template v-if="!$fetchState.pending">
+      <update-profile-modal @set-user="setUser"></update-profile-modal>
+      <side-bar v-if="user"></side-bar>
+      <div class="container">
+        <div>
+          <Nuxt :user="user" />
+        </div>
       </div>
-    </div>
+    </template>
+    <transition name="page">
+      <div v-if="$fetchState.pending" class="loader">
+        <img src="@/assets/logo.svg">
+        <img src="@/assets/spinner.svg" class="loader__icon">
+      </div>
+    </transition>
   </div>
 </template>
 <script>
@@ -48,14 +56,18 @@ export default {
           });
         } else {
           store.dispatch('user/set', null);
+          this.setUser(null);
           if (route.path !== '/') {
             if (route.path.includes('join')) {
               redirect(`/?returnUrl=${route.path}`);
-              return;
+            } else {
+              redirect('/');
             }
-            redirect('/');
           }
-          resolve();
+
+          setTimeout(() => { //eslint-disable-line
+            resolve();
+          }, 150);
         }
       });
     });
@@ -271,5 +283,24 @@ body {
 a {
   color: #333;
   text-decoration: none;
+}
+
+.loader {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #003aff;
+  flex-direction: column;
+}
+
+.loader__icon {
+  height: 100px;
+  width: 100px;
+  margin-top: 25px;
 }
 </style>

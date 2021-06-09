@@ -43,7 +43,7 @@
           </div>
           <div class="column">
             <div class="feed-item__label">
-              <strong>User</strong> just joined, welcome!
+              <strong>{{ message.message.name }}</strong> just joined, welcome!
             </div>
           </div>
         </template>
