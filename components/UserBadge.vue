@@ -85,7 +85,11 @@ export default {
   border-radius: 50%;
   transition: border-color ease 0.3s;
   cursor: pointer;
+<<<<<<< HEAD
   display: inline-block;
+=======
+  overflow: hidden;
+>>>>>>> ef8e8fc45279463651e9fa79a81a6407f8e5a9b2
 
   &:hover {
     border-color: rgba(0, 0, 0, 0.2);
