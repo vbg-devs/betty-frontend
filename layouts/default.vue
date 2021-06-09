@@ -41,6 +41,9 @@ export default {
             store.dispatch('group/load', { token }),
           ];
           Promise.all(promises).then(() => {
+            if (route.path === '/') {
+              redirect('/dashboard');
+            }
             resolve();
           });
         } else {

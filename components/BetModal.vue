@@ -132,6 +132,14 @@ export default {
       return this.$store.getters['team/byId'](this.gameBet.away_team_id);
     },
   },
+  watch: {
+    gameBet(newVal) {
+      if (!newVal) {
+        this.homeScore = '0';
+        this.awayScore = '0';
+      }
+    },
+  },
   methods: {
     placeBet() {
       const betPayload = {

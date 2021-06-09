@@ -45,11 +45,23 @@
               </div>
               <div class="column">
                 <div class="group__box">
-                  <h3 class="group__box__title">Invite code</h3>
+                  <h3 class="group__box__title">Invite link</h3>
                   <div class="big big--smaller text-center">
-                    <div class="row row--center-v">
+                    <div class="share-link">
+                      <input v-model="shareUrl" type="text" class="share-link__input" readonly>
+                      <div class="share-link__action" @click="copyInviteCode">
+                        <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard share-link__action__icon">
+                          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- <div class="row row--center-v">
                       <div class="column">
-                        {{ group.invite_code }}
+                        <input type="text" readonly :value="shareUrl" class="invite-code-input">
                       </div>
                       <div class="column column--wrap">
                         <button class="invite-code-button" @click="copyInviteCode">
@@ -62,7 +74,7 @@
                           </svg>
                         </button>
                       </div>
-                    </div>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -117,6 +129,9 @@ export default {
     });
   },
   computed: {
+    shareUrl() {
+      return `${window.location.href}/join/${this.group.invite_code}`;
+    },
     betsForGame() {
       if (this.gameBet === null) return [];
       return this.bets.filter((x) => x.game_id === this.gameBet.id)
@@ -186,7 +201,7 @@ export default {
     },
     copyInviteCode() {
       const elem = document.createElement('input');
-      elem.value = `${window.location.href}/join/${this.group.invite_code}`; // this.shareUrl;
+      elem.value = this.shareUrl; // this.shareUrl;
       document.body.appendChild(elem);
       const copyText = elem;
 
@@ -277,5 +292,42 @@ export default {
     // width: 18px;
     // height: auto;
   }
+}
+
+.invite-code-input {
+  padding: 7px;
+}
+
+.share-link {
+  border: 1px solid #efefef;
+  display: flex;
+  margin-top: 8px;
+}
+.share-link__input {
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 7px;
+  color: #969292;
+}
+
+.share-link__action {
+  border-left: 1px solid #efefef;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  cursor: pointer;
+  transition: all ease 0.3s;
+  color: #969292;
+}
+
+.share-link__action:hover {
+  color: #003aff;
+}
+
+.share-link__action__icon {
+  display: block;
+  width: 18px;
 }
 </style>
