@@ -72,6 +72,7 @@ export default {
   border-radius: 50%;
   transition: border-color ease 0.3s;
   cursor: pointer;
+  overflow: hidden;
 
   &:hover {
     border-color: rgba(0, 0, 0, 0.2);
