@@ -34,7 +34,7 @@ export const actions = {
       });
     });
   },
-  async create({ commit }, payload) {
+  async create({ }, payload) { //eslint-disable-line
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
 
@@ -44,7 +44,6 @@ export const actions = {
           Authorization: `Bearer ${token}`,
         },
       }).then((response) => {
-        commit('ADD_GROUPS', [Object.freeze(response.data)]);
         resolve(response.data);
       }).catch((err) => {
         console.error('error group/create', err);

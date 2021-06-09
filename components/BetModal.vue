@@ -279,7 +279,7 @@ input[type="number"] {
 .team__logo {
   display: block;
   width: 64px;
-  height: auto;
+  height: 64px;
   border-radius: 50%;
   margin: 0 auto;
   margin-bottom: 5px;

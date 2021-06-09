@@ -24,8 +24,12 @@ export default {
   width: 350px;
   background: #fff;
   border-right: 1px solid #e1e4e8;
-  display: flex;
+  display: none;
   flex-direction: column;
+
+  @media (min-width: 1024px) {
+    display: flex;
+  }
 }
 
 .side-bar__inner {

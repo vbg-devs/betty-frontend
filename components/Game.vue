@@ -142,7 +142,7 @@ export default {
 .team__logo {
   display: block;
   width: 64px;
-  height: auto;
+  height: 64px;
   border-radius: 50%;
   margin: 0 auto;
   margin-bottom: 5px;
@@ -198,6 +198,7 @@ export default {
 .game__column {
   .team__logo {
     width: 24px;
+    height: 24px;
     margin-right: 10px;
     margin-bottom: 0;
   }

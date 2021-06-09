@@ -14,8 +14,12 @@
       </div>
     </div>
     <div class="empty__button">
-      <nuxt-link to="/dashboard/groups/create" class="button button--action">Start a group</nuxt-link>
+      <button class="button button--action" @click="showModal = true">Start a group</button>
+      <!-- <nuxt-link to="/dashboard/groups/create" class="button button--action">Start a group</nuxt-link> -->
     </div>
+    <transition name="page">
+      <create-group-modal v-if="showModal" @close="showModal = false"></create-group-modal>
+    </transition>
   </div>
 </template>
 
@@ -24,11 +28,17 @@ import { mapGetters } from 'vuex'; //eslint-disable-line
 
 export default {
   name: 'Groups',
+  data() {
+    return {
+      showModal: false,
+    };
+  },
   computed: {
     ...mapGetters({
       groups: 'group/all',
     }),
   },
+
 };
 </script>
 
@@ -63,6 +73,10 @@ export default {
 
 .group {
   padding: 10px;
-  flex: 0 1 100%/3;
+  flex: 0 1 100%;
+
+  @media (min-width: 768px) {
+    flex: 0 1 100%/3;
+  }
 }
 </style>

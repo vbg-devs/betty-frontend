@@ -6,9 +6,9 @@
       </nuxt-link>
     </div>
     <div class="header-bar__item header-bar__item--spacer"></div>
-    <div class="header-bar__item">
+    <!-- <div class="header-bar__item">
       <nuxt-link to="/dashboard/tournaments">Tournaments</nuxt-link>
-    </div>
+    </div> -->
     <!-- <div class="header-bar__item">
       <nuxt-link to="/dashboard/teams">Teams</nuxt-link>
     </div> -->
@@ -86,6 +86,10 @@ a:hover {
 }
 
 .header-bar__item--spacer {
-  width: 270px;
+  width: 20px;
+
+  @media (min-width: 1024px) {
+    width: 270px;
+  }
 }
 </style>

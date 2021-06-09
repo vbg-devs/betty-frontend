@@ -114,7 +114,11 @@ export default {
 
 .tournament {
   padding: 10px;
-  flex: 0 1 100%/3;
+  flex: 0 1 100%;
+
+  @media (min-width: 768px) {
+    flex: 0 1 100%/3;
+  }
 }
 
 .selected-tournament {

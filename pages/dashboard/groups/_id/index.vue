@@ -4,9 +4,9 @@
       <div slot="header" class="card__header">
         <img src="@/assets/euroflag.jpeg" class="img img--full">
         <div class="card__header__details row row--bottom-v">
-          <div class="column column--wrap">
+          <!-- <div class="column column--wrap">
             <div clas="" class="group__image" :style="{'backgroundImage': `url(${group.image_url})`}"></div>
-          </div>
+          </div> -->
           <div class="column">
             <h1 class="card__header__title">
               {{ group.name }}
@@ -19,12 +19,12 @@
         </div>
       </div>
       <section class="group__body">
-        <div class="row">
+        <div class="row row--wrap">
           <section class="group__information column">
             <div class="welcome-message">
               {{ group.welcome_message }}
             </div>
-            <div class="row">
+            <div class="row row--wrap">
               <div class="column">
                 <div class="group__box">
                   <h3 class="group__box__title">Games played</h3>
@@ -252,8 +252,10 @@ export default {
 }
 
 .sidebar {
-  width: 300px;
-  margin-left: 25px;
+  @media (min-width: 768px) {
+    width: 300px;
+    margin-left: 25px;
+  }
 }
 
 .big {

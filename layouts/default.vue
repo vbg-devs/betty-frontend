@@ -105,7 +105,11 @@ html {
 }
 
 body {
-  padding: 100px 0 50px 350px;
+  padding: 80px 0 50px 0;
+
+  @media (min-width: 1024px) {
+    padding: 100px 0 50px 350px;
+  }
 }
 
 *,
@@ -221,6 +225,12 @@ body {
   margin: 0 -10px;
 }
 
+.row--wrap {
+  @media (max-width: 767px) {
+    display: block;
+  }
+}
+
 .row--center-v {
   align-items: center;
 }
@@ -257,14 +267,22 @@ body {
 .card__header__title {
   font-weight: 800;
   margin-top: 30px;
-  font-size: 40px;
+  font-size: 20px;
   line-height: 1.4;
+
+  @media (min-width: 768px) {
+    font-size: 40px;
+  }
 }
 
 .card__header__sub-title {
   color: #bbb;
   font-weight: 500;
-  font-size: 20px;
+  font-size: 14px;
+
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
 }
 
 .text-center {
