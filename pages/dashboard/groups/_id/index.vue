@@ -83,7 +83,7 @@
         </template>
       </section>
     </card>
-    <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peak="group.allow_sneak_peek" :bets="betsForGame" @close="gameBet = null"></bet-modal>
+    <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peak="group.allow_sneak_peek" :bets="betsForGame" @bet-placed="betPlaced" @close="gameBet = null"></bet-modal>
   </div>
 </template>
 
@@ -165,6 +165,25 @@ export default {
     },
   },
   methods: {
+    async loadBets() {
+      const user = firebase.auth().currentUser;
+      const token = await user.getIdToken();
+
+      return new Promise((resolve) => {
+        this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${this.$route.params.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then((res) => {
+          this.bets = res.data;
+          resolve();
+        });
+      });
+    },
+    betPlaced() {
+      this.gameBet = null;
+      this.loadBets();
+    },
     copyInviteCode() {
       const elem = document.createElement('input');
       elem.value = `${window.location.href}/join/${this.group.invite_code}`; // this.shareUrl;

@@ -1,8 +1,13 @@
 <template>
   <div>
-    activity
-    <div v-for="l in list" v-bind:key="l.msgIndex">
-      <span v-text="l.type" />
+    <div v-for="message in list" :key="message.id" class="feed-item">
+      <template v-if="message.type === 'user_register'">
+        <game-bet :bet="message.message"></game-bet>
+        {{ message }}
+      </template>
+      <template v-else>
+        <span v-text="message.type" />
+      </template>
     </div>
   </div>
 </template>
@@ -17,21 +22,21 @@ export default {
   },
   async fetch() {
     const connection = new WebSocket('wss://betty-prod.herokuapp.com/ws');
-    console.log(this.list);
     const that = this;
     let msgIndex = 0;
     connection.onmessage = (event) => {
       const evt = JSON.parse(event.data);
-
-      console.log('type', evt.type);
-      console.log('messag', evt.message);
-      evt.msgIndex = msgIndex;
-      that.list.push(evt);
+      evt.id = msgIndex;
+      that.list.push({ ...evt, timeStamp: new Date() });
       msgIndex += 1;
     };
   },
 };
 </script>
 
-<style>
+<style lang="less" scoped>
+.feed-item {
+  border-bottom: 1px solid #f2f2f2;
+  padding: 10px;
+}
 </style>

@@ -33,11 +33,11 @@
           </div>
           <div class="form-row">
             <label>
-              <input v-model="peak" type="checkbox"> Allow peaking (this will allow all members of the group to see the bets placed by others)
+              <input v-model="peak" type="checkbox"> Allow peeking (this will allow all members of the group to see the bets placed by others before the game has started)
             </label>
           </div>
           <div class="form-row">
-            <button class="button button--action">Create group</button>
+            <button class="button button--action" :disabled="loading" :class="{'button--disabled': loading}">Create group</button>
           </div>
         </form>
       </div>
@@ -46,6 +46,8 @@
 </template>
 
 <script>
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import { mapGetters } from 'vuex'; //eslint-disable-line
 
 export default {
@@ -59,6 +61,7 @@ export default {
       peak: true,
       tournamentId: null,
       selectedTournament: null,
+      loading: false,
     };
   },
   computed: {
@@ -75,7 +78,7 @@ export default {
       console.log(payload);
       this.selectedTournament = payload;
     },
-    create() {
+    async create() {
       const payload = {
         name: this.name,
         tournament_id: this.selectedTournament.id,
@@ -86,10 +89,16 @@ export default {
         mode: 0,
       };
 
+      this.loading = true;
+      const user = firebase.auth().currentUser;
+      const token = await user.getIdToken();
       this.$store.dispatch('group/create', payload).then((res) => {
-        console.log(res);
+        this.$store.dispatch('group/load', { token }).then(() => {
+          this.$router.push(`/dashboard/groups/${res.group_id}`);
+        });
       }).catch((err) => {
         console.error(err);
+        this.loading = false;
       });
     },
   },

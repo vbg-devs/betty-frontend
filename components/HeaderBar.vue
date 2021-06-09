@@ -5,6 +5,7 @@
         <img src="@/assets/logo.svg" class="logo">
       </nuxt-link>
     </div>
+    <div class="header-bar__item header-bar__item--spacer"></div>
     <div class="header-bar__item">
       <nuxt-link to="/dashboard/tournaments">Tournaments</nuxt-link>
     </div>
@@ -82,5 +83,9 @@ a:hover {
 
 .header-bar__item--fill {
   flex: 1;
+}
+
+.header-bar__item--spacer {
+  width: 270px;
 }
 </style>

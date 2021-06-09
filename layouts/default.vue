@@ -2,6 +2,7 @@
   <div class="page">
     <header-bar :user="user"></header-bar>
     <update-profile-modal @set-user="setUser"></update-profile-modal>
+    <side-bar v-if="user"></side-bar>
     <div class="container">
       <div v-if="!$fetchState.pending">
         <Nuxt :user="user" />
@@ -84,12 +85,12 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   /* background: #003aff; */
-  background: #f5f5f5;
+  background: #f7f8fa;
   color: #333;
 }
 
 body {
-  padding: 100px 0 50px;
+  padding: 100px 0 50px 350px;
 }
 
 *,

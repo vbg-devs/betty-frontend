@@ -143,7 +143,7 @@ export default {
       this.$store.dispatch('bet/place', betPayload)
         .then((res) => {
           console.log(res.data);
-          this.$emit('close');
+          this.$emit('bet-placed');
         }).catch((err) => {
           console.error(err);
         });

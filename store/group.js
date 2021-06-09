@@ -14,7 +14,7 @@ export const getters = {
 
 export const mutations = {
   ADD_GROUPS(state, payload) {
-    state.groups.push(...payload);
+    state.groups = payload;
   },
 };
 
