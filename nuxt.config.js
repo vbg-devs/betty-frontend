@@ -2,13 +2,25 @@ export default {
   ssr: false,
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'Betty',
+    title: 'Betty.social - The go to place for friendly betting',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: '' },
+      { hid: 'description', name: 'description', content: 'The go to place for friendly betting' },
+      { hid: 'og:title', property: 'og:title', content: 'Betty' },
+      { hid: 'og:image', property: 'og:image', content: 'https://betty.social/apple-touch-icon.png' },
+      { hid: 'og:description', property: 'og:description', content: 'The go to place for friendly betting' },
+      { hid: 'og:type', property: 'og:type', content: 'website' },
+      { hid: 'keywords', name: 'keywords', content: 'betting, bet pool, euro2021, eur2020, betty, friendly bets' },
     ],
     link: [
+      { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+      {
+        rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png',
+      },
+      {
+        rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png',
+      },
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap' },
     ],
