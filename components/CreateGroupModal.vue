@@ -131,6 +131,7 @@ export default {
         exact_result_points: parseFloat(this.exactScorePoints),
         allow_sneak_peek: this.peak,
         group_play_deadline: this.selectedTournament.start_date,
+        welcome_message: this.message,
         mode: 0,
       };
 
