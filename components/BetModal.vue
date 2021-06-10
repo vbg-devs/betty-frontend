@@ -71,11 +71,11 @@
           <div class="row">
             <div class="column">
               <div class="text-center">Home</div>
-              <input v-model="homeScore" type="number" min="0" class="bet-input">
+              <input v-model="homeScore" type="number" min="0" placeholder="0" class="bet-input">
             </div>
             <div class="column">
               <div class="text-center">Away</div>
-              <input v-model="awayScore" type="number" min="0" class="bet-input">
+              <input v-model="awayScore" type="number" min="0" placeholder="0" class="bet-input">
             </div>
           </div>
         </div>
@@ -113,8 +113,8 @@ export default {
   },
   data() {
     return {
-      homeScore: '0',
-      awayScore: '0',
+      homeScore: '',
+      awayScore: '',
       selectedTab: 1,
     };
   },
@@ -135,8 +135,8 @@ export default {
   watch: {
     gameBet(newVal) {
       if (!newVal) {
-        this.homeScore = '0';
-        this.awayScore = '0';
+        this.homeScore = '';
+        this.awayScore = '';
         this.selectedTab = 1;
       }
     },

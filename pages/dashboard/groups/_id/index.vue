@@ -209,7 +209,8 @@ export default {
   },
   computed: {
     shareUrl() {
-      return `${window.location.href}/join/${this.group.invite_code}`;
+      if (!this.group) return '';
+      return `https://betty.social/dashboard/groups/${this.group.id}/join/${this.group.invite_code}`;
     },
     betsForGame() {
       if (this.gameBet === null) return [];

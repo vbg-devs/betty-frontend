@@ -97,7 +97,7 @@ export default {
     }),
     shareUrl() {
       if (!this.group) return '';
-      return `${window.location.href}/${this.group.id}/join/${this.group.invite_code}`;
+      return `https://betty.social/dashboard/groups/${this.group.id}/join/${this.group.invite_code}`;
     },
     selectedTournament() {
       if (this.tournamentId === null) return null;

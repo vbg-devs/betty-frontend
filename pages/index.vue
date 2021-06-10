@@ -68,17 +68,18 @@ export default {
   bottom: 0;
   right: 0;
   display: flex;
-
-  align-items: center;
+  overflow-y: auto;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  padding: 50px 0;
 
-  @media (min-width: 768px) {
+  @media (min-height: 1000px) {
+    justify-content: center;
   }
 
-  .firebaseui-container {
-    margin-top: 15px;
-  }
+  // .firebaseui-container {
+  //   margin-top: 15px;
+  // }
 
   .firebaseui-idp-list {
     list-style-type: none;
@@ -201,18 +202,18 @@ export default {
   }
   color: #fff;
   position: relative;
-  padding-top: 120px;
+  // padding-top: 120px;
 
-  &:before {
-    position: absolute;
-    content: "";
-    height: 87px;
-    width: 129px;
-    background: url("~@/assets/logo.svg");
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+  // &:before {
+  //   position: absolute;
+  //   content: "";
+  //   height: 87px;
+  //   width: 129px;
+  //   background: url("~@/assets/logo.svg");
+  //   top: 0;
+  //   left: 50%;
+  //   transform: translateX(-50%);
+  // }
 }
 
 .firebaseui-button {
@@ -263,21 +264,26 @@ export default {
   }
 }
 
-.firebaseui-id-page-sign-in,
-.firebaseui-id-page-password-sign-up {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background: #003aff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+// .firebaseui-id-page-sign-in,
+// .firebaseui-id-page-password-sign-up {
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   bottom: 0;
+//   right: 0;
+//   background: #003aff;
+//   display: flex;
+//   justify-content: center;
+//   overflow-y: auto;
+//   padding: 50px 0;
 
-  form {
-    width: 90%;
-    max-width: 375px;
-  }
-}
+//   @media (min-height: 1000px) {
+//     align-items: center;
+//   }
+
+//   form {
+//     width: 90%;
+//     max-width: 375px;
+//   }
+// }
 </style>
