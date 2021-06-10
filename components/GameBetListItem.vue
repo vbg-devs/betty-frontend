@@ -1,6 +1,6 @@
 <template>
   <div v-if="game" class="game-bet-list-item">
-    Someone just place a bet on
+    {{ update ? 'Someone updated their bet on ' : 'Someone placed a bet on ' }}
     <team-logo v-if="homeTeam" :team="homeTeam" class="small"></team-logo>
     -
     <team-logo v-if="awayTeam" :team="awayTeam" class="small"></team-logo>
@@ -14,6 +14,10 @@ export default {
     bet: {
       type: Object,
       default: () => { },
+    },
+    update: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {

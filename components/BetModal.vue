@@ -14,7 +14,7 @@
         </h2>
         <bet-history :bets="bets" :home-team="homeTeam" :away-team="awayTeam"></bet-history>
       </header>
-      <div v-show="!hasBet" class="tabs">
+      <div class="tabs">
         <div class="tab" :class="{'tab--selected': selectedTab === 1}" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
@@ -39,8 +39,7 @@
         </div>
       </div>
       <section class="modal__body">
-        <div v-show="selectedTab === 2 || hasBet">
-
+        <div v-show="selectedTab === 2">
           <div v-for="bet in bets" :key="bet.id" class="bet">
             <div class="row">
               <div class="column">
@@ -53,7 +52,7 @@
           </div>
           <!-- {{ bets }} -->
         </div>
-        <div v-show="selectedTab === 1 && !hasBet">
+        <div v-show="selectedTab === 1">
           <!-- <div class="row row--center-v">
             <div class="column">
               <div class="team">
@@ -81,9 +80,10 @@
           </div>
         </div>
       </section>
-      <footer v-show="selectedTab === 1 && !hasBet" class="modal__footer">
+      <footer v-show="selectedTab === 1" class="modal__footer">
         <div class="button-wrapper">
-          <button class="button button--action" :class="{'button--disabled': hasBet}" :disabled="hasBet" @click="placeBet">Place bet</button>
+          <button v-if="!myBet" class="button button--action" @click="placeBet">Place bet</button>
+          <button v-else class="button button--action" @click="updateBet">Update bet</button>
         </div>
       </footer>
     </div>
@@ -122,8 +122,8 @@ export default {
     ...mapGetters({
       userId: 'user/id',
     }),
-    hasBet() {
-      return this.bets.some((x) => x.user_id === this.userId);
+    myBet() {
+      return this.bets.find((x) => x.user_id === this.userId);
     },
     homeTeam() {
       return this.$store.getters['team/byId'](this.gameBet.home_team_id);
@@ -137,10 +137,34 @@ export default {
       if (!newVal) {
         this.homeScore = '0';
         this.awayScore = '0';
+        this.selectedTab = 1;
+      }
+    },
+    myBet(newVal) {
+      if (newVal) {
+        this.homeScore = newVal.home_team_score;
+        this.awayScore = newVal.away_team_score;
       }
     },
   },
   methods: {
+    updateBet() {
+      const betPayload = {
+        game_id: this.gameBet.id,
+        group_id: this.gameBet.groupId,
+        home_team_score: parseFloat(this.homeScore),
+        away_team_score: parseFloat(this.awayScore),
+        id: this.myBet.id,
+      };
+      this.$store.dispatch('bet/update', betPayload)
+        .then((res) => {
+          console.log(res.data);
+          this.$emit('bet-placed');
+        }).catch((err) => {
+          console.error(err);
+        });
+    },
+
     placeBet() {
       const betPayload = {
         game_id: this.gameBet.id,

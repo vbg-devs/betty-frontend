@@ -3,6 +3,7 @@
     <header class="card__header" @click="$emit('clicked')">
       <slot name="header"></slot>
     </header>
+    <slot name="top"></slot>
     <section class="card__body">
       <slot></slot>
     </section>

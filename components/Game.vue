@@ -1,5 +1,5 @@
 <template>
-  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative}" @click="$emit('click-game', game)">
+  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12}" @click="$emit('click-game', game)">
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
@@ -60,7 +60,9 @@
 </template>
 
 <script>
-import { format, isToday, isTomorrow } from 'date-fns';
+import {
+  format, isToday, isTomorrow, differenceInHours,
+} from 'date-fns';
 
 export default {
   name: 'Game',
@@ -77,8 +79,15 @@ export default {
       type: Boolean,
       default: false,
     },
+    betted: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
+    timeToBet() {
+      return differenceInHours(new Date(this.game.start_date), new Date());
+    },
     homeTeam() {
       return this.$store.getters['team/byId'](this.game.home_team_id);
     },
@@ -114,6 +123,7 @@ export default {
   //   padding-bottom: 0;
   //   border-bottom: none;
   // }
+  border: 1px solid transparent;
 }
 
 .game--alternative {
@@ -122,6 +132,17 @@ export default {
 
 .game--clickable {
   cursor: pointer;
+}
+
+.game--bet-danger {
+  border-color: #f44336;
+}
+.game--bet-urgent {
+  border-color: #ff5722;
+}
+
+.game--bet-done {
+  border-color: #8bc34a;
 }
 
 .game__information {
