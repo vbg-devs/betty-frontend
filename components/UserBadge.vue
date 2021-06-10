@@ -1,5 +1,5 @@
 <template>
-  <div class="user-badge" :class="{'user-badge--small': small}" @click="$emit('click')">
+  <div class="user-badge" :class="{'user-badge--small': small, 'user-badge--large': large}" @click="$emit('click')">
     <div v-if="hasImage" class="user-badge__image" :style="{'backgroundImage': `url(${user.image_url})`}">
 
     </div>
@@ -21,6 +21,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    large: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     hasImage() {
@@ -30,7 +34,7 @@ export default {
       if (this.hasImage) return '';
       const splitFullName = this.user.name.split(' ');
       if (splitFullName.length === 1) return splitFullName[0].substring(0, 1);
-      return `${splitFullName[0].substring(0, 1)}${splitFullName[1].substring(0, 1)}`;
+      return `${splitFullName[0].substring(0, 1)}${splitFullName[1].substring(0, 1)}`.toUpperCase();
     },
     badgeColor() {
       if (!this.user.name) return '#efefef';
@@ -97,10 +101,25 @@ export default {
   height: 32px;
   width: 32px;
 
-  .user-badge__initial {
+  .user-badge__initial,
+  .user-badge__image {
     height: 22px;
     width: 22px;
     font-size: 14px;
+    background-size: 22px;
+  }
+}
+
+.user-badge--large {
+  height: 124px;
+  width: 124px;
+
+  .user-badge__initial,
+  .user-badge__image {
+    height: 114px;
+    width: 114px;
+    font-size: 54px;
+    background-size: 114px;
   }
 }
 </style>

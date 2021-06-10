@@ -103,7 +103,7 @@
         </template>
       </section>
     </card>
-    <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peak="group.allow_sneak_peek" :bets="betsForGame" @bet-placed="betPlaced" @close="gameBet = null"></bet-modal>
+    <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peek="group.allow_sneak_peek" :bets="betsForGame" @bet-placed="betPlaced" @close="gameBet = null"></bet-modal>
   </div>
 </template>
 

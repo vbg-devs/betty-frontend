@@ -44,7 +44,7 @@ const uiConfig = {
   signInOptions: [
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
     // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-    // firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
   ],
   signInFlow: 'popup',
   tosUrl: '/',
@@ -93,7 +93,10 @@ export default {
     padding: 12px 25px;
     border: none;
     cursor: pointer;
+    background: rgba(255, 255, 255, 0.8) !important;
     transition: background ease 0.3s;
+    min-width: 225px;
+    text-align: center;
   }
 
   .firebaseui-idp-button:hover {
@@ -163,5 +166,113 @@ export default {
       font-size: 18px;
     }
   }
+}
+
+.firebaseui-idp-list {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+}
+
+.firebaseui-list-item {
+  padding: 5px 0;
+
+  @media (min-width: 768px) {
+    padding: 0 5px;
+  }
+}
+
+.firebaseui-form-actions {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.firebaseui-title {
+  margin-bottom: 30px;
+  font-size: 26px;
+  font-weight: 800;
+
+  @media (min-width: 768px) {
+    font-size: 40px;
+    letter-spacing: 0.7px;
+  }
+  color: #fff;
+  position: relative;
+  padding-top: 120px;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 87px;
+    width: 129px;
+    background: url("~@/assets/logo.svg");
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.firebaseui-button {
+  outline: none;
+  border: none;
+  text-decoration: none;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+  -webkit-font-smoothing: auto;
+  cursor: pointer;
+  padding: 13px 15px;
+  border-radius: 5px;
+  line-height: 1;
+  white-space: nowrap;
+  background: #fff;
+  margin: 0 5px;
+}
+
+.mdl-textfield__label {
+  display: block;
+  font-weight: bold;
+  color: #fff;
+  margin: 10px 0 5px;
+}
+
+.mdl-textfield__input {
+  border: 1px solid #ddd;
+  padding: 10px 8px;
+  border-radius: 3px;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  width: 100%;
+  font-size: 15px;
+  outline: none;
+  transition: border-color ease 0.3s;
+
+  &:hover {
+    border-color: #aaa;
+  }
+
+  &:active,
+  &:focus {
+    border-color: #003aff;
+  }
+}
+
+.firebaseui-id-page-sign-in,
+.firebaseui-id-page-password-sign-up {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: #003aff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

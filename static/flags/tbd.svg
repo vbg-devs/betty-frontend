@@ -1,0 +1,22 @@
+
+<svg width="512px" height="512px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <circle id="path-1" cx="256" cy="256" r="256"></circle>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-2">
+            <g id="ad">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <g id="Oval"></g>
+                <g id="Group" mask="url(#mask-2)" fill="#D2D2D2" fill-rule="nonzero">
+                    <polygon id="Path" points="0 0 144.7 0 180.7 254.6 144.7 512 0 512"></polygon>
+                    <polygon id="Path" points="367.3 0 512 0 512 512 367.3 512 337.6 254.7"></polygon>
+                    <polygon id="Path" points="144.7 0 367.3 0 367.3 512 144.7 512"></polygon>
+                </g>
+            </g>
+            <path d="M125.404615,154.65 C125.404615,154.65 227.367692,140.1 256.5,111 C285.632308,140.1 387.595385,154.65 387.595385,154.65 C387.595385,154.65 402.161538,343.8 256.5,402 C110.838462,343.8 125.404615,154.65 125.404615,154.65" id="Crest-path" fill="#FFFFFF"></path>
+        </g>
+    </g>
+</svg>

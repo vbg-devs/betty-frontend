@@ -96,7 +96,8 @@ export default {
       tournaments: 'tournament/all',
     }),
     shareUrl() {
-      return `${window.location.href}/join/${this.group.invite_code}`;
+      if (!this.group) return '';
+      return `${window.location.href}/${this.group.id}/join/${this.group.invite_code}`;
     },
     selectedTournament() {
       if (this.tournamentId === null) return null;

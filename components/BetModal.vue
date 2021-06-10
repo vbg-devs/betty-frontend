@@ -46,7 +46,7 @@
               <div class="column">
                 {{ bet.user.name }}
               </div>
-              <div v-if="peak" class="column column--wrap">
+              <div v-if="peek" class="column column--wrap">
                 <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
               </div>
             </div>
@@ -106,7 +106,7 @@ export default {
       type: Array,
       default: () => [],
     },
-    peak: {
+    peek: {
       type: Boolean,
       default: false,
     },
