@@ -33,7 +33,6 @@
         <div v-else>
           {{ startDate }}
         </div>
-
       </div>
       <div class="teams">
         <div class="team">
@@ -43,9 +42,9 @@
           </div>
         </div>
         <div class="score">
-          <div class="score__label">{{ hometeamresult }}</div>
+          <div class="score__label">{{ game.home_team_score }}</div>
           <div class="score__divider">-</div>
-          <div class="score__label">{{ awayteamresult }}</div>
+          <div class="score__label">{{ game.away_team_score }}</div>
         </div>
         <div class="team">
           <team-logo :team="awayTeam" class="team__logo"></team-logo>
@@ -82,14 +81,6 @@ export default {
     betted: {
       type: Boolean,
       default: false,
-    },
-    hometeamresult: {
-      type: Number,
-      default: 0,
-    },
-    awayteamresult: {
-      type: Number,
-      default: 0,
     },
   },
   computed: {

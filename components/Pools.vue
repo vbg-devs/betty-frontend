@@ -23,8 +23,11 @@
     <div v-for="group in gameGroups" :key="group.key">
       <h3 class="pool__title">{{ group.title }}</h3>
       <div class="games">
-        <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :awayteamresult="awayTeamResult(game)" :hometeamresult="homeTeamResult(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
+        <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
           <div v-if="showBets" class="game__bets-info">
+            <div v-if="hasBet(game)" class="placed__bet">
+              {{ placedBetHomeTeam(game) }} - {{ placedBetAwayTeam(game) }}
+            </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check game__bets-info__icon">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="8.5" cy="7" r="4"></circle>
@@ -116,13 +119,13 @@ export default {
     getBets(game) {
       return this.bets.filter((x) => x.game_id === game.id).length;
     },
-    homeTeamResult(game) {
+    placedBetHomeTeam(game) {
       if (this.hasBet(game)) {
         return this.bets.filter((x) => x.game_id === game.id).filter((x) => x.user_id === this.userId)[0].home_team_score;
       }
       return 0;
     },
-    awayTeamResult(game) {
+    placedBetAwayTeam(game) {
       if (this.hasBet(game)) {
         return this.bets.filter((x) => x.game_id === game.id).filter((x) => x.user_id === this.userId)[0].away_team_score;
       }
@@ -194,5 +197,11 @@ export default {
 
 .game__bets-info__label {
   font-size: 12px;
+}
+
+.placed__bet {
+  font-weight: bold;
+    font-size: 12px;
+    padding-right: 26px;
 }
 </style>
