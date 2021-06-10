@@ -132,11 +132,6 @@ export default {
     margin-top: 40px;
     width: 200px;
     height: 200px;
-
-    @media (min-width: 768px) {
-      width: 300px;
-      height: 300px;
-    }
   }
 
   .content {
