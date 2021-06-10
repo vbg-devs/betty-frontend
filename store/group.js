@@ -51,4 +51,21 @@ export const actions = {
       });
     });
   },
+  async join({ dispatch }, payload) { //eslint-disable-line
+    const user = firebase.auth().currentUser;
+    const token = await user.getIdToken();
+
+    return new Promise((resolve, reject) => {
+      this.$axios.post(`https://betty-prod.herokuapp.com/api/v1/group/${payload.code}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((response) => {
+        dispatch('load', { token }).finally(() => { resolve(response.data); });
+      }).catch((err) => {
+        console.error('error group/join', err);
+        reject(err);
+      });
+    });
+  },
 };
