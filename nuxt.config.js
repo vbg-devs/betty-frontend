@@ -49,7 +49,11 @@ export default {
     '@nuxtjs/axios',
     // https://go.nuxtjs.dev/pwa
     '@nuxtjs/pwa',
+    '@nuxtjs/google-gtag',
   ],
+  'google-gtag': {
+    id: 'G-71Z91KX62G',
+  },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {},
