@@ -321,4 +321,8 @@ a {
   width: 100px;
   margin-top: 25px;
 }
+
+.text-right {
+  text-align: right;
+}
 </style>

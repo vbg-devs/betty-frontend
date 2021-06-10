@@ -154,7 +154,7 @@
             </template>
           </div>
           <div v-if="selectedTab === 3" key="leaderboard">
-
+            <leaderboard :users="group.members"></leaderboard>
           </div>
           <div v-if="selectedTab === 4" key="settings">
             <div>

@@ -187,7 +187,7 @@ export default {
 <style lang="less" scoped>
 .modal {
   position: fixed;
-  z-index: 999;
+  z-index: 997;
   top: 0;
   left: 0;
   bottom: 0;
