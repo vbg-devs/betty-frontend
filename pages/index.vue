@@ -274,5 +274,10 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  form {
+    width: 90%;
+    max-width: 375px;
+  }
 }
 </style>
