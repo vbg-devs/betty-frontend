@@ -35,7 +35,7 @@ export default {
 
     const config = {
       apiKey: 'AIzaSyCK7EQZtS0JGRnS9WXdx3Ja4Sdl4914zpg',
-      authDomain: 'betty-f676d.firebaseapp.com',
+      authDomain: 'betty.social',
     };
     return new Promise((resolve) => {
       firebase.initializeApp(config);

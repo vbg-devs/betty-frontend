@@ -33,7 +33,6 @@
         <div v-else>
           {{ startDate }}
         </div>
-
       </div>
       <div class="teams">
         <div class="team">
