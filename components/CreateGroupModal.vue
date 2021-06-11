@@ -42,7 +42,7 @@
             </label>
           </div>
           <div class="button-wrapper">
-            <button class="button button--action" :disabled="loading" :class="{'button--disabled': loading}">Create group</button>
+            <button class="button button--action" :disabled="loading || !canSave" :class="{'button--disabled': loading || !canSave}">Create group</button>
           </div>
         </form>
       </template>
@@ -102,6 +102,13 @@ export default {
     selectedTournament() {
       if (this.tournamentId === null) return null;
       return this.tournaments.find((x) => x.id === this.tournamentId);
+    },
+    canSave() {
+      if (this.tournamentId === null) return false;
+      if (this.name.length === 0) return false;
+      if (this.winPoints.length === 0) return false;
+      if (this.exactScorePoints.length === 0) return false;
+      return true;
     },
   },
   methods: {

@@ -50,24 +50,8 @@
               </div>
             </div>
           </div>
-          <!-- {{ bets }} -->
         </div>
         <div v-show="selectedTab === 1">
-          <!-- <div class="row row--center-v">
-            <div class="column">
-              <div class="team">
-                <team-logo :team="homeTeam" class="team__logo"></team-logo>
-              </div>
-            </div>
-            <div class="column column--wrap">
-              -
-            </div>
-            <div class="column">
-              <div class="team">
-                <team-logo :team="awayTeam" class="team__logo"></team-logo>
-              </div>
-            </div>
-          </div> -->
           <div class="row">
             <div class="column">
               <div class="text-center">Home</div>
@@ -82,8 +66,8 @@
       </section>
       <footer v-show="selectedTab === 1" class="modal__footer">
         <div class="button-wrapper">
-          <button v-if="!myBet" class="button button--action" @click="placeBet">Place bet</button>
-          <button v-else class="button button--action" @click="updateBet">Update bet</button>
+          <button v-if="!myBet" class="button button--action" :disabled="!canSave" :class="{'button--disabled': !canSave}" @click="placeBet">Place bet</button>
+          <button v-else class="button button--action" :disabled="!canSave" :class="{'button--disabled': !canSave}" @click="updateBet">Update bet</button>
         </div>
       </footer>
     </div>
@@ -116,12 +100,19 @@ export default {
       homeScore: '',
       awayScore: '',
       selectedTab: 1,
+      loading: false,
     };
   },
   computed: {
     ...mapGetters({
       userId: 'user/id',
     }),
+    canSave() {
+      if (this.loading) return false;
+      if (this.homeScore.length === 0) return false;
+      if (this.awayScore.length === 0) return false;
+      return true;
+    },
     myBet() {
       return this.bets.find((x) => x.user_id === this.userId);
     },
@@ -156,13 +147,19 @@ export default {
         away_team_score: parseFloat(this.awayScore),
         id: this.myBet.id,
       };
+      this.loading = true;
       this.$store.dispatch('bet/update', betPayload)
         .then((res) => {
           console.log(res.data);
           this.$emit('bet-placed');
         }).catch((err) => {
           console.error(err);
-        });
+          this.$alert({
+            title: 'Could not update bet',
+            message: `Your bet could not be updated, please try again \n\n ${err}`,
+            state: 'critical',
+          });
+        }).finaly(() => { this.loading = false; });
     },
 
     placeBet() {
@@ -172,13 +169,19 @@ export default {
         home_team_score: parseFloat(this.homeScore),
         away_team_score: parseFloat(this.awayScore),
       };
+      this.loading = true;
       this.$store.dispatch('bet/place', betPayload)
         .then((res) => {
           console.log(res.data);
           this.$emit('bet-placed');
         }).catch((err) => {
+          this.$alert({
+            title: 'Could not place bet',
+            message: `Your bet could not be placed, please try again \n\n ${err}`,
+            state: 'critical',
+          });
           console.error(err);
-        });
+        }).finaly(() => { this.loading = false; });
     },
   },
 };

@@ -122,7 +122,7 @@ export default {
   //   padding-bottom: 0;
   //   border-bottom: none;
   // }
-  border: 1px solid transparent;
+  border: 1px solid #e9e9e9;
 }
 
 .game--alternative {

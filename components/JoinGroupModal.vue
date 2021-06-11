@@ -49,7 +49,7 @@ export default {
       this.$store.dispatch('group/join', { code: this.$route.params.code }).then(() => {
         this.$confirm({
           title: 'Group joined!',
-          message: `You are now aporud member of <strong>${this.group.name}</strong> 👊`,
+          message: `You are now a proud member of <strong>${this.group.name}</strong> 👊`,
           state: 'success',
           question: 'Go there now?',
           ok: {
