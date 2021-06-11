@@ -98,7 +98,7 @@
                     <div class="group__box">
                       <h3 class="group__box__title">Rank</h3>
                       <div class="big text-center">
-                        8
+                        {{ yourPlacement }}
                       </div>
                     </div>
                   </div>
@@ -178,6 +178,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'; // eslint-disable-line
+
 import firebase from 'firebase/app';
 import 'firebase/auth';
 
@@ -208,6 +210,30 @@ export default {
     });
   },
   computed: {
+    ...mapGetters({
+      userId: 'user/id',
+    }),
+    yourPlacement() {
+      const members = JSON.parse(JSON.stringify(this.group.members)).concat();
+      members.sort((a, b) => b.score - a.score);
+
+      let currentPlace = 0;
+      let myPlace = -1;
+
+      for (let i = 0; i < members.length; i += 1) {
+        const currentUser = members[i];
+        const lastUser = members[i - 1];
+        if (!lastUser || currentUser.score < lastUser.score) {
+          currentPlace += 1;
+        }
+
+        if (currentUser.user_id === this.userId) {
+          myPlace = currentPlace;
+        }
+      }
+
+      return myPlace;
+    },
     shareUrl() {
       if (!this.group) return '';
       return `https://betty.social/dashboard/groups/${this.group.id}/join/${this.group.invite_code}`;
@@ -418,6 +444,7 @@ export default {
   margin: 0;
   padding: 0;
   margin-top: 5px;
+  padding-left: 10px;
 }
 
 .member {
@@ -437,10 +464,6 @@ export default {
 .member-icon {
   position: relative;
   margin-left: -10px;
-
-  &:first-child {
-    margin: 0;
-  }
 }
 
 .tabs {

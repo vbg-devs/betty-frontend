@@ -29,7 +29,7 @@ export default {
   computed: {
     orderedList() {
       const list = this.users.concat();
-      list.sort((a, b) => a.score - b.score);
+      list.sort((a, b) => b.score - a.score);
       return list;
     },
     listWithPlacement() {
