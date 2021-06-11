@@ -1,6 +1,6 @@
 <template>
   <div v-if="group && tournament" class="group">
-    <card>
+    <card :no-padding="true">
       <div slot="header" class="card__header">
         <img src="@/assets/euroflag.jpeg" class="img img--full">
         <div class="card__header__details row row--bottom-v">
@@ -56,28 +56,11 @@
             Leaderboard
           </div>
         </div>
-        <div class="tab" :class="{'tab--selected': selectedTab === 4}" @click="selectedTab = 4">
-          <div class="tab__image">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sliders">
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
-          </div>
-          <div class="tab__label">
-            Settings
-          </div>
-        </div>
+        <div class="tab tab--fill"></div>
       </div>
       <section class="group__body">
         <transition-group name="page">
-          <div v-if="selectedTab === 1" key="group">
+          <div v-if="selectedTab === 1" key="group" class="group-section">
             <div class="row row--wrap">
               <section class="group__information column">
                 <div class="welcome-message">
@@ -96,7 +79,7 @@
                   </div>
                   <div class="column">
                     <div class="group__box">
-                      <h3 class="group__box__title">Rank</h3>
+                      <h3 class="group__box__title">Your Rank</h3>
                       <div class="big text-center">
                         {{ yourPlacement }}
                       </div>
@@ -138,6 +121,35 @@
                     </div>
                   </div>
                 </div>
+                <div class="group-settings">
+                  <h2>Group settings</h2>
+                  <div class="row row--wrap">
+                    <div class="column">
+                      <div class="group__box">
+                        <h3 class="group__box__title">Allow sneak peek?</h3>
+                        <div class="big text-center">
+                          {{ yourPlacement }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="column">
+                      <div class="group__box">
+                        <h3 class="group__box__title">Points for winning team</h3>
+                        <div class="big text-center">
+                          {{ group.correct_team_points }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="column">
+                      <div class="group__box">
+                        <h3 class="group__box__title">Points for exact score</h3>
+                        <div class="big text-center">
+                          {{ group.exact_result_points }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </section>
               <aside class="sidebar column column--wrap">
                 <h2>Members</h2>
@@ -148,27 +160,13 @@
             </div>
 
           </div>
-          <div v-if="selectedTab === 2" key="games">
+          <div v-if="selectedTab === 2" key="games" class="games-section">
             <template v-if="tournamentDetails">
               <pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></pools>
             </template>
           </div>
           <div v-if="selectedTab === 3" key="leaderboard">
             <leaderboard :users="group.members"></leaderboard>
-          </div>
-          <div v-if="selectedTab === 4" key="settings">
-            <div>
-              <strong>Allow sneak peek?</strong>
-              <div>{{ group.allow_sneak_peek }}</div>
-            </div>
-            <div>
-              <strong>Points for winning team</strong>
-              <div>{{ group.correct_team_points }}</div>
-            </div>
-            <div>
-              <strong>Points for exact score</strong>
-              <div>{{ group.exact_result_points }}</div>
-            </div>
           </div>
         </transition-group>
       </section>
@@ -270,7 +268,7 @@ export default {
       return this.tournamentDetails.games;
     },
     completeGames() {
-      return this.games.filter((x) => x.status === 'complete');
+      return this.games.filter((x) => x.status === 1);
     },
     completeGamesPercentage() {
       if (this.completeGames.length === 0) return 0;
@@ -298,6 +296,12 @@ export default {
         }).then((res) => {
           this.bets = res.data;
           resolve();
+        }).catch((err) => {
+          this.$alert({
+            title: 'Could not refresh bets',
+            message: `Please refresh page to make sure your bet was placed. \n\n Error:  ${err}`,
+            state: 'critical',
+          });
         });
       });
     },
@@ -471,7 +475,8 @@ export default {
 }
 
 .tab {
-  flex: 1;
+  flex: 0 1 20%;
+
   // background: #f2f2f2;
   padding: 12px 10px;
   display: flex;
@@ -484,10 +489,20 @@ export default {
 
   @media (max-width: 767px) {
     justify-content: center;
+    flex: 1;
   }
 
   &:hover {
     // border-color: #ccc;
+  }
+}
+
+.tab--fill {
+  display: none;
+
+  @media (min-width: 768px) {
+    flex: 1;
+    display: block;
   }
 }
 
@@ -513,5 +528,21 @@ export default {
   @media (max-width: 767px) {
     display: none;
   }
+}
+
+.group-section,
+.games-section {
+  padding: 10px;
+}
+
+.group-settings {
+  margin-top: 25px;
+}
+
+.group__box {
+  background: #fbfbfb;
+  padding: 10px;
+  height: 100%;
+  border-radius: 4px;
 }
 </style>

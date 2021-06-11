@@ -1,6 +1,6 @@
 <template>
   <div class="leaderboard">
-    <div v-for="user in listWithPlacement" :key="user.id">
+    <div v-for="user in listWithPlacement" :key="user.user_id" class="leaderbord-row" :class="{'highlight': user.user_id === userId}">
       <div class="row row--center-v">
         <div class="column column--wrap">{{ user.place }}</div>
         <div class="column column--wrap">
@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'; //eslint-disable-line
 export default {
   name: 'Leaderboard',
   props: {
@@ -27,6 +28,9 @@ export default {
     },
   },
   computed: {
+    ...mapGetters({
+      userId: 'user/id',
+    }),
     orderedList() {
       const list = this.users.concat();
       list.sort((a, b) => b.score - a.score);
@@ -50,5 +54,12 @@ export default {
 };
 </script>
 
-<style>
+<style lang="less" scoped>
+.highlight {
+  background-color: rgba(255, 236, 61, 0.2);
+}
+
+.leaderbord-row {
+  padding: 0 10px;
+}
 </style>

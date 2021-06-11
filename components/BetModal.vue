@@ -39,19 +39,19 @@
         </div>
       </div>
       <section class="modal__body">
-        <div v-show="selectedTab === 2">
-          <div v-for="bet in bets" :key="bet.id" class="bet">
+        <div v-show="selectedTab === 2" class="bets">
+          <div v-for="bet in bets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId}">
             <div class="row">
               <div class="column">
                 {{ bet.user.name }}
               </div>
-              <div v-if="peek" class="column column--wrap">
+              <div v-if="showScores" class="column column--wrap">
                 <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
               </div>
             </div>
           </div>
         </div>
-        <div v-show="selectedTab === 1">
+        <div v-show="selectedTab === 1" class="new-bet">
           <div class="row">
             <div class="column">
               <div class="text-center">Home</div>
@@ -75,6 +75,7 @@
 </template>
 
 <script>
+import { isAfter } from 'date-fns';
 import { mapGetters } from 'vuex'; // eslint-disable-line
 import BetHistory from './BetHistory.vue';
 
@@ -107,7 +108,12 @@ export default {
     ...mapGetters({
       userId: 'user/id',
     }),
+    showScores() {
+      if (isAfter(new Date(), new Date(this.gameBet.start_date))) return true;
+      return this.peek;
+    },
     canSave() {
+      if (isAfter(new Date(), new Date(this.gameBet.start_date))) return false;
       if (this.homeScore.length === 0) return false;
       if (this.awayScore.length === 0) return false;
       return true;
@@ -159,7 +165,7 @@ export default {
             message: `Your bet could not be updated, please try again \n\n ${err}`,
             state: 'critical',
           });
-        }).finaly(() => { this.loading = false; });
+        }).finally(() => { this.loading = false; });
     },
 
     placeBet() {
@@ -181,7 +187,7 @@ export default {
             state: 'critical',
           });
           console.error(err);
-        }).finaly(() => { this.loading = false; });
+        }).finally(() => { this.loading = false; });
     },
   },
 };
@@ -234,7 +240,7 @@ export default {
 
 .modal__body {
   flex: 1;
-  padding: 10px;
+  // padding: 10px;
   padding-top: 0;
   overflow-y: auto;
 }
@@ -360,9 +366,18 @@ input[type="number"] {
 
 .bet {
   border-bottom: 1px solid #f2f2f2;
+  padding: 0 10px;
 
   &:lsat-child {
     border-bottom: none;
   }
+}
+
+.bet--highlight {
+  background-color: rgba(255, 236, 61, 0.2);
+}
+
+.new-bet {
+  padding: 10px;
 }
 </style>

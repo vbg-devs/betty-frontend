@@ -4,7 +4,7 @@
       <slot name="header"></slot>
     </header>
     <slot name="top"></slot>
-    <section class="card__body">
+    <section class="card__body" :class="{'card__body--no-padding': noPadding}">
       <slot></slot>
     </section>
     <footer class="card__footer">
@@ -15,7 +15,13 @@
 
 <script>
 export default {
-
+  name: 'Card',
+  props: {
+    noPadding: {
+      type: Boolean,
+      default: false,
+    },
+  },
 };
 </script>
 
@@ -41,5 +47,9 @@ export default {
 .card__body {
   padding: 10px;
   flex: 1;
+}
+
+.card__body--no-padding {
+  padding: 0;
 }
 </style>
