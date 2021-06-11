@@ -133,11 +133,12 @@ export default {
   cursor: pointer;
 }
 
-.game--bet-danger {
-  border-color: #f44336;
-}
 .game--bet-urgent {
   border-color: #ff5722;
+}
+
+.game--bet-danger {
+  border-color: #900;
 }
 
 .game--bet-done {
