@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="bet-history">
     <div class="bets-progress">
       <div class="row row--center-v">
         <div class="column column--wrap">
@@ -70,6 +70,11 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.bet-history {
+  .column {
+    padding: 20px;
+  }
+}
 .team-logo {
   display: block;
   width: 64px;

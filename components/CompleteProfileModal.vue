@@ -1,10 +1,10 @@
 <template>
-  <div class="update-profile-modal modal">
-    <div class="modal__backdrop" @click="$emit('close')"></div>
+  <div v-if="show" class="update-profile-modal modal">
+    <div class="modal__backdrop"></div>
     <div class="modal__inner">
       <header class="modal__header">
         <h2 class="modal__title">
-          Change profile
+          Complete profile
         </h2>
       </header>
       <div class="profile-image-wrapper">
@@ -30,7 +30,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 
 export default {
-  name: 'UpdateProfileModal',
+  name: 'CompleteProfileModal',
   data() {
     return {
       email: '',
@@ -38,7 +38,6 @@ export default {
       imageUrl: '',
       saving: false,
       show: false,
-      id: null,
     };
   },
   computed: {
@@ -48,17 +47,27 @@ export default {
     },
   },
   async mounted() {
-    const user = firebase.auth().currentUser;
-    const token = await user.getIdToken();
-    this.$axios.get('https://betty-prod.herokuapp.com/api/v1/user/me', {
-      headers:
-      {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => {
-      this.name = res.data.name;
-      this.imageUrl = res.data.image_url;
-      this.id = res.data.id;
+    firebase.auth().onAuthStateChanged(async (_user) => {
+      if (!_user) return;
+      const token = await _user.getIdToken();
+      this.$axios.get('https://betty-prod.herokuapp.com/api/v1/user/me', {
+        headers:
+        {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => {
+        this.$emit('set-user', res.data);
+        this.$store.dispatch('user/set', res.data);
+        console.log(res);
+      }).catch((err) => {
+        if (err.response.status === 404) {
+          console.log(_user);
+          this.email = _user.email;
+          this.name = _user.displayName;
+          this.imageUrl = _user.photoURL;
+          this.show = true;
+        }
+      });
     });
   },
   methods: {
@@ -66,7 +75,7 @@ export default {
       this.saving = true;
       const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
-      this.$axios.put('https://betty-prod.herokuapp.com/api/v1/user/me', {
+      this.$axios.post('https://betty-prod.herokuapp.com/api/v1/user', {
         email: this.email,
         name: this.name,
         image_url: this.imageUrl,
@@ -75,21 +84,19 @@ export default {
         {
           Authorization: `Bearer ${token}`,
         },
-      }).then(() => {
-        this.$alert({
-          title: 'Profile updated',
-          message: 'Refresh the page to make sure the changes are visible',
-          state: 'success',
-        });
-        this.$emit('close');
+      }).then((res) => {
+        console.log(res);
+        this.$emit('set-user', res.data);
+        this.$store.dispatch('user/set', res.data);
+        this.show = false;
       }).catch((err) => {
         console.error(err);
-        this.$alert({
-          title: 'Could not update profile',
-          message: `Your profile could not be updated, please try again \n\nError: ${err}`,
-          state: 'critical',
-        });
       }).finally(() => { this.saving = false; });
+      // Email     string    `json:"email"`
+      // Name      string    `json:"name"`
+      // ImageUrl  *string   `db:"image_url" json:"image_url"`
+      // CreatedAt time.Time `db:"created_at" json:"created_at"`
+      // UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
     },
   },
 };

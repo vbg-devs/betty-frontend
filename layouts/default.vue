@@ -2,7 +2,7 @@
   <div class="page">
     <header-bar :user="user"></header-bar>
     <template v-if="!$fetchState.pending">
-      <update-profile-modal @set-user="setUser"></update-profile-modal>
+      <complete-profile-modal @set-user="setUser"></complete-profile-modal>
       <side-bar v-if="user"></side-bar>
       <div class="container">
         <div>

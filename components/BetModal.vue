@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" :class="{'modal--show': gameBet !== null}">
+  <div class="modal bet-modal" :class="{'modal--show': gameBet !== null}">
     <div class="modal__backdrop" @click="$emit('close')"></div>
     <div v-if="gameBet !== null" class="modal__inner">
       <header class="modal__header">
@@ -194,6 +194,11 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.bet-modal {
+  .column {
+    padding: 20px;
+  }
+}
 .modal {
   position: fixed;
   z-index: 997;
@@ -320,7 +325,7 @@ input[type="number"] {
 
 .modal__title {
   text-align: center;
-  padding: 10px 0 5px;
+  padding: 30px 0 5px;
 }
 
 .tabs {
@@ -330,7 +335,7 @@ input[type="number"] {
 .tab {
   flex: 1;
   // background: #f2f2f2;
-  padding: 10px;
+  padding: 20px;
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -338,6 +343,7 @@ input[type="number"] {
   transition: border-color ease 0.3s;
   cursor: pointer;
   opacity: 0.6;
+  justify-content: center;
 
   &:hover {
     // border-color: #ccc;
@@ -367,7 +373,6 @@ input[type="number"] {
 .bet {
   border-bottom: 1px solid #f2f2f2;
   padding: 0 10px;
-
   &:lsat-child {
     border-bottom: none;
   }

@@ -169,7 +169,7 @@ export default {
   padding: 10px !important;
   margin-bottom: 10px;
   border-radius: 3px;
-  transition: background ease 0.3s;
+  transition: background ease 0.3s, opacity ease 0.3s;
 
   &:hover {
     background: #f2f2f2;
@@ -201,7 +201,7 @@ export default {
 
 .placed__bet {
   font-weight: bold;
-    font-size: 12px;
-    padding-right: 26px;
+  font-size: 12px;
+  padding-right: 26px;
 }
 </style>

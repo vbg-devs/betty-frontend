@@ -1,5 +1,5 @@
 <template>
-  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12}" @click="$emit('click-game', game)">
+  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12, 'game--over': game.status === 1}" @click="$emit('click-game', game)">
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
@@ -60,7 +60,7 @@
 
 <script>
 import {
-  format, isToday, isTomorrow, differenceInHours,
+  format, isToday, isTomorrow, differenceInHours, isAfter,
 } from 'date-fns';
 
 export default {
@@ -94,6 +94,7 @@ export default {
       return this.$store.getters['team/byId'](this.game.away_team_id);
     },
     startDate() {
+      if (this.game.status === 1) return 'Finished';
       const startDate = new Date(this.game.start_date);
       if (isToday(startDate)) {
         return `Today, ${format(startDate, 'HH:mm')}`;
@@ -104,7 +105,8 @@ export default {
       return format(startDate, 'MMM dd HH:mm');
     },
     isLive() {
-      return false;
+      if (this.game.status === 1) return false;
+      return (isAfter(new Date(), new Date(this.game.start_date)));
     },
   },
 };
@@ -227,6 +229,14 @@ export default {
 
 .game__column--fill {
   flex: 1;
+}
+
+.game--over {
+  opacity: 0.3;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 @keyframes live {
