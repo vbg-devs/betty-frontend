@@ -161,14 +161,24 @@ body {
   border-radius: 5px;
   line-height: 1;
   white-space: nowrap;
+  background-position: left;
+  background-repeat: no-repeat;
+  transition: all ease 0.3s;
+  background-size: 40px;
+}
+
+.button--loading {
+  // color: transparent;
+  background-image: url("~@/assets/spinner.svg");
+  padding-left: 40px;
 }
 
 .button--action {
-  background: #78cc14;
+  background-color: #78cc14;
 }
 
 .button--disabled {
-  background: #ccc;
+  background-color: #ccc;
   cursor: default;
 }
 

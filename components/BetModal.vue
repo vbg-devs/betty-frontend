@@ -66,8 +66,8 @@
       </section>
       <footer v-show="selectedTab === 1" class="modal__footer">
         <div class="button-wrapper">
-          <button v-if="!myBet" class="button button--action" :disabled="!canSave" :class="{'button--disabled': !canSave}" @click="placeBet">Place bet</button>
-          <button v-else class="button button--action" :disabled="!canSave" :class="{'button--disabled': !canSave}" @click="updateBet">Update bet</button>
+          <button v-if="!myBet" class="button button--action" :disabled="!canSave || loading" :class="{'button--disabled': !canSave, 'button--loading': loading}" @click="placeBet">Place bet</button>
+          <button v-else class="button button--action" :disabled="!canSave || loading" :class="{'button--disabled': !canSave, 'button--loading': loading}" @click="updateBet">Update bet</button>
         </div>
       </footer>
     </div>
@@ -108,7 +108,6 @@ export default {
       userId: 'user/id',
     }),
     canSave() {
-      if (this.loading) return false;
       if (this.homeScore.length === 0) return false;
       if (this.awayScore.length === 0) return false;
       return true;
@@ -129,6 +128,7 @@ export default {
         this.homeScore = '';
         this.awayScore = '';
         this.selectedTab = 1;
+        this.loading = false;
       }
     },
     myBet(newVal) {

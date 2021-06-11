@@ -42,7 +42,7 @@
             </label>
           </div>
           <div class="button-wrapper">
-            <button class="button button--action" :disabled="loading || !canSave" :class="{'button--disabled': loading || !canSave}">Create group</button>
+            <button class="button button--action" :disabled="loading || !canSave" :class="{'button--loading': loading,'button--disabled': !canSave}">Create group</button>
           </div>
         </form>
       </template>
