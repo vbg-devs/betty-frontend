@@ -56,7 +56,6 @@
             Leaderboard
           </div>
         </div>
-        <div class="tab tab--fill"></div>
       </div>
       <section class="group__body">
         <transition-group name="page">
@@ -128,7 +127,13 @@
                       <div class="group__box">
                         <h3 class="group__box__title">Allow sneak peek?</h3>
                         <div class="big text-center">
-                          {{ yourPlacement }}
+                          <svg v-if="group.allow_sneak_peek" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check icon-peek">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x icon-peek">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
                         </div>
                       </div>
                     </div>
@@ -475,7 +480,7 @@ export default {
 }
 
 .tab {
-  flex: 0 1 20%;
+  flex: 1;
 
   // background: #f2f2f2;
   padding: 12px 10px;
@@ -489,20 +494,10 @@ export default {
 
   @media (max-width: 767px) {
     justify-content: center;
-    flex: 1;
   }
 
   &:hover {
     // border-color: #ccc;
-  }
-}
-
-.tab--fill {
-  display: none;
-
-  @media (min-width: 768px) {
-    flex: 1;
-    display: block;
   }
 }
 
@@ -544,5 +539,11 @@ export default {
   padding: 10px;
   height: 100%;
   border-radius: 4px;
+}
+
+.icon-peek {
+  height: 50px;
+  width: auto;
+  vertical-align: middle;
 }
 </style>
