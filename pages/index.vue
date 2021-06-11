@@ -24,6 +24,11 @@ import * as firebaseui from 'firebaseui';
 
 // import { FBUIApp } from '@/scripts/firebaseConfig';
 
+function isFacebookApp() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  return (ua.includes('FBAN') || (ua.includes('FBAV')));
+}
+
 const uiConfig = {
   signInSuccessUrl: `${window.location.protocol}//${window.location.host}/dashboard`,
   callbacks: {
@@ -46,7 +51,7 @@ const uiConfig = {
     // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
     firebase.auth.EmailAuthProvider.PROVIDER_ID,
   ],
-  signInFlow: 'popup',
+  signInFlow: isFacebookApp() ? 'redirect' : 'popup',
   tosUrl: '/',
 };
 export default {
