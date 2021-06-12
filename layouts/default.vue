@@ -177,6 +177,10 @@ body {
   background-color: #78cc14;
 }
 
+.button--danger {
+  background-color: #f44336;
+}
+
 .button--disabled {
   background-color: #ccc;
   cursor: default;

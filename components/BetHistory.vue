@@ -1,6 +1,7 @@
 <template>
   <div class="bet-history">
     <div class="bets-progress">
+      <div class="tie">{{ tiePercentage }}%</div>
       <div class="row row--center-v">
         <div class="column column--wrap">
           <span class="bet-percentage">
@@ -8,7 +9,7 @@
           </span>
         </div>
         <div class="column">
-          <split-progress-bar :left-progress="homeWinPercentage" :right-progress="awayWinPercentage"></split-progress-bar>
+          <split-progress-bar :tie-progress="tiePercentage" :left-progress="homeWinPercentage" :right-progress="awayWinPercentage"></split-progress-bar>
         </div>
         <div class="column column--wrap">
           <span class="bet-percentage">
@@ -65,6 +66,11 @@ export default {
       if (bets.length === 0) return 0;
       return Math.round((bets.length / this.bets.length) * 100);
     },
+    tiePercentage() {
+      const bets = this.bets.filter((x) => x.away_team_score === x.home_team_score);
+      if (bets.length === 0) return 0;
+      return Math.round((bets.length / this.bets.length) * 100);
+    },
   },
 };
 </script>
@@ -93,6 +99,17 @@ export default {
 .bets-progress {
   margin: 0 auto;
   width: 75%;
+  position: relative;
+}
+
+.tie {
+  position: absolute;
+  font-size: 12px;
+  line-height: 1;
+  display: block;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .team-name {

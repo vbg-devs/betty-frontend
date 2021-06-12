@@ -40,7 +40,7 @@
       </div>
       <section class="modal__body">
         <div v-show="selectedTab === 2" class="bets">
-          <div v-for="bet in bets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId}">
+          <div v-for="bet in bets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId, 'bet--semi-right': bet.user_points === 1, 'bet--full-right': bet.user_points === 3}">
             <div class="row">
               <div class="column">
                 {{ bet.user.name }}
@@ -381,6 +381,25 @@ input[type="number"] {
 .bet--highlight {
   background-color: rgba(255, 236, 61, 0.2);
 }
+
+// .bet--full-right {
+//   background-color: rgba(139, 195, 74, 0.46);
+// }
+
+// .bet--semi-right {
+//   background-color: rgba(139, 195, 74, 0.46);
+//   background-size: 1rem 1rem;
+//   background-image: linear-gradient(
+//     -45deg,
+//     hsla(0, 0%, 100%, 0.15) 25%,
+//     transparent 0,
+//     transparent 50%,
+//     hsla(0, 0%, 100%, 0.15) 0,
+//     hsla(0, 0%, 100%, 0.15) 75%,
+//     transparent 0,
+//     transparent
+//   );
+// }
 
 .new-bet {
   padding: 10px;

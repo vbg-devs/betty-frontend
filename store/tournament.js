@@ -43,8 +43,6 @@ export const actions = {
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
 
-    console.log('loadDetails', token, payload.id);
-
     return new Promise((resolve, reject) => {
       const details = state.details.find((x) => x.id === payload.id);
       if (details) resolve(details);

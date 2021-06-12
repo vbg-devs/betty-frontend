@@ -161,6 +161,9 @@
                 <div class="members">
                   <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon"></user-badge>
                 </div>
+                <div class="button-wrapper">
+                  <button class="button button--danger" @click="leaveGroup">Leave group</button>
+                </div>
               </aside>
             </div>
 
@@ -288,12 +291,28 @@ export default {
   watch: {
     tournament: {
       handler(newVal) {
+        if (!newVal) return;
         this.$store.dispatch('tournament/loadDetails', { id: newVal.id });
       },
       immediate: true,
     },
   },
   methods: {
+    leaveGroup() {
+      this.$confirm({
+        title: 'Leave group',
+        message: `Are you sure you want to leave <strong>${this.group.name}</strong>?`,
+        state: 'warning',
+        ok: {
+          text: 'Confirm',
+          action: () => {
+            this.$store.dispatch('group/leave', { id: this.group.id }).then(() => {
+              this.$router.replace('/dashboard');
+            });
+          },
+        },
+      });
+    },
     async loadBets() {
       const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
@@ -458,6 +477,7 @@ export default {
   margin: 0;
   padding: 0;
   margin-top: 5px;
+  margin-bottom: 25px;
   padding-left: 10px;
 }
 
@@ -560,5 +580,10 @@ export default {
 
 .underline {
   text-decoration: underline;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
 }
 </style>
