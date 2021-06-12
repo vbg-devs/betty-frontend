@@ -107,9 +107,9 @@ html {
 body {
   padding: 80px 0 50px 0;
 
-  @media (min-width: 1024px) {
-    padding: 100px 0 50px 350px;
-  }
+  // @media (min-width: 1024px) {
+  //   padding: 100px 0 50px 350px;
+  // }
 }
 
 *,

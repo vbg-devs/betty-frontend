@@ -1,8 +1,5 @@
 <template>
   <aside class="side-bar">
-    <header class="side-bar__header">
-      Recent Activity
-    </header>
     <section class="side-bar__inner">
       <activity-feed />
     </section>
@@ -18,14 +15,11 @@ export default {
 <style lang="less" scoped>
 .side-bar {
   position: fixed;
-  top: 62px;
   left: 0;
   bottom: 0;
-  width: 350px;
-  background: #fff;
-  border-right: 1px solid #e1e4e8;
   display: none;
   flex-direction: column;
+  padding: 15px;
 
   @media (min-width: 1024px) {
     display: flex;
@@ -34,7 +28,7 @@ export default {
 
 .side-bar__inner {
   flex: 1;
-  overflow-y: auto;
+  // overflow-y: auto;
   min-height: 1px;
   // padding: 15px 32px;
   padding-top: 0;

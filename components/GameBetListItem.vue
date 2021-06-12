@@ -46,9 +46,11 @@ export default {
 }
 
 .team-logo.small {
-  width: 24px;
-  height: 24px;
+  width: 19px;
+  height: 19px;
   padding: 0 2px;
-  border: 3px solid rgba(0, 0, 0, 0.08);
+  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  margin: 0 3px;
 }
 </style>
