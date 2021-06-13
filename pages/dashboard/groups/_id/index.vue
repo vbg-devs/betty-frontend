@@ -159,7 +159,7 @@
               <aside class="sidebar column column--wrap">
                 <h2>Members</h2>
                 <div class="members">
-                  <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon"></user-badge>
+                  <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon" @click="userSelected(member)"></user-badge>
                 </div>
                 <div class="button-wrapper">
                   <button class="button button--danger" @click="leaveGroup">Leave group</button>
@@ -517,6 +517,12 @@ export default {
 .member-icon {
   position: relative;
   margin-left: -10px;
+  border-width: 2px !important;
+
+  &:hover {
+    z-index: 5;
+    transform: scale(1.2);
+  }
 }
 
 .tabs {

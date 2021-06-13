@@ -31,5 +31,6 @@ export default {
   height: 64px;
   background-repeat: no-repeat;
   border-radius: 50%;
+  background-size: 100%;
 }
 </style>

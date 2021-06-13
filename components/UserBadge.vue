@@ -64,29 +64,6 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.user-badge__initial {
-  height: 32px;
-  width: 32px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
-    sans-serif, Apple Color Emoji, Segoe UI Emoji;
-  -webkit-font-smoothing: auto;
-  font-weight: 600;
-  background: #fff;
-  color: #333;
-}
-
-.user-badge__image {
-  height: 32px;
-  width: 32px;
-  background-repeat: no-repeat;
-  background-size: 32px;
-}
-
 .user-badge {
   height: 42px;
   width: 42px;
@@ -108,10 +85,7 @@ export default {
 
   .user-badge__initial,
   .user-badge__image {
-    height: 22px;
-    width: 22px;
     font-size: 14px;
-    background-size: 22px;
   }
 }
 
@@ -121,11 +95,31 @@ export default {
 
   .user-badge__initial,
   .user-badge__image {
-    height: 114px;
-    width: 114px;
     font-size: 54px;
-    background-size: 114px;
   }
+}
+
+.user-badge__initial {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  -webkit-font-smoothing: auto;
+  font-weight: 600;
+  background: #fff;
+  color: #333;
+}
+
+.user-badge__image {
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: 100%;
 }
 
 .block {
