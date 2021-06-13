@@ -7,10 +7,10 @@
           <user-badge :user="user" :block="true"></user-badge>
         </div>
         <div class="column column--wrap">
-          {{ user.name }}
+          <a href="javascript:void(0);" class="link" @click="$emit('user-selected', user)">{{ user.name }}</a>
         </div>
         <div class="column text-right">
-          {{ user.score }}p
+          <span class="points">{{ user.score }}p</span>
         </div>
       </div>
     </div>
@@ -61,5 +61,11 @@ export default {
 
 .leaderbord-row {
   padding: 0 10px;
+}
+
+.link {
+  &:hover {
+    text-decoration: underline;
+  }
 }
 </style>

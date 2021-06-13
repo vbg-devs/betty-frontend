@@ -339,4 +339,8 @@ a {
 .text-right {
   text-align: right;
 }
+
+.points {
+  color: #888;
+}
 </style>

@@ -178,12 +178,15 @@
               <a href="javascript:void(0)" :class="{'underline': leaderboardToShow === 'local'}" @click="leaderboardToShow = 'local'">Local</a> / <a href="javascript:void(0)" :class="{'underline': leaderboardToShow === 'global'}" @click="leaderboardToShow = 'global'">Global</a>
             </div> -->
             <global-leaderboard v-if="leaderboardToShow === 'global'" :id="group.tournament_id"></global-leaderboard>
-            <leaderboard v-else :users="group.members"></leaderboard>
+            <leaderboard v-else :users="group.members" @user-selected="userSelected"></leaderboard>
           </div>
         </transition-group>
       </section>
     </card>
     <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peek="group.allow_sneak_peek" :bets="betsForGame" @bet-placed="betPlaced" @close="gameBet = null"></bet-modal>
+    <transition name="page">
+      <user-history v-if="selectedUser" :user="selectedUser" :games="tournamentDetails.games" :bets="bets" @close="selectedUser = null"></user-history>
+    </transition>
   </div>
 </template>
 
@@ -202,6 +205,7 @@ export default {
       copied: false,
       selectedTab: 1,
       leaderboardToShow: 'local',
+      selectedUser: null,
     };
   },
   async fetch() {
@@ -298,16 +302,21 @@ export default {
     },
     selectedTab(newVal) {
       if (newVal !== 2) return;
-      setTimeout(() => {
-        const elem = document.getElementById('today');
-        if (!elem) return;
-        const yOffset = -70;
-        const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }, 500);
+      this.$nextTick().then(() => {
+        setTimeout(() => {
+          const elem = document.getElementById('today');
+          if (!elem) return;
+          const yOffset = -70;
+          const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }, 500);
+      });
     },
   },
   methods: {
+    userSelected(user) {
+      this.selectedUser = user;
+    },
     leaveGroup() {
       this.$confirm({
         title: 'Leave group',

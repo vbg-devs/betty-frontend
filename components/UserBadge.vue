@@ -77,6 +77,7 @@ export default {
   -webkit-font-smoothing: auto;
   font-weight: 600;
   background: #fff;
+  color: #333;
 }
 
 .user-badge__image {
