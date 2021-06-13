@@ -296,6 +296,16 @@ export default {
       },
       immediate: true,
     },
+    selectedTab(newVal) {
+      if (newVal !== 2) return;
+      setTimeout(() => {
+        const elem = document.getElementById('today');
+        if (!elem) return;
+        const yOffset = -70;
+        const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }, 500);
+    },
   },
   methods: {
     leaveGroup() {

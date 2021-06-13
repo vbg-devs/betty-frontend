@@ -20,7 +20,7 @@
       </div>
 
     </div> -->
-    <div v-for="group in gameGroups" :key="group.key">
+    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key">
       <h3 class="pool__title">{{ group.title }}</h3>
       <div class="games">
         <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">

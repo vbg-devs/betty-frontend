@@ -105,7 +105,6 @@ export default {
     },
     games() {
       if (!this.tournamentDetails) return [];
-      console.log(isBefore);
       // const games = this.tournamentDetails.games.concat().filter((x) => isBefore(new Date(x.start_date), new Date()));
       const games = this.tournamentDetails.games.concat();
       games.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
