@@ -20,6 +20,7 @@ export default {
   display: none;
   flex-direction: column;
   padding: 15px;
+  z-index: 2;
 
   @media (min-width: 1024px) {
     display: flex;

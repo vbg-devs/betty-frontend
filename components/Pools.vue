@@ -93,7 +93,7 @@ export default {
           let title = '';
           if (isToday(date)) {
             title = 'Today';
-          } if (isTomorrow(date)) {
+          } else if (isTomorrow(date)) {
             title = 'Tomorrow';
           } else {
             title = formatDistance(date, new Date(), { addSuffix: true });

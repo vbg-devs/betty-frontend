@@ -139,7 +139,6 @@ export default {
   },
   methods: {
     deleteMessage(message) {
-      console.log(message);
       const index = this.list.findIndex((x) => x.id === message.id);
       if (index > -1) {
         this.list.splice(index, 1);
@@ -166,7 +165,7 @@ export default {
   background: #0a158e;
   color: #fff;
   padding: 0 20px;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 4px -2px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: flex-start;

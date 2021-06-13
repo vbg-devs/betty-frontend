@@ -1,6 +1,6 @@
 <template>
   <div class="bet-history">
-    <div class="bets-progress">
+    <div v-if="!hideProgress" class="bets-progress">
       <div class="tie">{{ tiePercentage }}%</div>
       <div class="row row--center-v">
         <div class="column column--wrap">
@@ -53,6 +53,10 @@ export default {
     awayTeam: {
       type: Object,
       default: () => { },
+    },
+    hideProgress: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
