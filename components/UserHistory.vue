@@ -17,7 +17,7 @@
         </h2>
       </header>
       <section class="modal__body">
-        <user-bet-list-item v-for="bet in userBets" :key="bet.id" :games="games" :bet="bet"></user-bet-list-item>
+        <user-bet-list-item v-for="bet in userBets" :key="bet.id" :peek="peek" :bet="bet"></user-bet-list-item>
       </section>
     </div>
   </div>
@@ -43,10 +43,16 @@ export default {
       type: Array,
       default: () => [],
     },
+    peek: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     userBets() {
-      return this.bets.filter((x) => x.user_id === this.user.user_id && x.processed_at !== null);
+      const bets = this.bets.concat().filter((x) => x.user_id === this.user.user_id).map((x) => ({ ...x, game: this.games.find((z) => z.id === x.game_id) }));
+      bets.sort((a, b) => new Date(a.game.start_date) - new Date(b.game.start_date));
+      return bets;
     },
   },
 };

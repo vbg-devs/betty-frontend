@@ -45,9 +45,13 @@
               <div class="column">
                 {{ bet.user.name }}
               </div>
-              <div v-if="showScores" class="column column--wrap">
-                <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
+              <div class="column column--wrap">
+                <template v-if="showScores">
+                  <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
+                </template>
+                <hidden-score v-else></hidden-score>
               </div>
+
             </div>
           </div>
         </div>

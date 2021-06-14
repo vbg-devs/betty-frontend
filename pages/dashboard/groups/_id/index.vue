@@ -155,6 +155,7 @@
                     </div>
                   </div>
                 </div>
+                <!-- <meme-board></meme-board> -->
               </section>
               <aside class="sidebar column column--wrap">
                 <h2>Members</h2>
@@ -185,7 +186,7 @@
     </card>
     <bet-modal :game-bet="gameBet" :show="gameBet !== null" :peek="group.allow_sneak_peek" :bets="betsForGame" @bet-placed="betPlaced" @close="gameBet = null"></bet-modal>
     <transition name="page">
-      <user-history v-if="selectedUser" :user="selectedUser" :games="tournamentDetails.games" :bets="bets" @close="selectedUser = null"></user-history>
+      <user-history v-if="selectedUser" :user="selectedUser" :peek="group.allow_sneak_peek" :games="tournamentDetails.games" :bets="bets" @close="selectedUser = null"></user-history>
     </transition>
   </div>
 </template>

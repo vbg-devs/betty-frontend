@@ -5,16 +5,28 @@
         <team-logo class="team-logo--small" :team="homeTeam"></team-logo> - <team-logo class="team-logo--small" :team="awayTeam"></team-logo>
       </div>
       <div class="column text-center">
-        <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
+        <template v-if="showScore">
+          <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
+        </template>
+        <template v-else>
+          <hidden-score></hidden-score>
+        </template>
       </div>
       <div class="column text-right">
-        <span class="points">+{{ bet.user_points }}p</span>
+        <template v-if="showScore">
+          <span class="points">+{{ bet.user_points }}p</span>
+        </template>
+        <template v-else>
+          <span class="points">-</span>
+        </template>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { isAfter } from 'date-fns';
+
 export default {
   name: 'UserBetListItem',
 
@@ -23,20 +35,23 @@ export default {
       type: Object,
       default: () => { },
     },
-    games: {
-      type: Array,
-      default: () => [],
+    peek: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
-    game() {
-      return this.games.find((x) => x.id === this.bet.game_id);
+    showScore() {
+      if (this.peek) return true;
+      if (this.bet.processed_at !== null) return true;
+      if (isAfter(new Date(), new Date(this.bet.game.start_date))) return true;
+      return false;
     },
     homeTeam() {
-      return this.$store.getters['team/byId'](this.game.home_team_id);
+      return this.$store.getters['team/byId'](this.bet.game.home_team_id);
     },
     awayTeam() {
-      return this.$store.getters['team/byId'](this.game.away_team_id);
+      return this.$store.getters['team/byId'](this.bet.game.away_team_id);
     },
   },
 };
