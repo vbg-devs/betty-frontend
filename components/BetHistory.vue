@@ -24,7 +24,7 @@
         <team-logo :team="homeTeam" class="team-logo"></team-logo>
         <div class="text-center team-name">{{ homeTeam.name }}</div>
       </div>
-      <div class="column column--wrap">
+      <div class="column column--wrap vs-container">
         <span class="vs">VS</span>
       </div>
       <div class="column">
@@ -83,6 +83,9 @@ export default {
 .bet-history {
   .column {
     padding: 20px;
+  }
+  .vs-container {
+    padding-bottom: 50px;
   }
 }
 .team-logo {

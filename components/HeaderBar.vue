@@ -88,6 +88,7 @@ a:hover {
   height: 32px;
   width: auto;
   display: block;
+  margin-top: 6px;
 }
 
 .header-bar__item {

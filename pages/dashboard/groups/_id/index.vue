@@ -595,6 +595,14 @@ export default {
   height: 50px;
   width: auto;
   vertical-align: middle;
+
+  &.feather-x {
+    color: #f44336;
+  }
+
+  &.feather-check {
+    color: #78cc14;
+  }
 }
 
 .leaderboard-menu {
