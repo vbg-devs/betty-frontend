@@ -5,7 +5,7 @@
         <team-logo class="team-logo--small" :team="homeTeam"></team-logo> - <team-logo class="team-logo--small" :team="awayTeam"></team-logo>
       </div>
       <div class="column text-center">
-        <template v-if="showScore">
+        <template v-if="showScore || isMyScore">
           <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
         </template>
         <template v-else>
@@ -27,6 +27,8 @@
 <script>
 import { isAfter } from 'date-fns';
 
+import { mapGetters } from 'vuex'; //eslint-disable-line
+
 export default {
   name: 'UserBetListItem',
 
@@ -41,6 +43,12 @@ export default {
     },
   },
   computed: {
+    ...mapGetters({
+      userId: 'user/id',
+    }),
+    isMyScore() {
+      return (this.bet.user_id === this.userId);
+    },
     showScore() {
       if (this.peek) return true;
       if (this.bet.processed_at !== null) return true;
