@@ -178,6 +178,7 @@ export default {
 
 .score {
   display: flex;
+  padding-bottom: 20px;
 }
 
 .score__label {
