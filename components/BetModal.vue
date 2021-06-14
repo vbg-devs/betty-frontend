@@ -59,11 +59,11 @@
           <div class="row">
             <div class="column">
               <div class="text-center">Home</div>
-              <input v-model="homeScore" type="number" min="0" placeholder="0" class="bet-input">
+              <input v-model="homeScore" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
             </div>
             <div class="column">
               <div class="text-center">Away</div>
-              <input v-model="awayScore" type="number" min="0" placeholder="0" class="bet-input">
+              <input v-model="awayScore" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
             </div>
           </div>
         </div>
@@ -115,6 +115,9 @@ export default {
     showScores() {
       if (isAfter(new Date(), new Date(this.gameBet.start_date))) return true;
       return this.peek;
+    },
+    lockInput() {
+      return isAfter(new Date(), new Date(this.gameBet.start_date));
     },
     canSave() {
       if (isAfter(new Date(), new Date(this.gameBet.start_date))) return false;
@@ -299,6 +302,7 @@ export default {
   width: 100%;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
     Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  padding: 1px;
 }
 
 /* Chrome, Safari, Edge, Opera */

@@ -1,5 +1,5 @@
 <template>
-  <div class="user-badge" :class="{'user-badge--small': small, 'user-badge--large': large, 'block': block}" @click="$emit('click')">
+  <div class="user-badge" :class="{'user-badge--small': small, 'user-badge--large': large, 'user-badge--medium': medium, 'block': block}" @click="$emit('click')">
     <div v-if="hasImage" class="user-badge__image" :style="{'backgroundImage': `url(${user.image_url})`}">
 
     </div>
@@ -22,6 +22,10 @@ export default {
       default: false,
     },
     large: {
+      type: Boolean,
+      default: false,
+    },
+    medium: {
       type: Boolean,
       default: false,
     },
@@ -96,6 +100,16 @@ export default {
   .user-badge__initial,
   .user-badge__image {
     font-size: 54px;
+  }
+}
+
+.user-badge--medium {
+  height: 64px;
+  width: 64px;
+
+  .user-badge__initial,
+  .user-badge__image {
+    font-size: 28px;
   }
 }
 

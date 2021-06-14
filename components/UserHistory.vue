@@ -10,7 +10,7 @@
           </svg>
         </button>
         <div class="user-badge-wrapper">
-          <user-badge :user="user" :large="true"></user-badge>
+          <user-badge :user="user" :medium="true"></user-badge>
         </div>
         <h2 class="modal__title">
           {{ user.name }}
