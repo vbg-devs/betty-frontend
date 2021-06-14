@@ -202,6 +202,6 @@ export default {
 .placed__bet {
   font-weight: bold;
   font-size: 12px;
-  padding-right: 26px;
+  padding-right: 5px;
 }
 </style>
