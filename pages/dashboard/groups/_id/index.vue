@@ -534,9 +534,10 @@ export default {
   flex: 1;
 
   // background: #f2f2f2;
-  padding: 12px 10px;
+  padding: 20px 10px;
   display: flex;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   border-bottom: 1px solid #f2f2f2;
   transition: border-color ease 0.3s;
