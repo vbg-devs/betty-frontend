@@ -1,26 +1,6 @@
 <template>
   <div class="pools">
-    <!-- <div v-for="pool in pools" :key="pool.id" class="pool">
-      <div>
-        <h3 class="pool__title">{{ pool.name }}</h3>
-        <div class="games">
-          <game v-for="game in pool.games" :key="game.id" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
-            <div v-if="showBets" class="game__bets-info">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check game__bets-info__icon">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <polyline points="17 11 19 13 23 9"></polyline>
-              </svg>
-              <span class="game__bets-info__label">
-                {{ getBets(game) }}
-              </span>
-            </div>
-          </game>
-        </div>
-      </div>
-
-    </div> -->
-    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key">
+    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" class="day-group">
       <h3 class="pool__title">{{ group.title }}</h3>
       <div class="games">
         <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
@@ -157,6 +137,7 @@ export default {
 
 .pool__title {
   margin-bottom: 10px;
+  text-transform: capitalize;
 }
 
 .games {
@@ -205,5 +186,9 @@ export default {
   font-weight: bold;
   font-size: 12px;
   padding-right: 5px;
+}
+
+.day-group {
+  margin-top: 30px;
 }
 </style>

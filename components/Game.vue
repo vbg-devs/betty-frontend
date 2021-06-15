@@ -28,7 +28,7 @@
     <template v-else>
       <div class="game__information">
         <div v-if="isLive" class="live-badge">
-          Live!
+          <span class="live-badge__blob"></span>Live!
         </div>
         <div v-else>
           {{ startDate }}
@@ -65,7 +65,7 @@
 
 <script>
 import {
-  format, isToday, isTomorrow, differenceInHours, isAfter,
+  format, isToday, isTomorrow, differenceInHours, isAfter, formatDistanceStrict,
 } from 'date-fns';
 
 export default {
@@ -102,6 +102,9 @@ export default {
       if (this.game.status === 1) return 'Finished';
       const startDate = new Date(this.game.start_date);
       if (isToday(startDate)) {
+        if (differenceInHours(startDate, new Date()) < 4) {
+          return `${formatDistanceStrict(startDate, new Date(), { addSuffix: true, roundingMethod: 'ceil' })}, ${format(startDate, 'HH:mm')}`;
+        }
         return `Today, ${format(startDate, 'EEE HH:mm')}`;
       }
       if (isTomorrow(startDate)) {
@@ -234,22 +237,19 @@ export default {
   position: relative;
   color: #ccc;
   font-size: 13px;
-  padding-left: 12px;
-  &:before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    background: #78cc14;
-    border-radius: 50%;
-    box-shadow: 0px 0px 5px #78cc14;
-    // animation: live 0.9s infinite alternate;
-  }
 }
 
+.live-badge__blob {
+  border-radius: 50%;
+  margin-right: 10px;
+  height: 10px;
+  width: 10px;
+  transform: scale(1);
+  background: rgba(120, 204, 20, 1);
+  box-shadow: 0 0 0 0 rgba(120, 204, 20, 1);
+  animation: pulse-green 2s infinite;
+  display: inline-block;
+}
 .game__row {
   display: flex;
   align-items: center;
@@ -283,6 +283,21 @@ export default {
   }
   to {
     box-shadow: 0px 0px 7px #78cc14;
+  }
+}
+
+@keyframes pulse-green {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(120, 204, 20, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(120, 204, 20, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(120, 204, 20, 0);
   }
 }
 </style>
