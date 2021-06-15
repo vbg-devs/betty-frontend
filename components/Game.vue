@@ -97,12 +97,12 @@ export default {
       if (this.game.status === 1) return 'Finished';
       const startDate = new Date(this.game.start_date);
       if (isToday(startDate)) {
-        return `Today, ${format(startDate, 'HH:mm')}`;
+        return `Today, ${format(startDate, 'EEE HH:mm')}`;
       }
       if (isTomorrow(startDate)) {
-        return `Tomorrow, ${format(startDate, 'HH:mm')}`;
+        return `Tomorrow, ${format(startDate, 'EEE HH:mm')}`;
       }
-      return format(startDate, 'MMM dd HH:mm');
+      return format(startDate, 'EEE dd MMM HH:mm');
     },
     isLive() {
       if (this.game.status === 1) return false;
