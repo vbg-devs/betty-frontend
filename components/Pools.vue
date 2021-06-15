@@ -24,10 +24,12 @@
       <h3 class="pool__title">{{ group.title }}</h3>
       <div class="games">
         <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
+          <div v-if="hasBet(game)" slot="test" class="score score--small">
+            <div class="score__label">{{ placedBetHomeTeam(game) }}</div>
+            <div class="score__divider">-</div>
+            <div class="score__label">{{ placedBetAwayTeam(game) }}</div>
+          </div>
           <div v-if="showBets" class="game__bets-info">
-            <div v-if="hasBet(game)" class="placed__bet">
-              {{ placedBetHomeTeam(game) }} - {{ placedBetAwayTeam(game) }}
-            </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check game__bets-info__icon">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="8.5" cy="7" r="4"></circle>

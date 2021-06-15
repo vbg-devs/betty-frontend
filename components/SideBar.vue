@@ -1,5 +1,5 @@
 <template>
-  <aside class="side-bar">
+  <aside class="side-bar" :class="{'side-bar--show': show}">
     <section class="side-bar__inner">
       <activity-feed />
     </section>
@@ -8,7 +8,13 @@
 
 <script>
 export default {
-
+  name: 'SideBar',
+  props: {
+    show: {
+      type: Boolean,
+      default: false,
+    },
+  },
 };
 </script>
 
@@ -21,9 +27,19 @@ export default {
   flex-direction: column;
   padding: 15px;
   z-index: 2;
+  right: 0;
 
   @media (min-width: 1024px) {
     display: flex;
+    right: auto;
+  }
+}
+
+.side-bar--show {
+  display: flex;
+
+  @media (min-width: 1024px) {
+    display: none;
   }
 }
 

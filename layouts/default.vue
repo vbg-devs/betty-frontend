@@ -1,9 +1,9 @@
 <template>
   <div class="page">
-    <header-bar :user="user"></header-bar>
+    <header-bar :user="user" @toggle-notifications="showNotifications = !showNotifications"></header-bar>
     <template v-if="!$fetchState.pending">
       <complete-profile-modal @set-user="setUser"></complete-profile-modal>
-      <side-bar v-if="user"></side-bar>
+      <side-bar v-if="user" :show="showNotifications"></side-bar>
       <div class="container">
         <div>
           <Nuxt :user="user" />
@@ -28,6 +28,7 @@ export default {
   data() {
     return {
       user: null,
+      showNotifications: false,
     };
   },
   async fetch() {

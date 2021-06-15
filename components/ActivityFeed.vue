@@ -107,6 +107,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'; //eslint-disable-line
 import { format } from 'date-fns';
 
 export default {
@@ -118,44 +119,33 @@ export default {
   },
   data() {
     return {
-      list: [],
       interval: null,
     };
   },
   async fetch() {
     const connection = new WebSocket('wss://betty-prod.herokuapp.com/ws');
-    const that = this;
     let msgIndex = 0;
     connection.onmessage = (event) => {
       const evt = JSON.parse(event.data);
       if (evt.type === 'ping') return;
       evt.id = msgIndex;
-      if (this.list.length === 5) {
-        this.list.splice(0, 1);
-      }
-      that.list.push({ ...evt, timeStamp: new Date() });
+      this.$store.dispatch('message/add', { ...evt, timeStamp: new Date() });
       msgIndex += 1;
     };
   },
-  methods: {
-    deleteMessage(message) {
-      const index = this.list.findIndex((x) => x.id === message.id);
-      if (index > -1) {
-        this.list.splice(index, 1);
-      }
+  computed: {
+    ...mapGetters({
+      messages: 'message/all',
+    }),
+    list() {
+      return this.messages;
     },
   },
-  // mounted() {
-  //   this.interval = setInterval(() => {
-  //     if (this.list.length === 0) return;
-  //     this.list.splice(0, 1);
-  //   }, 10000);
-  // },
-  // beforeDestroy() {
-  //   if (this.interval === null) return;
-  //   clearInterval(this.interval);
-  //   this.interval = null;
-  // },
+  methods: {
+    deleteMessage(message) {
+      this.$store.dispatch('message/delete', { id: message.id });
+    },
+  },
 };
 </script>
 

@@ -41,10 +41,15 @@
             {{ homeTeam.name }}
           </div>
         </div>
-        <div class="score">
-          <div class="score__label">{{ game.home_team_score }}</div>
-          <div class="score__divider">-</div>
-          <div class="score__label">{{ game.away_team_score }}</div>
+        <div>
+          <div class="score">
+            <div class="score__label">{{ game.home_team_score }}</div>
+            <div class="score__divider">-</div>
+            <div class="score__label">{{ game.away_team_score }}</div>
+          </div>
+          <div class="my-score">
+            <slot name="test"></slot>
+          </div>
         </div>
         <div class="team">
           <team-logo :team="awayTeam" class="team__logo"></team-logo>
@@ -178,19 +183,51 @@ export default {
 
 .score {
   display: flex;
-  padding-bottom: 20px;
+  // padding-bottom: 20px;
 }
 
 .score__label {
   flex: 1;
   font-weight: 600;
   font-size: 18px;
+  text-align: center;
 }
 
 .score__divider {
   padding: 0 5px;
   font-weight: 600;
   font-size: 18px;
+  text-align: center;
+}
+.my-score {
+  padding-left: 2px;
+  // padding-bottom: 15px;
+}
+.score--small {
+  .score__label,
+  .score__divider {
+    font-size: 12px;
+    flex: none;
+    font-weight: normal;
+  }
+
+  .score__divider {
+    padding: 0 2px;
+  }
+  position: relative;
+  justify-content: center;
+
+  &:before {
+    height: 12px;
+    width: 10px;
+    content: "";
+    position: absolute;
+    background: url("~@/assets/reciept.svg");
+    background-repeat: no-repeat;
+    background-size: 100%;
+    top: 2px;
+    left: -4px;
+  }
 }
 
 .live-badge {
