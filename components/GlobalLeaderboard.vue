@@ -3,7 +3,7 @@
     <div v-if="loading" class="l-loader">
       <img src="@/assets/spinner--alt.svg" class="l-loader__image">
     </div>
-    <leaderboard v-else :users="users"></leaderboard>
+    <leaderboard v-else :users="users" :global="true"></leaderboard>
   </div>
 </template>
 

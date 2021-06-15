@@ -10,7 +10,7 @@
           <a href="javascript:void(0);" class="link" @click="$emit('user-selected', user)">{{ user.name }}</a>
         </div>
         <div class="column text-right">
-          <span class="points">{{ user.score }}p</span>
+          <span class="points">{{ global ? user.normalized_score : user.score }}p</span>
         </div>
       </div>
     </div>
@@ -26,6 +26,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    global: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     ...mapGetters({
@@ -33,7 +37,12 @@ export default {
     }),
     orderedList() {
       const list = this.users.concat();
-      list.sort((a, b) => b.score - a.score);
+      if (this.global) {
+        list.sort((a, b) => b.normalized_score - a.normalized_score);
+      } else {
+        list.sort((a, b) => b.score - a.score);
+      }
+
       return list;
     },
     listWithPlacement() {
@@ -43,7 +52,7 @@ export default {
       for (let i = 0; i < this.orderedList.length; i += 1) {
         const currentUser = this.orderedList[i];
         const lastUser = this.orderedList[i - 1];
-        if (!lastUser || currentUser.score < lastUser.score) {
+        if (!lastUser || (this.global ? currentUser.normalized_score : currentUser.score) < (this.global ? lastUser.normalized_score : lastUser.score)) {
           currentPlace += 1;
         }
         users.push({ ...currentUser, place: currentPlace });
