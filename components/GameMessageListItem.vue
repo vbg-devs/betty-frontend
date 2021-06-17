@@ -1,30 +1,32 @@
 <template>
-  <div v-if="game" class="game-bet-list-item">
+  <div v-if="game" class="game-message-list-item">
     <div class="flex">
-      {{ update ? 'Someone updated their bet on ' : 'Someone placed a bet on ' }}
+      Game evaluated
     </div>
-    <team-logo v-if="homeTeam" :team="homeTeam" class="small"></team-logo>
-    -
-    <team-logo v-if="awayTeam" :team="awayTeam" class="small"></team-logo>
+    <div>
+      <team-logo v-if="homeTeam" :team="homeTeam" class="small"></team-logo>
+    </div>
+    <div>
+      <strong>{{ game.home_team_score }} - {{ game.away_team_score }}</strong>
+    </div>
+    <div>
+      <team-logo v-if="awayTeam" :team="awayTeam" class="small"></team-logo>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'GameBetListItem',
+  name: 'GameMessageListItem',
   props: {
-    bet: {
+    message: {
       type: Object,
       default: () => { },
-    },
-    update: {
-      type: Boolean,
-      default: false,
     },
   },
   computed: {
     game() {
-      return this.$store.getters['game/byId'](this.bet.game_id);
+      return this.$store.getters['game/byId'](this.message.game_id);
     },
     homeTeam() {
       if (!this.game) return null;
@@ -36,15 +38,19 @@ export default {
     },
   },
   mounted() {
-    this.$store.dispatch('game/load', { id: this.bet.game_id });
+    this.$store.dispatch('game/load', { id: this.message.game_id });
   },
 };
 </script>
 
 <style lang="less" scoped>
-.game-bet-list-item {
+.game-message-list-item {
   display: flex;
   align-items: center;
+}
+
+.flex {
+  flex: 1;
 }
 
 .team-logo.small {
@@ -54,9 +60,5 @@ export default {
   border: none;
   border: 2px solid rgba(255, 255, 255, 0.2);
   margin: 0 3px;
-}
-
-.flex {
-  flex: 1;
 }
 </style>
