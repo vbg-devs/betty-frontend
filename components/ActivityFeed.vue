@@ -138,6 +138,9 @@ export default {
     connection.onmessage = (event) => {
       const evt = JSON.parse(event.data);
       if (evt.type === 'ping') return;
+      if (evt.type === 'evaluate_game') {
+        window.dispatchEvent(new Event('game-evaluated'));
+      }
       evt.id = msgIndex;
       this.$store.dispatch('message/add', { ...evt, timeStamp: new Date() });
       msgIndex += 1;

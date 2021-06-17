@@ -207,6 +207,7 @@ export default {
       selectedTab: 1,
       leaderboardToShow: 'local',
       selectedUser: null,
+      timer: null,
     };
   },
   async fetch() {
@@ -314,7 +315,22 @@ export default {
       });
     },
   },
+  mounted() {
+    this.interval = setInterval(this.loadBets, (1000 * 10));
+    window.addEventListener('game-evaluated', this.handleEvent);
+  },
+  beforeDestroy() {
+    window.removeEventListener('game-evaluated', this.handleEvent);
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+  },
   methods: {
+    handleEvent() {
+      if (!this.tournament) return;
+      this.$store.dispatch('tournament/loadDetails', { id: parseFloat(this.tournament.id), force: true });
+    },
     userSelected(user) {
       this.selectedUser = user;
     },

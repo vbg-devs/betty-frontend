@@ -40,7 +40,7 @@
       </div>
       <section class="modal__body">
         <div v-show="selectedTab === 2" class="bets">
-          <div v-for="bet in bets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId, 'bet--semi-right': bet.user_points === 1, 'bet--full-right': bet.user_points === 3}">
+          <div v-for="bet in orderedBets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId, 'bet--semi-right': bet.user_points === 1, 'bet--full-right': bet.user_points === 3}">
             <div class="row">
               <div class="column">
                 {{ bet.user.name }}
@@ -48,10 +48,10 @@
               <div class="column column--wrap">
                 <template v-if="showScores">
                   <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
+                  <span v-if="bet.processed_at" class="points">(+{{ bet.user_points }}p)</span>
                 </template>
                 <hidden-score v-else></hidden-score>
               </div>
-
             </div>
           </div>
         </div>
@@ -124,6 +124,11 @@ export default {
       if (this.homeScore.length === 0) return false;
       if (this.awayScore.length === 0) return false;
       return true;
+    },
+    orderedBets() {
+      const bets = this.bets.concat();
+      bets.sort((a, b) => a.user.name.localeCompare(b.user.name));
+      return bets;
     },
     myBet() {
       return this.bets.find((x) => x.user_id === this.userId);

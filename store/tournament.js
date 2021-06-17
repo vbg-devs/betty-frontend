@@ -18,7 +18,12 @@ export const mutations = {
     state.tournaments = payload;
   },
   ADD_DETAILS(state, payload) {
-    state.details.push(payload);
+    const index = state.details.findIndex((x) => x.id === payload.id);
+    if (index === -1) {
+      state.details.push(payload);
+    } else {
+      state.details.splice(index, 1, payload);
+    }
   },
 };
 
@@ -44,8 +49,10 @@ export const actions = {
     const token = await user.getIdToken();
 
     return new Promise((resolve, reject) => {
-      const details = state.details.find((x) => x.id === payload.id);
-      if (details) resolve(details);
+      if (!payload.force) {
+        const details = state.details.find((x) => x.id === payload.id);
+        if (details) resolve(details);
+      }
       this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/tournament/${payload.id}`, {
         headers:
         {

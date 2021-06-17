@@ -343,5 +343,6 @@ a {
 
 .points {
   color: #888;
+  font-size: 14px;
 }
 </style>
