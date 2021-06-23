@@ -105,8 +105,8 @@ export default {
     },
     games() {
       if (!this.tournamentDetails) return [];
-      // const games = this.tournamentDetails.games.concat().filter((x) => isBefore(new Date(x.start_date), new Date()));
-      const games = this.tournamentDetails.games.concat();
+      const games = this.tournamentDetails.games.concat().filter((x) => x.status !== 1);
+      // const games = this.tournamentDetails.games.concat();
       games.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
       return games;
     },

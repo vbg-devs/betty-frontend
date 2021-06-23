@@ -91,7 +91,8 @@ export default {
   border-radius: 4px;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
+  max-height: 600px;
+  height: 75vh;
   // padding: 15px;
 }
 
