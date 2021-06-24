@@ -1,7 +1,8 @@
 <template>
   <div class="pools">
     <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" class="day-group">
-      <h3 class="pool__title">{{ group.title }}</h3>
+      <h3 v-if="group.name.includes('Group')" class="pool__title">{{ group.title }}</h3>
+      <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
         <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
           <div v-if="hasBet(game)" slot="test" class="score score--small">
@@ -58,7 +59,7 @@ export default {
       const allGames = [];
 
       this.pools.forEach((pool) => {
-        allGames.push(...pool.games);
+        allGames.push(...pool.games.map((x) => ({ ...x, poolName: pool.name })));
       });
 
       const gameGroups = [];
@@ -81,8 +82,10 @@ export default {
             title = formatDistance(date, new Date(), { addSuffix: true });
           }
 
+          const name = game.poolName;
+
           gameGroups.push({
-            key, date, title, games: [game],
+            key, date, title, name, games: [game],
           });
         }
       });

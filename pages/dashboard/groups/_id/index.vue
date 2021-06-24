@@ -352,22 +352,25 @@ export default {
     async loadBets() {
       const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
-
       return new Promise((resolve) => {
-        this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${this.$route.params.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }).then((res) => {
-          this.bets = res.data;
-          resolve();
-        }).catch((err) => {
-          this.$alert({
-            title: 'Could not refresh bets',
-            message: `Please refresh page to make sure your bet was placed. \n\n Error:  ${err}`,
-            state: 'critical',
+        if (token) {
+          this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${this.$route.params.id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).then((res) => {
+            this.bets = res.data;
+            resolve();
+          }).catch((err) => {
+            this.$alert({
+              title: 'Could not load bets',
+              message: `Please refresh page to make sure all bets are loaded. \n\n Error:  ${err}`,
+              state: 'warning',
+            });
           });
-        });
+        } else {
+          resolve();
+        }
       });
     },
     betPlaced() {
