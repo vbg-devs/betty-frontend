@@ -11,7 +11,14 @@
         </button>
         <div v-if="showDropdown" class="dropdown">
           <div class="dropdown__item" @click="openModal">
-            Edit profile
+            <div class="profile-pic"></div>
+            John Smith
+          </div>
+          <div class="dropdown__item" @click="openModal">
+            Announcements
+          </div>
+          <div class="dropdown__item" @click="openModal">
+            Groups
           </div>
           <div class="dropdown__item" @click="logOut">
             <span class="warning">Log out</span>
@@ -150,10 +157,10 @@ a:hover {
   background: #fff;
   border-radius: 5px;
   box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  width: 200px;
-  left: -12px;
+  width: 240px;
+  left: -102px;
   top: 0;
-  transform: translateY(~"calc(100% - 33px)");
+  transform: translateY(~"calc(24% - 33px)");
 
   &:before {
     position: absolute;
@@ -161,22 +168,38 @@ a:hover {
     border: 10px solid transparent;
     border-bottom-color: #fff;
     top: 0;
-    left: 20px;
+    left: calc(50% - 10px);
     transform: translateY(-20px);
   }
 }
 
 .dropdown__item {
-  padding: 10px;
+  padding: 30px;
   border-bottom: 1px solid #e9e9e9;
   cursor: pointer;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
   &:last-child {
     border: none;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
   }
 
   &:hover {
     background: #003aff;
     color: #fff;
+  }
+
+  .profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #c8f8f8;
+    margin-bottom: 10px;
+    margin: 0 auto 10px auto;
   }
 }
 
