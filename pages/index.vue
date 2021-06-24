@@ -78,7 +78,7 @@ export default {
   align-items: center;
   padding: 50px 0;
 
-  @media (min-height: 880px) {
+  @media (min-height: 800px) {
     justify-content: center;
   }
 
