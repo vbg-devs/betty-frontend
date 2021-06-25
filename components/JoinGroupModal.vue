@@ -44,6 +44,12 @@ export default {
       return this.$store.getters['tournament/byId'](this.group.tournament_id);
     },
   },
+  mounted() {
+    document.body.classList.add('no-scroll');
+  },
+  beforeDestroy() {
+    document.body.classList.remove('no-scroll');
+  },
   methods: {
     async join() {
       this.$store.dispatch('group/join', { code: this.$route.params.code }).then(() => {

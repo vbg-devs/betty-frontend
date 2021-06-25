@@ -345,4 +345,8 @@ a {
   color: #888;
   font-size: 14px;
 }
+
+body.no-scroll {
+  overflow: hidden;
+}
 </style>

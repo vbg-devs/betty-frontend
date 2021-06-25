@@ -114,6 +114,12 @@ export default {
       return true;
     },
   },
+  mounted() {
+    document.body.classList.add('no-scroll');
+  },
+  beforeDestroy() {
+    document.body.classList.remove('no-scroll');
+  },
   methods: {
     copyInviteCode() {
       const elem = document.createElement('input');

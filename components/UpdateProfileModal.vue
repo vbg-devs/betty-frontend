@@ -48,6 +48,7 @@ export default {
     },
   },
   async mounted() {
+    document.body.classList.add('no-scroll');
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
     this.$axios.get('https://betty-prod.herokuapp.com/api/v1/user/me', {
@@ -60,6 +61,9 @@ export default {
       this.imageUrl = res.data.image_url;
       this.id = res.data.id;
     });
+  },
+  beforeDestroy() {
+    document.body.classList.remove('no-scroll');
   },
   methods: {
     async save() {

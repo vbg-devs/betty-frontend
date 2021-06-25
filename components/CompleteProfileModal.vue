@@ -46,6 +46,15 @@ export default {
       return true;
     },
   },
+  watch: {
+    show(newVal) {
+      if (newVal) {
+        document.body.classList.add('no-scroll');
+      } else {
+        document.body.classList.remove('no-scroll');
+      }
+    },
+  },
   async mounted() {
     firebase.auth().onAuthStateChanged(async (_user) => {
       if (!_user) return;

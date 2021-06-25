@@ -10,9 +10,19 @@
           </svg>
         </button>
         <div v-if="showDropdown" class="dropdown">
-          <div class="dropdown__item" @click="openModal">
-            Edit profile
+          <div v-if="user" class="dropdown__item" @click="openModal">
+            <user-badge :user="user" :large="true"></user-badge>
+            <p class="user-name">{{ user.name }}</p>
           </div>
+          <!-- <div class="dropdown__item" >
+            Edit profile
+          </div> -->
+          <!-- <div class="dropdown__item">
+            <span class="warning">Announcements</span>
+          </div>
+          <div class="dropdown__item">
+            <span class="warning">Groups</span>
+          </div> -->
           <div class="dropdown__item" @click="logOut">
             <span class="warning">Log out</span>
           </div>
@@ -150,10 +160,24 @@ a:hover {
   background: #fff;
   border-radius: 5px;
   box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  width: 200px;
-  left: -12px;
-  top: 0;
-  transform: translateY(~"calc(100% - 33px)");
+  width: 300px;
+  left: 50%;
+  top: 50px;
+  transform: translateX(-50%);
+
+  @media (max-width: 767px) {
+    position: fixed;
+    top: 62px;
+    left: 0;
+    bottom: 0;
+    transform: none;
+    border-radius: 0;
+
+    &:before {
+      display: none;
+    }
+  }
+  // transform: translateY(~"calc(100% - 33px)");
 
   &:before {
     position: absolute;
@@ -161,22 +185,27 @@ a:hover {
     border: 10px solid transparent;
     border-bottom-color: #fff;
     top: 0;
-    left: 20px;
-    transform: translateY(-20px);
+    left: 50%;
+    transform: translate(-50%, -100%);
   }
 }
 
 .dropdown__item {
-  padding: 10px;
+  // padding: 80px 150px;
+  padding: 35px 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600;
   border-bottom: 1px solid #e9e9e9;
   cursor: pointer;
+  transition: background ease 0.3s;
   &:last-child {
     border: none;
   }
 
   &:hover {
-    background: #003aff;
-    color: #fff;
+    background: #f2f2f2;
+    // color: #fff;
   }
 }
 
@@ -237,5 +266,9 @@ a:hover {
   @media (min-width: 1024px) {
     opacity: 0.5;
   }
+}
+
+.user-name {
+  margin-top: 15px;
 }
 </style>
