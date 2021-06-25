@@ -78,7 +78,7 @@ export default {
   align-items: center;
   padding: 50px 0;
 
-  @media (min-height: 1000px) {
+  @media (min-height: 800px) {
     justify-content: center;
   }
 
@@ -134,7 +134,7 @@ export default {
 
   .video {
     border-radius: 50%;
-    margin-top: 40px;
+    margin-top: 10px;
     width: 200px;
     height: 200px;
   }
