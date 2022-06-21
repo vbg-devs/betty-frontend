@@ -4,7 +4,7 @@
     <section class="modal__inner">
       <div class="padding">
         <div class="logo">
-          <!-- <img src="@/assets/euroflag.jpeg" class="logo__image img img--full"> -->
+          <!-- <img src="@/assets/euroflag.webp" class="logo__image img img--full"> -->
         </div>
 
         <div class="group-name">{{ group.name }}</div>
@@ -228,7 +228,7 @@ export default {
   margin: 0 auto;
   margin-bottom: 20px;
   background-repeat: no-repeat;
-  background-image: url("~@/assets/euroflag.jpeg");
+  background-image: url("~@/assets/euroflag.webp");
 
   background-position: center;
   background-size: cover;

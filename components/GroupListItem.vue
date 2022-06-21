@@ -2,7 +2,7 @@
   <nuxt-link :to="`/dashboard/groups/${group.id}`">
     <card class="card--clickable">
       <div slot="header" class="card__header">
-        <img src="@/assets/euroflag.jpeg" class="img img--full">
+        <img src="@/assets/euroflag.webp" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">
             <img :src="group.image_url" class="group__image">

@@ -2,7 +2,7 @@
   <div v-if="group && tournament" class="group">
     <card :no-padding="true">
       <div slot="header" class="card__header">
-        <img src="@/assets/euroflag.jpeg" class="img img--full">
+        <img src="@/assets/euroflag.webp" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">
             <div clas="" class="group__image" :style="{'backgroundImage': `url(${group.image_url})`}"></div>
