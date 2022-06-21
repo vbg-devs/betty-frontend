@@ -48,7 +48,7 @@ const uiConfig = {
   },
   signInOptions: [
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-    // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    'apple.com',
     firebase.auth.EmailAuthProvider.PROVIDER_ID,
   ],
   signInFlow: isFacebookApp() ? 'redirect' : 'popup',
