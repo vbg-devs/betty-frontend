@@ -13,6 +13,7 @@ export default {
   },
   computed: {
     logo() {
+      if (!this.team.image_url) return '';
       const splitLogo = this.team.image_url.split(':');
       const type = splitLogo[0];
       const key = splitLogo[1];

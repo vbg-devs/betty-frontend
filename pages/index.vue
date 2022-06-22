@@ -58,9 +58,6 @@ export default {
   mounted() {
     new firebaseui.auth.AuthUI(firebase.auth(firebase)).start('#firebaseui-auth-container', uiConfig);
   },
-  beforeDestroy() {
-    // FBUIApp(firebase).reset();
-  },
 };
 </script>
 
