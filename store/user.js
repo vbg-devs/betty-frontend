@@ -7,6 +7,7 @@ export const state = () => ({
 export const getters = {
   id: (state) => state.user?.id,
   email: (state) => state.user?.email,
+  is_admin: (state) => state.user?.is_admin,
   profile: (state) => state.user,
 };
 
