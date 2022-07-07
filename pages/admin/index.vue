@@ -83,9 +83,10 @@ export default {
     ...mapGetters({
       tournaments: 'tournament/all',
       userId: 'user/id',
+      userIsAdmin: 'user/is_admin',
     }),
     isAdmin() {
-      return ['HJQ7A5awB8eSwR0H8vTMxseL1Kv2', 'UGHbuE8cFxW7EtzYSzdz6FYpFvq2', 'xTpt3B0gVNgBIn8NR5TTrzXUKgj1', 'mASfqgnZoSYPI5lsyhuJrVpGVs23'].includes(this.userId);
+      return this.userIsAdmin;
     },
     canSave() {
       if (!this.selectedGame) return false;
