@@ -143,7 +143,7 @@ export default {
     };
   },
   async fetch() {
-    const connection = new WebSocket('wss://betty-prod.herokuapp.com/ws');
+    const connection = new WebSocket('wss://api.betty.social/ws');
     let msgIndex = 0;
     connection.onmessage = (event) => {
       const evt = JSON.parse(event.data);

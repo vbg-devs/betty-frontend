@@ -28,7 +28,7 @@ export default {
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
 
-    this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/group/${this.$route.params.code}`, {
+    this.$axios.get(`https://api.betty.social/api/v1/group/${this.$route.params.code}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -49,7 +49,7 @@ export default {
     const { route, $axios } = this.$nuxt.context;
     firebase.auth().onAuthStateChanged(async (_user) => {
       const token = await _user.getIdToken();
-      $axios.get(`https://betty-prod.herokuapp.com/api/v1/tournament/${route.params.id}`, {
+      $axios.get(`https://api.betty.social/api/v1/tournament/${route.params.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

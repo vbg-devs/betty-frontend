@@ -51,7 +51,7 @@ export default {
     document.body.classList.add('no-scroll');
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
-    this.$axios.get('https://betty-prod.herokuapp.com/api/v1/user/me', {
+    this.$axios.get('https://api.betty.social/api/v1/user/me', {
       headers:
       {
         Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ export default {
       this.saving = true;
       const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
-      this.$axios.put('https://betty-prod.herokuapp.com/api/v1/user/me', {
+      this.$axios.put('https://api.betty.social/api/v1/user/me', {
         email: this.email,
         name: this.name,
         image_url: this.imageUrl,

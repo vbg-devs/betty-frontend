@@ -216,7 +216,7 @@ export default {
     const token = await user.getIdToken();
 
     return new Promise((resolve) => {
-      $axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${route.params.id}`, {
+      $axios.get(`https://api.betty.social/api/v1/bets/bygroup/${route.params.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -354,7 +354,7 @@ export default {
       const token = await user.getIdToken();
       return new Promise((resolve) => {
         if (token) {
-          this.$axios.get(`https://betty-prod.herokuapp.com/api/v1/bets/bygroup/${this.$route.params.id}`, {
+          this.$axios.get(`https://api.betty.social/api/v1/bets/bygroup/${this.$route.params.id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

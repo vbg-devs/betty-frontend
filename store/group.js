@@ -21,7 +21,7 @@ export const mutations = {
 export const actions = {
   load({ commit }, payload) {
     return new Promise((resolve, reject) => {
-      this.$axios.get('https://betty-prod.herokuapp.com/api/v1/groups', {
+      this.$axios.get('https://api.betty.social/api/v1/groups', {
         headers: {
           Authorization: `Bearer ${payload.token}`,
         },
@@ -39,7 +39,7 @@ export const actions = {
     const token = await user.getIdToken();
 
     return new Promise((resolve, reject) => {
-      this.$axios.post('https://betty-prod.herokuapp.com/api/v1/group', payload, {
+      this.$axios.post('https://api.betty.social/api/v1/group', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -56,7 +56,7 @@ export const actions = {
     const token = await user.getIdToken();
 
     return new Promise((resolve, reject) => {
-      this.$axios.post(`https://betty-prod.herokuapp.com/api/v1/group/${payload.code}`, {}, {
+      this.$axios.post(`https://api.betty.social/api/v1/group/${payload.code}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -73,7 +73,7 @@ export const actions = {
     const token = await user.getIdToken();
 
     return new Promise((resolve, reject) => {
-      this.$axios.delete(`https://betty-prod.herokuapp.com/api/v1/group/${payload.id}/leave`, {
+      this.$axios.delete(`https://api.betty.social/api/v1/group/${payload.id}/leave`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
