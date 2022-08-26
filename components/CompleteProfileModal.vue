@@ -59,7 +59,7 @@ export default {
     firebase.auth().onAuthStateChanged(async (_user) => {
       if (!_user) return;
       const token = await _user.getIdToken();
-      this.$axios.get('https://betty-prod.herokuapp.com/api/v1/user/me', {
+      this.$axios.get('https://api.betty.social/api/v1/user/me', {
         headers:
         {
           Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ export default {
       this.saving = true;
       const user = firebase.auth().currentUser;
       const token = await user.getIdToken();
-      this.$axios.post('https://betty-prod.herokuapp.com/api/v1/user', {
+      this.$axios.post('https://api.betty.social/api/v1/user', {
         email: this.email,
         name: this.name,
         image_url: this.imageUrl,

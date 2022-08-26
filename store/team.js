@@ -20,7 +20,7 @@ export const actions = {
   load({ commit }, payload) {
     console.log('LOAD TEMAS');
     return new Promise((resolve, reject) => {
-      this.$axios.get('https://betty-prod.herokuapp.com/api/v1/teams', {
+      this.$axios.get('https://api.betty.social/api/v1/teams', {
         headers:
         {
           Authorization: `Bearer ${payload.token}`,
