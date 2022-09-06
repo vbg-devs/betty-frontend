@@ -7,7 +7,7 @@
       <section v-for="tournament in tournaments" :key="tournament.id" class="tournament">
         <nuxt-link :to="`/dashboard/tournaments/${tournament.id}`">
           <card class="card--clickable">
-            <img slot="header" src="@/assets/euroflag.webp" class="img img--full">
+            <img src="@/assets/euroflag.webp" class="img img--full">
             {{ tournament.name }}
           </card>
         </nuxt-link>

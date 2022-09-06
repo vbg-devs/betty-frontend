@@ -4,7 +4,7 @@
       <div class="tournaments">
         <section v-for="tournament in tournaments" :key="tournament.id" class="tournament">
           <card class="card--clickable" @clicked="selectTournament(tournament)">
-            <img slot="header" src="@/assets/euroflag.webp" class="img img--full">
+            <img src="@/assets/euroflag.webp" class="img img--full">
             {{ tournament.name }}
           </card>
         </section>
@@ -141,7 +141,6 @@ export default {
         home_team_score: parseFloat(this.homeScore),
         away_team_score: parseFloat(this.awayScore),
       };
-
 
       this.$confirm({
         title: 'Confirm',

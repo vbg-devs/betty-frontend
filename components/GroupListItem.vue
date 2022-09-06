@@ -1,7 +1,7 @@
 <template>
-  <nuxt-link :to="`/dashboard/groups/${group.id}`">
+  <nuxt-link v-if="tournament" :to="`/dashboard/groups/${group.id}`">
     <card class="card--clickable">
-      <div slot="header" class="card__header">
+      <div class="card__header">
         <img src="@/assets/euroflag.webp" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">

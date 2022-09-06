@@ -5,7 +5,7 @@
       <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
         <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
-          <div v-if="hasBet(game)" slot="test" class="score score--small">
+          <div v-if="hasBet(game)" class="score score--small">
             <div class="score__label">{{ placedBetHomeTeam(game) }}</div>
             <div class="score__divider">-</div>
             <div class="score__label">{{ placedBetAwayTeam(game) }}</div>

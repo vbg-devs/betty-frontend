@@ -77,7 +77,6 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import { mapGetters } from 'vuex'; //eslint-disable-line
 
-
 export default {
   name: 'CreateGroupModal',
   data() {
@@ -100,7 +99,7 @@ export default {
     }),
     shareUrl() {
       if (!this.group) return '';
-      return `https://betty.social/dashboard/groups/${this.group.id}/join/${this.group.invite_code}`;
+      return this.group.invite_url;
     },
     selectedTournament() {
       if (this.tournamentId === null) return null;
@@ -117,7 +116,7 @@ export default {
   mounted() {
     document.body.classList.add('no-scroll');
   },
-  beforeDestroy() {
+  beforeUnmount() {
     document.body.classList.remove('no-scroll');
   },
   methods: {

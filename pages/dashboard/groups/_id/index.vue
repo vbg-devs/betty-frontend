@@ -1,7 +1,7 @@
 <template>
   <div v-if="group && tournament" class="group">
     <card :no-padding="true">
-      <div slot="header" class="card__header">
+      <div class="card__header">
         <img src="@/assets/euroflag.webp" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">
@@ -18,7 +18,7 @@
           </div>
         </div>
       </div>
-      <div slot="top" class="tabs">
+      <div class="tabs">
         <div class="tab" :class="{'tab--selected': selectedTab === 1}" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
@@ -253,7 +253,7 @@ export default {
     },
     shareUrl() {
       if (!this.group) return '';
-      return `https://betty.social/dashboard/groups/${this.group.id}/join/${this.group.invite_code}`;
+      return this.group.invite_url;
     },
     betsForGame() {
       if (this.gameBet === null) return [];
@@ -319,7 +319,7 @@ export default {
     this.interval = setInterval(this.loadBets, (1000 * 10));
     window.addEventListener('game-evaluated', this.handleEvent);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('game-evaluated', this.handleEvent);
     if (this.interval) {
       clearInterval(this.interval);

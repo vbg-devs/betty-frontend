@@ -1,7 +1,7 @@
 <template>
   <div v-if="tournament">
     <card>
-      <div slot="header" class="card__header">
+      <div class="card__header">
         <img src="@/assets/euroflag.webp" class="img img--full">
         <div class="card__header__details">
           <h1 class="card__header__title">
