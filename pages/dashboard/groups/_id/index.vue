@@ -319,7 +319,7 @@ export default {
     this.interval = setInterval(this.loadBets, (1000 * 10));
     window.addEventListener('game-evaluated', this.handleEvent);
   },
-  beforeUnmount() {
+  beforeDestroy() { //eslint-disable-line
     window.removeEventListener('game-evaluated', this.handleEvent);
     if (this.interval) {
       clearInterval(this.interval);
