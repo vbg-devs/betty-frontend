@@ -2,7 +2,7 @@
   <div class="page">
     <header-bar :user="user" @toggle-notifications="showNotifications = !showNotifications"></header-bar>
     <template v-if="!$fetchState.pending">
-      <complete-profile-modal @set-user="setUser"></complete-profile-modal>
+      <complete-profile-modal v-if="!iSopenPage" @set-user="setUser"></complete-profile-modal>
       <side-bar v-if="user" :show="showNotifications"></side-bar>
       <div class="container">
         <div>
@@ -39,6 +39,10 @@ export default {
       authDomain: 'betty.social',
     };
     return new Promise((resolve) => {
+      if (['privacy', 'support'].includes(route.name)) {
+        resolve();
+        return;
+      }
       firebase.initializeApp(config);
 
       firebase.auth().onAuthStateChanged(async (_user) => {
@@ -72,6 +76,11 @@ export default {
         }
       });
     });
+  },
+  computed: {
+    iSopenPage() {
+      return ['privacy', 'support'].includes(this.$route.name);
+    },
   },
   methods: {
     setUser(user) {
