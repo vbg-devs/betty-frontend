@@ -6,10 +6,10 @@ export default {
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: 'Betty is your personal assistant who keeps track of everyones bets and scores and let´s you relax, sit back and enjoy the European Cup.' },
+      { hid: 'description', name: 'description', content: 'Betty is your personal assistant who keeps track of everyones bets and scores and let´s you relax, sit back and enjoy the World Cup.' },
       { hid: 'og:title', property: 'og:title', content: 'Betty' },
       { hid: 'og:image', property: 'og:image', content: 'https://betty.social/apple-touch-icon.png' },
-      { hid: 'og:description', property: 'og:description', content: 'Betty is your personal assistant who keeps track of everyones bets and scores and let´s you relax, sit back and enjoy the European Cup.' },
+      { hid: 'og:description', property: 'og:description', content: 'Betty is your personal assistant who keeps track of everyones bets and scores and let´s you relax, sit back and enjoy the World Cup.' },
       { hid: 'og:type', property: 'og:type', content: 'website' },
       { hid: 'keywords', name: 'keywords', content: 'betting, bet pool, euro2021, eur2020, betty, friendly bets' },
     ],

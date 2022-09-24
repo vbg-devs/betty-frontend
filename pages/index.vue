@@ -10,7 +10,7 @@
       <h1 class="title">No more spreadsheets.</h1>
       <p>Betty is your personal assistant who</p>
       <p>keeps track of everyones bets and scores</p>
-      <p>and let's you relax, sit back and enjoy the European Cup.</p>
+      <p>and let's you relax, sit back and enjoy the World Cup.</p>
     </div>
     <div id="firebaseui-auth-container"></div>
     <div id="loader">Loading...</div>
