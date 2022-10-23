@@ -2,7 +2,7 @@
   <div v-if="group && tournament" class="group">
     <card :no-padding="true">
       <div class="card__header">
-        <img src="@/assets/euroflag.webp" class="img img--full">
+        <img :src="tournament.image_url" class="img img--full">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">
             <div clas="" class="group__image" :style="{'backgroundImage': `url(${group.image_url})`}"></div>
@@ -266,7 +266,7 @@ export default {
       this.tournamentDetails.pools.forEach((pool) => {
         pools.push({
           ...pool,
-          games: this.tournamentDetails.games.filter((x) => x.pool_id === pool.id),
+          games: (this.tournamentDetails.games || []).filter((x) => x.pool_id === pool.id),
         });
       });
       return pools;
@@ -284,7 +284,7 @@ export default {
     },
     games() {
       if (!this.tournamentDetails) return [];
-      return this.tournamentDetails.games;
+      return (this.tournamentDetails.games || []);
     },
     completeGames() {
       return this.games.filter((x) => x.status === 1);

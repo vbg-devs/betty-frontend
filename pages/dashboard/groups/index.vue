@@ -2,7 +2,7 @@
   <div>
     <h1 class="page-title">My Groups</h1>
     <div class="groups">
-      <div v-for="group in groups" :key="group.id" class="group">
+      <div v-for="group in groupsWithTournament" :key="group.id" class="group">
         <group-list-item :group="group"></group-list-item>
       </div>
     </div>
@@ -37,6 +37,13 @@ export default {
     ...mapGetters({
       groups: 'group/all',
     }),
+    groupsWithTournament() {
+      const groups = this.groups.map((x) => Object.freeze({
+        ...x,
+        tournament: this.$store.getters['tournament/byId'](x.tournament_id),
+      }));
+      return groups.filter((x) => x.tournament);
+    },
   },
 
 };

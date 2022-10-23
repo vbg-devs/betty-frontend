@@ -2,13 +2,13 @@
   <div v-if="tournament">
     <card>
       <div class="card__header">
-        <img src="@/assets/euroflag.webp" class="img img--full">
+        <img :src="tournament.image_url" class="img img--full">
         <div class="card__header__details">
           <h1 class="card__header__title">
             {{ tournament.name }}
           </h1>
           <div class="card__header__sub-title">
-            {{ tournament.start_date | formatDate }} - {{ tournament.end_date | formatDate }}
+            {{ formatDate(tournament.start_date) }} - {{ formatDate(tournament.end_date) }}
           </div>
         </div>
       </div>
@@ -34,12 +34,6 @@ import { format } from 'date-fns';
 
 export default {
   name: 'TournamentDetails',
-  filters: {
-    formatDate(input) {
-      const startDate = new Date(input);
-      return format(startDate, 'MMM dd HH:mm');
-    },
-  },
   data() {
     return {
       tournament: null,
@@ -69,6 +63,12 @@ export default {
         });
       });
       return pools;
+    },
+  },
+  methods: {
+    formatDate(input) {
+      const startDate = new Date(input);
+      return format(startDate, 'MMM dd HH:mm');
     },
   },
 };

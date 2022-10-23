@@ -2,7 +2,7 @@
   <nuxt-link v-if="tournament" :to="`/dashboard/groups/${group.id}`">
     <card class="card--clickable">
       <div class="card__header">
-        <img src="@/assets/euroflag.webp" class="img img--full">
+        <img :src="tournament.image_url" class="img img--full tournament__image">
         <div class="card__header__details row row--bottom-v">
           <!-- <div class="column column--wrap">
             <img :src="group.image_url" class="group__image">
@@ -34,7 +34,7 @@ export default {
   },
   computed: {
     tournament() {
-      return this.$store.getters['tournament/byId'](this.group.tournament_id);
+      return this.group.tournament;
     },
   },
 };
@@ -71,5 +71,9 @@ export default {
 
 .card__header__sub-title {
   font-size: 12px;
+}
+
+.tournament__image {
+  max-height: 169px;
 }
 </style>
