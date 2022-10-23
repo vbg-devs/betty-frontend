@@ -4,7 +4,7 @@
       <h3 v-if="group.name.includes('Group')" class="pool__title">{{ group.title }}</h3>
       <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
-        <game v-for="game in games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
+        <game v-for="game in group.games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
           <div v-if="hasBet(game)" class="score score--small">
             <div class="score__label">{{ placedBetHomeTeam(game) }}</div>
             <div class="score__divider">-</div>
@@ -55,9 +55,6 @@ export default {
     ...mapGetters({
       userId: 'user/id',
     }),
-    games() {
-      return (this.group.games || []);
-    },
     gameGroups() {
       const allGames = [];
 
