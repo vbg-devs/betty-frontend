@@ -4,7 +4,8 @@
       <div class="tournaments">
         <section v-for="tournament in tournaments" :key="tournament.id" class="tournament">
           <card class="card--clickable" @clicked="selectTournament(tournament)">
-            <img src="@/assets/euroflag.webp" class="img img--full">
+            <!-- <img src="@/assets/euroflag.webp" class="img img--full"> -->
+            <img :src="tournament.image_url" class="img img--full">
             {{ tournament.name }}
           </card>
         </section>

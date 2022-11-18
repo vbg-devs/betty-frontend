@@ -1,6 +1,5 @@
 /* eslint-disable no-shadow, no-param-reassign */
 
-
 export const state = () => ({
   teams: [],
 });
@@ -18,7 +17,6 @@ export const mutations = {
 
 export const actions = {
   load({ commit }, payload) {
-    console.log('LOAD TEMAS');
     return new Promise((resolve, reject) => {
       this.$axios.get('https://api.betty.social/api/v1/teams', {
         headers:

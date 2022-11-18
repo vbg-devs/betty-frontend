@@ -1,5 +1,5 @@
 <template>
-  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12, 'game--over': game.status === 1}" @click="$emit('click-game', game)">
+  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12, 'game--over': game.status === 1}" @click="handleClick">
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
@@ -115,6 +115,11 @@ export default {
     isLive() {
       if (this.game.status === 1) return false;
       return (isAfter(new Date(), new Date(this.game.start_date)));
+    },
+  },
+  methods: {
+    handleClick() {
+      this.$emit('click-game', this.game);
     },
   },
 };

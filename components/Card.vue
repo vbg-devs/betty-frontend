@@ -1,6 +1,6 @@
 <template>
-  <div class="card">
-    <header class="card__header" @click="$emit('clicked')">
+  <div class="card" @click="handleClick">
+    <header class="card__header">
       <slot name="header"></slot>
     </header>
     <slot name="top"></slot>
@@ -20,6 +20,11 @@ export default {
     noPadding: {
       type: Boolean,
       default: false,
+    },
+  },
+  methods: {
+    handleClick() {
+      this.$emit('clicked');
     },
   },
 };

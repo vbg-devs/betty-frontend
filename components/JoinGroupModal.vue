@@ -3,8 +3,8 @@
     <div class="modal__backdrop"></div>
     <section class="modal__inner">
       <div class="padding">
-        <div class="logo">
-          <!-- <img src="@/assets/euroflag.webp" class="logo__image img img--full"> -->
+        <div class="logo" :style="{backgroundImage: `url(${tournament.image_url})`}">
+          <img :src="tournament.image_url" class="logo__image img img--full">
         </div>
 
         <div class="group-name">{{ group.name }}</div>
@@ -47,7 +47,7 @@ export default {
   mounted() {
     document.body.classList.add('no-scroll');
   },
-  beforeDestroy() {
+  beforeUnmount() {
     document.body.classList.remove('no-scroll');
   },
   methods: {
@@ -222,13 +222,12 @@ export default {
 }
 
 .logo {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
+  border-radius: 4px;
+  overflow: hidden;
   margin: 0 auto;
   margin-bottom: 20px;
   background-repeat: no-repeat;
-  background-image: url("~@/assets/euroflag.webp");
+  // background-image: url("~@/assets/euroflag.webp");
 
   background-position: center;
   background-size: cover;

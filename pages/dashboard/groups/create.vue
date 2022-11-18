@@ -75,7 +75,6 @@ export default {
   },
   methods: {
     selectTournament(payload) {
-      console.log(payload);
       this.selectedTournament = payload;
     },
     async create() {

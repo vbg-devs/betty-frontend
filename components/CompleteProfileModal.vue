@@ -67,10 +67,8 @@ export default {
       }).then((res) => {
         this.$emit('set-user', res.data);
         this.$store.dispatch('user/set', res.data);
-        console.log(res);
       }).catch((err) => {
         if (err.response.status === 404) {
-          console.log(_user);
           this.email = _user.email;
           this.name = _user.displayName;
           this.imageUrl = _user.photoURL;
@@ -94,7 +92,6 @@ export default {
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => {
-        console.log(res);
         this.$emit('set-user', res.data);
         this.$store.dispatch('user/set', res.data);
         this.show = false;

@@ -173,8 +173,7 @@ export default {
       };
       this.loading = true;
       this.$store.dispatch('bet/update', betPayload)
-        .then((res) => {
-          console.log(res.data);
+        .then(() => {
           this.$emit('bet-placed');
         }).catch((err) => {
           console.error(err);
@@ -196,7 +195,6 @@ export default {
       this.loading = true;
       this.$store.dispatch('bet/place', betPayload)
         .then((res) => {
-          console.log(res.data);
           this.$emit('bet-placed');
         }).catch((err) => {
           this.$alert({
