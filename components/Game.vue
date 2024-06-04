@@ -88,6 +88,7 @@ export default {
       default: false,
     },
   },
+  emits: ['click-game'],
   computed: {
     timeToBet() {
       return differenceInHours(new Date(this.game.start_date), new Date());
@@ -114,7 +115,12 @@ export default {
     },
     isLive() {
       if (this.game.status === 1) return false;
-      return (isAfter(new Date(), new Date(this.game.start_date)));
+
+      const currentDate = new Date();
+      currentDate.setMinutes(currentDate.getMinutes() + 150);
+      if (isAfter(currentDate, new Date(this.game.start_date))) return false;
+
+      return isAfter(new Date(), new Date(this.game.start_date));
     },
   },
   methods: {
