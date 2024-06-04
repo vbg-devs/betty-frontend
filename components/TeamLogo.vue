@@ -18,6 +18,7 @@ export default {
       const type = splitLogo[0];
       const key = splitLogo[1];
       if (type === 'flag') return `/flags/${key}.svg`;
+      if (type === 'pl') return `/pl/${key}.png`;
       return '';
     },
   },
