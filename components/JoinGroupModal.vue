@@ -3,7 +3,7 @@
     <div class="modal__backdrop"></div>
     <section class="modal__inner">
       <div class="padding">
-        <div class="logo" :style="{backgroundImage: `url(${tournament.image_url})`}">
+        <div class="logo" :style="{ backgroundImage: `url(${tournament.image_url})` }">
           <img :src="tournament.image_url" class="logo__image img img--full">
         </div>
 
@@ -132,7 +132,7 @@ export default {
 
 .modal__header {
   padding-bottom: 15px;
-  // background: #003aff;
+  // background: #434f8e;
   // color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -172,6 +172,7 @@ export default {
   display: flex;
   margin-top: 20px;
 }
+
 .share-link__input {
   border: none;
   outline: none;
@@ -192,7 +193,7 @@ export default {
 }
 
 .share-link__action:hover {
-  color: #003aff;
+  color: #434f8e;
 }
 
 .share-link__action__icon {

@@ -1,5 +1,5 @@
 <template>
-  <div class="modal bet-modal" :class="{'modal--show': gameBet !== null}">
+  <div class="modal bet-modal" :class="{ 'modal--show': gameBet !== null }">
     <div class="modal__backdrop" @click="$emit('close')"></div>
     <div v-if="gameBet !== null" class="modal__inner">
       <header class="modal__header">
@@ -15,7 +15,7 @@
         <bet-history :bets="bets" :home-team="homeTeam" :away-team="awayTeam"></bet-history>
       </header>
       <div class="tabs">
-        <div class="tab" :class="{'tab--selected': selectedTab === 1}" @click="selectedTab = 1">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -26,7 +26,7 @@
             New bet
           </div>
         </div>
-        <div class="tab" :class="{'tab--selected': selectedTab === 2}" @click="selectedTab = 2">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 2 }" @click="selectedTab = 2">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -40,7 +40,7 @@
       </div>
       <section class="modal__body">
         <div v-show="selectedTab === 2" class="bets">
-          <div v-for="bet in orderedBets" :key="bet.id" class="bet" :class="{'bet--highlight': bet.user_id === userId, 'bet--semi-right': bet.user_points === 1, 'bet--full-right': bet.user_points === 3}">
+          <div v-for="bet in orderedBets" :key="bet.id" class="bet" :class="{ 'bet--highlight': bet.user_id === userId, 'bet--semi-right': bet.user_points === 1, 'bet--full-right': bet.user_points === 3 }">
             <div class="row">
               <div class="column">
                 {{ bet.user.name }}
@@ -69,9 +69,14 @@
         </div>
       </section>
       <footer v-show="selectedTab === 1" class="modal__footer">
+        <div class="text-center">
+          <label>
+            <input v-model="placeInAllGroups" type="checkbox"> Place same bet in all your groups
+          </label>
+        </div>
         <div class="button-wrapper">
-          <button v-if="!myBet" class="button button--action" :disabled="!canSave || loading" :class="{'button--disabled': !canSave, 'button--loading': loading}" @click="placeBet">Place bet</button>
-          <button v-else class="button button--action" :disabled="!canSave || loading" :class="{'button--disabled': !canSave, 'button--loading': loading}" @click="updateBet">Update bet</button>
+          <button v-if="!myBet" class="button button--action" :disabled="!canSave || loading" :class="{ 'button--disabled': !canSave, 'button--loading': loading }" @click="placeBet">Place bet</button>
+          <button v-else class="button button--action" :disabled="!canSave || loading" :class="{ 'button--disabled': !canSave, 'button--loading': loading }" @click="placeBet">Update bet</button>
         </div>
       </footer>
     </div>
@@ -106,6 +111,7 @@ export default {
       awayScore: '',
       selectedTab: 1,
       loading: false,
+      placeInAllGroups: true,
     };
   },
   computed: {
@@ -146,6 +152,7 @@ export default {
         this.homeScore = '';
         this.awayScore = '';
         this.selectedTab = 1;
+        this.placeInAllGroups = true;
         this.loading = false;
       }
 
@@ -163,38 +170,17 @@ export default {
     },
   },
   methods: {
-    updateBet() {
-      const betPayload = {
-        game_id: this.gameBet.id,
-        group_id: this.gameBet.groupId,
-        home_team_score: parseFloat(this.homeScore),
-        away_team_score: parseFloat(this.awayScore),
-        id: this.myBet.id,
-      };
-      this.loading = true;
-      this.$store.dispatch('bet/update', betPayload)
-        .then(() => {
-          this.$emit('bet-placed');
-        }).catch((err) => {
-          console.error(err);
-          this.$alert({
-            title: 'Could not update bet',
-            message: `Your bet could not be updated, please try again \n\n ${err}`,
-            state: 'critical',
-          });
-        }).finally(() => { this.loading = false; });
-    },
-
     placeBet() {
       const betPayload = {
         game_id: this.gameBet.id,
         group_id: this.gameBet.groupId,
         home_team_score: parseFloat(this.homeScore),
         away_team_score: parseFloat(this.awayScore),
+        is_universal: this.placeInAllGroups,
       };
       this.loading = true;
       this.$store.dispatch('bet/place', betPayload)
-        .then((res) => {
+        .then(() => {
           this.$emit('bet-placed');
         }).catch((err) => {
           this.$alert({
@@ -215,6 +201,7 @@ export default {
     padding: 20px;
   }
 }
+
 .modal {
   position: fixed;
   z-index: 997;
@@ -268,7 +255,7 @@ export default {
 
 .modal__header {
   padding-bottom: 5px;
-  background: #003aff;
+  background: #434f8e;
   color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -368,7 +355,7 @@ input[type="number"] {
 }
 
 .tab--selected {
-  border-color: #003aff;
+  border-color: #434f8e;
   background: #fff;
   opacity: 1;
 }
@@ -390,6 +377,7 @@ input[type="number"] {
 .bet {
   border-bottom: 1px solid #f2f2f2;
   padding: 0 10px;
+
   &:lsat-child {
     border-bottom: none;
   }

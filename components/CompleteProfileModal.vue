@@ -18,7 +18,7 @@
           </label>
         </div>
         <div class="button-wrapper">
-          <button type="submit" :disabled="saving || !canSave" :class="{'button--loading': saving, 'button--disabled': !canSave}" class="button button--action">Save profile</button>
+          <button type="submit" :disabled="saving || !canSave" :class="{ 'button--loading': saving, 'button--disabled': !canSave }" class="button button--action">Save profile</button>
         </div>
       </form>
     </div>
@@ -147,7 +147,7 @@ export default {
 
 .modal__header {
   padding-bottom: 15px;
-  // background: #003aff;
+  // background: #434f8e;
   // color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -187,6 +187,7 @@ export default {
   display: flex;
   margin-top: 20px;
 }
+
 .share-link__input {
   border: none;
   outline: none;
@@ -207,7 +208,7 @@ export default {
 }
 
 .share-link__action:hover {
-  color: #003aff;
+  color: #434f8e;
 }
 
 .share-link__action__icon {

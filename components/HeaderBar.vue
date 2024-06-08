@@ -34,7 +34,7 @@
         </nuxt-link>
       </div>
       <div class="header-bar__item ">
-        <button class="header-bar__button header-bar__button--dimmed" :class="{'dimmed': showNotifications}" @click="toggleNotifications">
+        <button class="header-bar__button header-bar__button--dimmed" :class="{ 'dimmed': showNotifications }" @click="toggleNotifications">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -66,7 +66,6 @@ import 'firebase/auth';
 import UpdateProfileModal from './UpdateProfileModal.vue';
 
 import { mapGetters } from 'vuex'; //eslint-disable-line
-
 
 export default {
   components: { UpdateProfileModal },
@@ -113,8 +112,8 @@ export default {
   height: 62px;
   z-index: 5;
   // background: #fff;
-  // border-top: 4px solid #003aff;
-  background: #003aff;
+  // border-top: 4px solid #434f8e;
+  background: #434f8e;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 4px rgba(0, 0, 0, 0.05),
     0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -177,6 +176,7 @@ a:hover {
       display: none;
     }
   }
+
   // transform: translateY(~"calc(100% - 33px)");
 
   &:before {
@@ -199,6 +199,7 @@ a:hover {
   border-bottom: 1px solid #e9e9e9;
   cursor: pointer;
   transition: background ease 0.3s;
+
   &:last-child {
     border: none;
   }
@@ -256,6 +257,7 @@ a:hover {
 
 .header-bar__button--dimmed {
   opacity: 0.5;
+
   @media (min-width: 1024px) {
     opacity: 1;
   }
@@ -263,6 +265,7 @@ a:hover {
 
 .header-bar__button--dimmed.dimmed {
   opacity: 1;
+
   @media (min-width: 1024px) {
     opacity: 0.5;
   }

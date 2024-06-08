@@ -19,7 +19,7 @@
         </div>
       </div>
       <div class="tabs">
-        <div class="tab" :class="{'tab--selected': selectedTab === 1}" @click="selectedTab = 1">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -32,7 +32,7 @@
             Group
           </div>
         </div>
-        <div class="tab" :class="{'tab--selected': selectedTab === 2}" @click="selectedTab = 2">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 2 }" @click="selectedTab = 2">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -45,7 +45,7 @@
             Games
           </div>
         </div>
-        <div class="tab" :class="{'tab--selected': selectedTab === 3}" @click="selectedTab = 3">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 3 }" @click="selectedTab = 3">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-award">
               <circle cx="12" cy="8" r="7"></circle>
@@ -176,7 +176,7 @@
           </div>
           <div v-if="selectedTab === 3" key="leaderboard">
             <div class="leaderboard-menu">
-              <a href="javascript:void(0)" :class="{'underline': leaderboardToShow === 'local'}" @click="leaderboardToShow = 'local'">Local</a> / <a href="javascript:void(0)" :class="{'underline': leaderboardToShow === 'global'}" @click="leaderboardToShow = 'global'">Global</a>
+              <a href="javascript:void(0)" :class="{ 'underline': leaderboardToShow === 'local' }" @click="leaderboardToShow = 'local'">Local</a> / <a href="javascript:void(0)" :class="{ 'underline': leaderboardToShow === 'global' }" @click="leaderboardToShow = 'global'">Global</a>
             </div>
             <global-leaderboard v-if="leaderboardToShow === 'global'" :id="group.tournament_id"></global-leaderboard>
             <leaderboard v-else :users="group.members" @user-selected="userSelected"></leaderboard>
@@ -483,6 +483,7 @@ export default {
   display: flex;
   margin-top: 8px;
 }
+
 .share-link__input {
   border: none;
   outline: none;
@@ -503,7 +504,7 @@ export default {
 }
 
 .share-link__action:hover {
-  color: #003aff;
+  color: #434f8e;
 }
 
 .share-link__action__icon {
@@ -573,7 +574,7 @@ export default {
 }
 
 .tab--selected {
-  border-color: #003aff;
+  border-color: #434f8e;
   background: #fff;
   opacity: 1;
 }

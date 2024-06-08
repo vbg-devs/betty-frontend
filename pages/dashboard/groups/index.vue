@@ -45,7 +45,6 @@ export default {
       return groups.filter((x) => x.tournament);
     },
   },
-
 };
 </script>
 

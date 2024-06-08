@@ -48,7 +48,7 @@
             </section>
             <footer class="modal__footer">
               <div class="button-wrapper">
-                <button class="button button--action" :disabled="!canSave || loading" :class="{'button--disabled': !canSave, 'button--loading': loading}" @click="evaluateGame">Evaluate game</button>
+                <button class="button button--action" :disabled="!canSave || loading" :class="{ 'button--disabled': !canSave, 'button--loading': loading }" @click="evaluateGame">Evaluate game</button>
               </div>
             </footer>
           </div>
@@ -265,7 +265,7 @@ export default {
 
 .modal__header {
   padding-bottom: 15px;
-  background: #003aff;
+  background: #434f8e;
   color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;

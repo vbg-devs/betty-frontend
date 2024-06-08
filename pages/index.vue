@@ -3,14 +3,14 @@
     <div class="logo">
       <img src="@/assets/logo.svg" class="logo">
     </div>
-    <video class="video" poster="/poster.jpg" autoplay muted loop playsinline>
-      <source src="/betty-alive.mp4" type="video/mp4">
+    <video class="video" poster="/poster--new.jpg" autoplay muted loop playsinline>
+      <source src="/betty-alive--new.mp4" type="video/mp4">
     </video>
     <div class="content">
       <h1 class="title">No more spreadsheets.</h1>
       <p>Betty is your personal assistant who</p>
-      <p>keeps track of everyones bets and scores</p>
-      <p>and let's you relax, sit back and enjoy the World Cup.</p>
+      <p>keeps track of everyone's bets and scores</p>
+      <p>and let's you relax, sit back and enjoy the cup.</p>
     </div>
     <div id="firebaseui-auth-container"></div>
     <div id="loader">Loading...</div>
@@ -63,7 +63,7 @@ export default {
 
 <style lang="less">
 .login-page {
-  background: #003aff;
+  background: #434f8e;
   position: fixed;
   top: 0;
   left: 0;
@@ -197,6 +197,7 @@ export default {
     font-size: 40px;
     letter-spacing: 0.7px;
   }
+
   color: #fff;
   position: relative;
   // padding-top: 120px;
@@ -257,7 +258,7 @@ export default {
 
   &:active,
   &:focus {
-    border-color: #003aff;
+    border-color: #434f8e;
   }
 }
 
@@ -268,7 +269,7 @@ export default {
 //   left: 0;
 //   bottom: 0;
 //   right: 0;
-//   background: #003aff;
+//   background: #434f8e;
 //   display: flex;
 //   justify-content: center;
 //   overflow-y: auto;

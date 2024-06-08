@@ -109,7 +109,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  /* background: #003aff; */
+  /* background: #434f8e; */
   background: #f7f8fa;
   color: #333;
 }
@@ -135,8 +135,7 @@ body {
   margin: 0 auto;
 }
 
-.img {
-}
+.img {}
 
 .img--full {
   display: block;
@@ -217,7 +216,7 @@ body {
 
   &:active,
   &:focus {
-    border-color: #003aff;
+    border-color: #434f8e;
   }
 }
 
@@ -317,6 +316,7 @@ body {
 .page-leave-active {
   transition: opacity 0.2s;
 }
+
 .page-enter,
 .page-leave-active {
   opacity: 0;
@@ -336,7 +336,7 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #003aff;
+  background: #434f8e;
   flex-direction: column;
 }
 

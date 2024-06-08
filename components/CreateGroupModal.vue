@@ -64,7 +64,7 @@
       </section>
       <footer v-if="group === null" class="modal__footer">
         <div class="button-wrapper">
-          <button class="button button--action" :disabled="loading || !canSave" :class="{'button--loading': loading,'button--disabled': !canSave}" @click="create">Create group</button>
+          <button class="button button--action" :disabled="loading || !canSave" :class="{ 'button--loading': loading, 'button--disabled': !canSave }" @click="create">Create group</button>
         </div>
       </footer>
     </section>
@@ -205,7 +205,7 @@ export default {
 
 .modal__header {
   padding-bottom: 15px;
-  background: #003aff;
+  background: #434f8e;
   color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -253,6 +253,7 @@ export default {
   display: flex;
   margin-top: 20px;
 }
+
 .share-link__input {
   border: none;
   outline: none;
@@ -273,7 +274,7 @@ export default {
 }
 
 .share-link__action:hover {
-  color: #003aff;
+  color: #434f8e;
 }
 
 .share-link__action__icon {

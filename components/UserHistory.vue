@@ -58,7 +58,7 @@ export default {
   mounted() {
     document.body.classList.add('no-scroll');
   },
-  beforeDestroy() {
+  beforeDestroy() { //eslint-disable-line
     document.body.classList.remove('no-scroll');
   },
 };
@@ -104,7 +104,7 @@ export default {
 
 .modal__header {
   padding-bottom: 15px;
-  background: #003aff;
+  background: #434f8e;
   color: #fff;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
