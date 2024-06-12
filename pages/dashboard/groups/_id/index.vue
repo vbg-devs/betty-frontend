@@ -19,7 +19,20 @@
         </div>
       </div>
       <div class="tabs">
-        <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
+        <div class="tab" :class="{ 'tab--selected': selectedTab === 4 }" @click="selectedTab = 4">
+          <div class="tab__image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="tab__label">
+            Messages
+          </div>
+        </div>
+        <!-- <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -31,7 +44,7 @@
           <div class="tab__label">
             Group
           </div>
-        </div>
+        </div> -->
         <div class="tab" :class="{ 'tab--selected': selectedTab === 2 }" @click="selectedTab = 2">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
@@ -59,48 +72,63 @@
       </div>
       <section class="group__body">
         <transition-group name="page">
-          <div v-if="selectedTab === 1" key="group" class="group-section">
+          <div v-if="selectedTab === 1 || selectedTab === 4" key="group" class="group-section">
             <div class="row row--wrap">
-              <section class="group__information column">
-                <div class="welcome-message">
-                  {{ group.welcome_message }}
-                </div>
-                <div class="row row--wrap">
+              <div class="column">
+                <div class="row">
                   <div class="column">
-                    <div class="group__box">
+                    <div class="group__box group__box">
                       <h3 class="group__box__title">Games played</h3>
-                      <span class="big">{{ completeGamesPercentage }}</span><span class="big big--smaller">%</span>
-                      <progress-bar :progress="completeGamesPercentage"></progress-bar>
-                      <div class="games">
-                        {{ completeGames.length }} of {{ games.length }} games played
+                      <div class="row row--bottom-v row--no-padding">
+                        <div class="column column--wrap">
+                          <span class="big">{{ completeGamesPercentage }}</span><span class="big big--smaller">%</span>
+                        </div>
+                        <div class="column">
+                          <div class="games">
+                            {{ completeGames.length }} of {{ games.length }} games played
+                          </div>
+                        </div>
                       </div>
+                      <progress-bar :progress="completeGamesPercentage"></progress-bar>
                     </div>
                   </div>
                   <div class="column">
-                    <div class="group__box">
+                    <div class="group__box group__box--full-height">
                       <h3 class="group__box__title">Your Rank</h3>
                       <div class="big text-center">
                         {{ yourPlacement }}
                       </div>
                     </div>
                   </div>
-                  <div class="column">
-                    <div class="group__box">
-                      <h3 class="group__box__title">Invite link</h3>
-                      <div class="big big--smaller text-center">
-                        <div class="share-link">
-                          <input v-model="shareUrl" type="text" class="share-link__input" readonly>
-                          <div class="share-link__action" @click="copyInviteCode">
-                            <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard share-link__action__icon">
-                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                            </svg>
-                            <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          </div>
-                        </div>
-                        <!-- <div class="row row--center-v">
+                </div>
+
+                <section v-show="selectedTab === 1" class="group__information column">
+                  <div class="welcome-message">
+                    {{ group.welcome_message }}
+                  </div>
+                </section>
+                <section v-show="selectedTab === 4" class="group__information column">
+                  <meme-board></meme-board>
+                </section>
+              </div>
+              <aside class="sidebar column column--wrap">
+
+                <div class="group__box">
+                  <h3 class="group__box__title">Invite link</h3>
+                  <div class="big big--smaller text-center">
+                    <div class="share-link">
+                      <input v-model="shareUrl" type="text" class="share-link__input" readonly>
+                      <div class="share-link__action" @click="copyInviteCode">
+                        <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard share-link__action__icon">
+                          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- <div class="row row--center-v">
                       <div class="column">
                         <input type="text" readonly :value="shareUrl" class="invite-code-input">
                       </div>
@@ -116,48 +144,32 @@
                         </button>
                       </div>
                     </div> -->
-                      </div>
-                    </div>
                   </div>
                 </div>
-                <div class="group-settings">
-                  <h2>Group settings</h2>
-                  <div class="row row--wrap">
-                    <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Allow sneak peek?</h3>
-                        <div class="big text-center">
-                          <svg v-if="group.allow_sneak_peek" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check icon-peek">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x icon-peek">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Points for winning team</h3>
-                        <div class="big text-center">
-                          {{ group.correct_team_points }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Points for exact score</h3>
-                        <div class="big text-center">
-                          {{ group.exact_result_points }}
-                        </div>
-                      </div>
-                    </div>
+                <div class="group__box">
+                  <h3 class="group__box__title">Allow sneak peek?</h3>
+                  <div class="big text-center">
+                    <svg v-if="group.allow_sneak_peek" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check icon-peek">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x icon-peek">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                   </div>
                 </div>
-                <!-- <meme-board></meme-board> -->
-              </section>
-              <aside class="sidebar column column--wrap">
+                <div class="group__box">
+                  <h3 class="group__box__title">Points for winning team</h3>
+                  <div class="big text-center">
+                    {{ group.correct_team_points }}
+                  </div>
+                </div>
+                <div class="group__box">
+                  <h3 class="group__box__title">Points for exact score</h3>
+                  <div class="big text-center">
+                    {{ group.exact_result_points }}
+                  </div>
+                </div>
                 <h2>Members</h2>
                 <div class="members">
                   <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon" @click="userSelected(member)"></user-badge>
@@ -204,7 +216,7 @@ export default {
       bets: [],
       gameBet: null,
       copied: false,
-      selectedTab: 1,
+      selectedTab: 4,
       leaderboardToShow: 'local',
       selectedUser: null,
       timer: null,
@@ -449,10 +461,11 @@ export default {
 }
 
 .games {
-  margin-top: 7px;
+  margin-bottom: 8px;
   color: #c0cbd4;
   font-size: 12px;
   font-weight: bold;
+  text-align: right;
 }
 
 .invite-code-button {
@@ -609,8 +622,11 @@ export default {
 .group__box {
   background: #fbfbfb;
   padding: 10px;
-  height: 100%;
   border-radius: 4px;
+}
+
+.group__box--full-height {
+  height: 100%;
 }
 
 .icon-peek {
