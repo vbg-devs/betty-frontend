@@ -61,6 +61,7 @@ export default {
           ok: {
             text: 'Confirm',
             action: () => {
+              document.body.classList.remove('no-scroll');
               this.$router.push(`/dashboard/groups/${this.group.id}`);
             },
           },
@@ -75,6 +76,7 @@ export default {
             ok: {
               text: 'Confirm',
               action: () => {
+                document.body.classList.remove('no-scroll');
                 this.$router.push(`/dashboard/groups/${this.group.id}`);
               },
             },
