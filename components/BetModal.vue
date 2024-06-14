@@ -59,11 +59,11 @@
           <div class="row">
             <div class="column">
               <div class="text-center">Home</div>
-              <input v-model="homeScore" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
+              <input v-model="homeScore" onclick="this.select();" inputmode="numeric" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
             </div>
             <div class="column">
               <div class="text-center">Away</div>
-              <input v-model="awayScore" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
+              <input v-model="awayScore" onclick="this.select();" inputmode="numeric" type="number" :readonly="lockInput" min="0" placeholder="0" class="bet-input form-input">
             </div>
           </div>
         </div>
