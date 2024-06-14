@@ -609,4 +609,13 @@ button[aria-label][data-balloon-pos] {
 [aria-label][data-balloon-pos][data-balloon-length="fit"]:after {
   width: 100%;
 }
+
+.row--new {
+  margin: 0;
+  gap: 10px;
+}
+
+.row--new .column {
+  padding: 0;
+}
 </style>

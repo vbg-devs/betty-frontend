@@ -75,7 +75,7 @@
           <div v-if="selectedTab === 1 || selectedTab === 4" key="group" class="group-section">
             <div class="row row--wrap">
               <div class="column">
-                <div class="row">
+                <div class="row row--new">
                   <div class="column">
                     <div class="group__box group__box">
                       <h3 class="group__box__title">Games played</h3>
@@ -170,12 +170,17 @@
                     {{ group.exact_result_points }}
                   </div>
                 </div>
-                <h2>Members</h2>
+                <div class="row row--center-v">
+                  <div class="column">
+                    <h2>Members</h2>
+                  </div>
+                  <div class="column">
+                    <button class="button button--danger" @click="leaveGroup">Leave group</button>
+                  </div>
+                </div>
+
                 <div class="members">
                   <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon" @click="userSelected(member)"></user-badge>
-                </div>
-                <div class="button-wrapper">
-                  <button class="button button--danger" @click="leaveGroup">Leave group</button>
                 </div>
               </aside>
             </div>
