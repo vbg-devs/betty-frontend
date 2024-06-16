@@ -1,7 +1,11 @@
 <template>
-  <div v-if="games.length" class="warning">
-    <div class="warning__text">
-      Make sure to bet on these games before it's too late!
+  <div v-if="games.length" class="message" :class="{ 'message--warning': gamesThatNeedsAttention.length > 0 }">
+    <div class="message__text">
+      <template v-if="gamesThatNeedsAttention.length">
+        Make sure to bet on these games before it's too late!</template>
+      <template v-else>
+        Todays games
+      </template>
     </div>
     <div class="games games--wide">
       <game v-for="game in games" :key="game.id" :betted="hasBet(game)" :placed-bet-home-team="placedBetHomeTeam(game)" :placed-bet-away-team="placedBetAwayTeam(game)" :clickable="clickable" :game="game" class="game-box" @click-game="clickGame">
@@ -27,6 +31,7 @@
 <script>
 import {
   differenceInHours,
+  isToday,
 } from 'date-fns';
 import Pools from './Pools.vue';
 
@@ -34,8 +39,15 @@ export default {
   name: 'NeedAction',
   extends: Pools,
   computed: {
+    gamesThatNeedsAttention() {
+      return this.allGames.filter((x) => x.status !== 1 && !this.hasBet(x) && this.timeToBet(x) < 24).slice(0, 3);
+    },
     games() {
-      return this.allGames.filter((x) => !this.hasBet(x) && this.timeToBet(x) < 24).slice(0, 2);
+      if (this.gamesThatNeedsAttention.length === 0) return this.todaysGames;
+      return this.gamesThatNeedsAttention;
+    },
+    todaysGames() {
+      return this.allGames.filter((x) => isToday(new Date(x.start_date)));
     },
   },
   methods: {
@@ -46,20 +58,26 @@ export default {
 };
 </script>
 <style>
-.warning {
-
-  background-color: #fff3cd;
-  border-color: #ffeeba;
+.message {
+  background-color: #fbfbfb;
   padding: 10px 6px;
   padding-bottom: 0;
   border-radius: 4px;
-
 }
 
-.warning__text {
+.message__text {
   font-weight: 700;
   text-align: center;
   font-size: 14px;
+  color: #333;
+}
+
+.message--warning .message__text {
   color: #856404;
+}
+
+.message--warning {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
 }
 </style>

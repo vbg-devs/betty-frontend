@@ -99,6 +99,7 @@ export default {
     }),
     shareUrl() {
       if (!this.group) return '';
+      return `https://betty.social/dashboard/groups/join/${this.group.invite_code}`;
       return this.group.invite_url;
     },
     selectedTournament() {

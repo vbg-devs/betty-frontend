@@ -82,30 +82,42 @@
                     </div>
                   </div>
                   <div class="column">
-                    <div class="group__box">
+                    <div class="group__box group__box--flex">
                       <h3 class="group__box__title">Your Rank</h3>
-                      <div class="big text-center">
-                        {{ yourPlacement }}
+                      <div class="group__box__body">
+                        <div class="big text-center">
+                          {{ yourPlacement }}<span class="big big--smaller dimmed"> of {{ group.members.length }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div class="column">
-                    <div class="group__box">
-                      <h3 class="group__box__title">Invite link</h3>
-                      <div class="big big--smaller text-center">
-                        <div class="share-link">
-                          <input v-model="shareUrl" type="text" class="share-link__input" readonly>
-                          <div class="share-link__action" @click="copyInviteCode">
-                            <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard share-link__action__icon">
-                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                            </svg>
-                            <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          </div>
-                        </div>
-                        <!-- <div class="row row--center-v">
+                    <div class="group__box group__box--flex">
+                      <h3 class="group__box__title">Top 3</h3>
+                      <TopThree :users="group.members" @user-selected="userSelected"></TopThree>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- <meme-board></meme-board> -->
+              </section>
+              <aside class="sidebar column column--wrap">
+                <div class="group__box group__box--fit">
+                  <h3 class="group__box__title">Invite link</h3>
+                  <div class="big big--smaller text-center">
+                    <div class="share-link">
+                      <input v-model="shareUrl" type="text" class="share-link__input" readonly>
+                      <div class="share-link__action" @click="copyInviteCode">
+                        <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard share-link__action__icon">
+                          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                    <!-- <div class="row row--center-v">
                       <div class="column">
                         <input type="text" readonly :value="shareUrl" class="invite-code-input">
                       </div>
@@ -121,51 +133,46 @@
                         </button>
                       </div>
                     </div> -->
-                      </div>
-                    </div>
+                  </div>
+                </div>
+                <div class="members-box">
+                  <h2>Members</h2>
+                  <div class="members">
+                    <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon" @click="userSelected(member)"></user-badge>
                   </div>
                 </div>
                 <div class="group-settings">
                   <h2>Group settings</h2>
-                  <div class="row row--wrap">
+                  <div class="row row--center-v">
                     <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Allow sneak peek?</h3>
-                        <div class="big text-center">
-                          <svg v-if="group.allow_sneak_peek" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check icon-peek">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x icon-peek">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                        </div>
-                      </div>
+                      Allow sneak peek?
                     </div>
-                    <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Points for winning team</h3>
-                        <div class="big text-center">
-                          {{ group.correct_team_points }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="column">
-                      <div class="group__box">
-                        <h3 class="group__box__title">Points for exact score</h3>
-                        <div class="big text-center">
-                          {{ group.exact_result_points }}
-                        </div>
-                      </div>
+                    <div class="column column--wrap">
+                      <svg v-if="group.allow_sneak_peek" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check icon-peek">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x icon-peek">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
                     </div>
                   </div>
-                </div>
-                <!-- <meme-board></meme-board> -->
-              </section>
-              <aside class="sidebar column column--wrap">
-                <h2>Members</h2>
-                <div class="members">
-                  <user-badge v-for="member in group.members" :key="member.user_id" :user="member" class="member-icon" @click="userSelected(member)"></user-badge>
+                  <div class="row row--center-v">
+                    <div class="column">
+                      Points for winning team
+                    </div>
+                    <div class="column column--wrap text-center" style="width: 44px;">
+                      <strong>{{ group.correct_team_points }}</strong>
+                    </div>
+                  </div>
+                  <div class="row row--center-v">
+                    <div class="column">
+                      Points for exact score
+                    </div>
+                    <div class="column column--wrap text-center" style="width: 44px;">
+                      <strong>{{ group.exact_result_points }}</strong>
+                    </div>
+                  </div>
                 </div>
                 <div class="button-wrapper">
                   <button class="button button--danger" @click="leaveGroup">Leave group</button>
@@ -258,7 +265,7 @@ export default {
     },
     shareUrl() {
       if (!this.group) return '';
-      return this.group.invite_url;
+      return `https://betty.social/dashboard/groups/join/${this.group.invite_code}`;
     },
     betsForGame() {
       if (this.gameBet === null) return [];
@@ -521,8 +528,7 @@ export default {
   list-style-type: none;
   margin: 0;
   padding: 0;
-  margin-top: 5px;
-  margin-bottom: 25px;
+  padding-top: 10px;
   padding-left: 10px;
 }
 
@@ -544,6 +550,8 @@ export default {
   position: relative;
   margin-left: -10px;
   border-width: 2px !important;
+  height: 43.75px !important;
+  width: 43.75px !important;
 
   &:hover {
     z-index: 5;
@@ -618,8 +626,24 @@ export default {
   border-radius: 4px;
 }
 
+.group__box--flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.group__box__body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.group__box--fit {
+  height: auto;
+}
+
 .icon-peek {
-  height: 50px;
   width: auto;
   vertical-align: middle;
 
@@ -645,5 +669,20 @@ export default {
 .button-wrapper {
   display: flex;
   justify-content: center;
+  margin-top: 30px;
+}
+
+.members-box {
+  margin: 20px 0;
+}
+
+h2 {
+  border-bottom: 1px solid #fafafa;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.dimmed {
+  color: #c0cbd4;
 }
 </style>

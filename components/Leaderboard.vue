@@ -1,6 +1,6 @@
 <template>
   <div class="leaderboard">
-    <div v-for="user in listWithPlacement" :key="user.user_id" class="leaderbord-row" :class="{'highlight': user.user_id === userId}">
+    <div v-for="user in listWithPlacement" :key="user.user_id" class="leaderbord-row" :class="{ 'highlight': user.user_id === userId }">
       <div class="row row--center-v">
         <div class="column column--wrap">{{ user.place }}</div>
         <div class="column column--wrap">
@@ -65,11 +65,25 @@ export default {
 
 <style lang="less" scoped>
 .highlight {
-  background-color: rgba(255, 236, 61, 0.2);
+  background-color: #434f8e;
+  color: #fff;
+}
+
+.points {
+  font-weight: 700;
+}
+
+.highlight .link,
+.highlight .points {
+  color: #fff;
 }
 
 .leaderbord-row {
   padding: 0 10px;
+}
+
+.leaderbord-row:not(.highlight):nth-child(even) {
+  background: #fbfbfb;
 }
 
 .link {
