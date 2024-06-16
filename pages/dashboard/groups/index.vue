@@ -18,7 +18,7 @@
       <!-- <nuxt-link to="/dashboard/groups/create" class="button button--action">Start a group</nuxt-link> -->
     </div>
     <transition name="page">
-      <create-group-modal v-if="showModal" @close="showModal = false"></create-group-modal>
+      <create-group-modal v-if="showModal" @close="handleCloseCreateGroupModal"></create-group-modal>
     </transition>
   </div>
 </template>
@@ -43,6 +43,12 @@ export default {
         tournament: this.$store.getters['tournament/byId'](x.tournament_id),
       }));
       return groups.filter((x) => x.tournament);
+    },
+  },
+  methods: {
+    handleCloseCreateGroupModal() {
+      this.showModal = false;
+      document.body.classList.remove('no-scroll');
     },
   },
 };

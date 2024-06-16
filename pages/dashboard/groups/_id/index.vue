@@ -65,6 +65,11 @@
                 <div class="welcome-message">
                   {{ group.welcome_message }}
                 </div>
+                <div>
+                  <template v-if="tournamentDetails">
+                    <need-action :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></need-action>
+                  </template>
+                </div>
                 <div class="row row--wrap">
                   <div class="column">
                     <div class="group__box">

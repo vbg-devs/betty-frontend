@@ -23,7 +23,6 @@
         </game>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -55,17 +54,16 @@ export default {
     ...mapGetters({
       userId: 'user/id',
     }),
-    gameGroups() {
+    allGames() {
       const allGames = [];
-
       this.pools.forEach((pool) => {
         allGames.push(...(pool.games || []).map((x) => ({ ...x, poolName: pool.name })));
       });
-
+      return allGames.toSorted((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    },
+    gameGroups() {
       const gameGroups = [];
-      allGames.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-
-      allGames.forEach((game) => {
+      this.allGames.forEach((game) => {
         const date = new Date(game.start_date);
         const key = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
         const group = gameGroups.find((x) => x.key === key);
@@ -132,6 +130,16 @@ export default {
   }
 }
 
+.games--wide {
+  @media (min-width: 768px) {
+    display: flex;
+
+    .game {
+      flex: 1;
+    }
+  }
+}
+
 .pool {
   margin-top: 20px;
   // border-bottom: 1px solid #f2f2f2;
@@ -142,8 +150,7 @@ export default {
   text-transform: capitalize;
 }
 
-.games {
-}
+.games {}
 
 // .game-wrapper {
 //   flex: 0 1 100%/3;
