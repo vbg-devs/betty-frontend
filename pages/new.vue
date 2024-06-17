@@ -5,23 +5,25 @@
         <div class="logo">
           <img src="@/assets/logo.svg" class="logo">
         </div>
-        <button class="login-button" @click="showModal = true">Log in</button>
+        <button class="login-button">Log in</button>
       </div>
     </header>
     <section class="section slant--bottom">
-      <div class="container content-center">
-
-        <video class="video" poster="/poster--new.jpg" autoplay muted loop playsinline>
-          <source src="/betty-alive--new.mp4" type="video/mp4">
-        </video>
-
-        <h1>
-          Betty is your your personal friendly bets assistant.
-        </h1>
-        <p class="tagline">Keeps track of everyone's bets and scores and let's you relax, sit back and enjoy the cup.</p>
-
+      <div class="container">
+        <div class="row row--center-v">
+          <div class="column column--wrap">
+            <video class="video" poster="/poster--new.jpg" autoplay muted loop playsinline>
+              <source src="/betty-alive--new.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="column">
+            <h1>
+              Betty is your your personal friendly bets assistant.
+            </h1>
+            <p class="tagline">Keeps track of everyone's bets and scores and let's you relax, sit back and enjoy the cup.</p>
+          </div>
+        </div>
       </div>
-
       <!-- <div class="section__slant">
         <svg width="1920" height="180" viewBox="0 0 1920 180" fill="none" class="hwh-section__slant__image" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 180L1920 0V180H0Z" fill="#fbfbfb" />
@@ -30,7 +32,7 @@
     </section>
     <section class="slant">
       <div class="container">
-        <div class="row row--center-v row--reverse-mobile">
+        <div class="row row--center-v">
           <div class="column">
             <h1>Create a group and invite friends and family.</h1>
             <p class="tagline">
@@ -39,7 +41,7 @@
             </p>
           </div>
           <div class="column column--wrap">
-            <img src="@/assets/Laptop_2.png" class="usp__image">
+            <img src="@/assets/Lightbulb_2.png" class="usp__image">
           </div>
         </div>
       </div>
@@ -62,27 +64,25 @@
         </div>
       </div>
     </section>
-    <div class="modal" :class="{ 'modal--show': showModal }">
-      <div class="modal__backdrop" @click="showModal = false"></div>
-      <div class="modal__inner">
-        <header class="modal__header">
-          <button class="modal__close" @click="showModal = false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-          <img src="@/assets/betty--idle.png" class="modal__header__image">
-          <h2 class="modal__title">
-            Log In
-          </h2>
-        </header>
-        <section class="modal__body">
-          <div id="firebaseui-auth-container"></div>
-          <div id="loader">Loading...</div>
-        </section>
+    <section class="slant">
+      <div class="container">
+        <div class="row row--center-v">
+          <div class="column column--wrap">
+            <img src="@/assets/Laptop_2.png" class="usp__image">
+          </div>
+          <div class="column">
+            <h1>Create a group</h1>
+            <p class="tagline">
+              And invite friends and family, or colleagues to join.
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
+
+    <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
+
   </div>
 </template>
 
@@ -124,11 +124,6 @@ const uiConfig = {
   tosUrl: '/',
 };
 export default {
-  data() {
-    return {
-      showModal: false,
-    };
-  },
   mounted() {
     new firebaseui.auth.AuthUI(firebase.auth(firebase)).start('#firebaseui-auth-container', uiConfig);
   },
@@ -169,28 +164,22 @@ export default {
     padding: 12px 25px;
     border: none;
     cursor: pointer;
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    transition: background ease 0.3s;
+    min-width: 225px;
     text-align: center;
-    width: 100%;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    padding: 10px;
-    margin: 10px 0;
   }
 
   .firebaseui-idp-button:hover {
-    border-color: #434f8e !important;
+    background: #eee !important;
   }
 
   .firebaseui-idp-icon-wrapper {
     margin-right: 10px;
-    background-color: #434f8e;
-    border-radius: 50%;
-    padding: 5px;
   }
 
   .firebaseui-idp-icon {
-    height: 24px;
+    height: 32px;
     width: auto;
     display: block;
   }
@@ -211,13 +200,8 @@ export default {
   .video {
     border-radius: 50%;
     margin-top: 10px;
-    width: 300px;
-    height: 300px;
-
-    @media(min-width: 768px) {
-      width: 500px;
-      height: 500px;
-    }
+    width: 500px;
+    height: 500px;
   }
 
   .content {
@@ -241,12 +225,12 @@ export default {
 }
 
 .firebaseui-idp-list {
-  // display: flex;
-  // flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-  // @media (min-width: 768px) {
-  //   flex-direction: row;
-  // }
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
 }
 
 .firebaseui-list-item {
@@ -264,15 +248,15 @@ export default {
 
 .firebaseui-title {
   margin-bottom: 30px;
-  font-size: 26px !important;
+  font-size: 26px;
   font-weight: 800;
-  text-align: center;
 
   @media (min-width: 768px) {
+    font-size: 40px;
     letter-spacing: 0.7px;
   }
 
-  color: #434f8e;
+  color: #fff;
   position: relative;
   // padding-top: 120px;
 
@@ -311,9 +295,8 @@ export default {
 .mdl-textfield__label {
   display: block;
   font-weight: bold;
-  color: #aaa;
+  color: #fff;
   margin: 10px 0 5px;
-  font-size: 14px;
 }
 
 .mdl-textfield__input {
@@ -362,12 +345,7 @@ export default {
 
 .usp__image {
   display: block;
-  max-width: 100%;
-
-  @media(min-width: 768px) {
-    max-width: none;
-    max-height: 500px;
-  }
+  max-height: 500px;
 }
 
 .login-page {
@@ -376,25 +354,16 @@ export default {
   padding-top: 80px;
 
   h1 {
-    font-size: ~"calc(20px + 1.3vw)";
+    font-size: ~"calc(30px + 1.3vw)";
     text-wrap: balance;
     max-width: 700px;
     font-weight: 700;
     line-height: 1.1;
-
-    @media(min-width: 768px) {
-      font-size: ~"calc(30px + 1.3vw)";
-    }
   }
 
   .tagline {
     max-width: 700px;
     color: rgba(255, 255, 255, 0.6);
-    font-size: 18px;
-
-    @media(min-width: 768px) {
-      font-size: 24px;
-    }
   }
 
   .light {
@@ -442,46 +411,26 @@ export default {
   height: 80px;
   display: flex;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 30px;
   align-items: center;
   background: #434f8e;
   z-index: 200;
-
-  @media(min-width: 768px) {
-    padding: 0 10px;
-  }
 }
 
 .logo {
   height: 60px;
-
-}
-
-@media(min-width: 768px) {
-  div.logo {
-    // margin-left: 220px;
-  }
 }
 
 .gradient-image {
   position: relative;
-
+  rotate: -12deg;
   z-index: -1;
-
-  @media(min-width: 768px) {
-    rotate: -12deg;
-  }
 }
 
 .gradient-image__image {
   display: block;
-  max-width: 100%;
-  padding: 50px;
-
-  @media(min-width: 768px) {
-    padding: 0 100px;
-    max-width: 500px;
-  }
+  max-width: 500px;
+  padding: 0 100px;
 }
 
 .gradient-image__overlay {
@@ -507,121 +456,5 @@ export default {
   border: none;
   padding: 16px 24px;
   display: block;
-}
-
-.modal {
-  position: fixed;
-  z-index: 997;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity ease 0.3s;
-}
-
-.modal--show {
-  visibility: visible;
-  opacity: 1;
-}
-
-.modal__backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1;
-}
-
-.modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  max-height: 700px;
-}
-
-.modal__body {
-  flex: 1;
-  // padding: 10px;
-  padding-top: 0;
-  overflow-y: auto;
-}
-
-.modal__header {
-  background: #434f8e;
-  color: #fff;
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
-  position: relative;
-  padding-bottom: 15px;
-}
-
-.modal__close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  color: #fff;
-  border: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
-
-  svg {
-    display: block;
-  }
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
-.modal__title {
-  text-align: center;
-  padding: 10px 0 5px;
-  font-size: 24px;
-}
-
-.modal__header__image {
-  display: block;
-  margin: 0 auto;
-  margin-top: 30px;
-  height: 100px;
-  width: auto;
-}
-
-.modal__body {
-  padding: 10px;
-}
-
-@media(max-width: 767px) {
-  section .row {
-    flex-direction: column;
-  }
-
-  section .row.row--reverse-mobile {
-    flex-direction: column-reverse;
-  }
-}
-
-.content-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 </style>

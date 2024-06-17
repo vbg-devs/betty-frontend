@@ -18,6 +18,18 @@
               <game-bet-list-item :bet="message.message"></game-bet-list-item>
             </div>
           </template>
+          <template v-if="message.type === 'game_starting_soon'">
+            <div class="column column--wrap column--no-padding">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-watch feed-item__icon">
+                <circle cx="12" cy="12" r="7"></circle>
+                <polyline points="12 9 12 12 13.5 13.5"></polyline>
+                <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"></path>
+              </svg>
+            </div>
+            <div class="column">
+              <game-start-soon-list-item :match="message.message"></game-start-soon-list-item>
+            </div>
+          </template>
           <template v-else-if="message.type === 'bet_updated'">
             <div class="column column--wrap column--no-padding">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check feed-item__icon">
@@ -187,7 +199,7 @@ export default {
   font-size: 13px;
   position: relative;
 
-  & > .row {
+  &>.row {
     flex: 1;
   }
 }
@@ -245,16 +257,19 @@ export default {
 .list-leave-active {
   transition: all 0.5s ease;
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
   transform: translateX(-100%);
 }
+
 .list-enter {
   opacity: 0;
   transform: translateY(100%);
   height: 0;
 }
+
 .list-enter-to {
   opacity: 1;
   transform: translateY(0);

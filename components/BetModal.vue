@@ -15,7 +15,7 @@
         <bet-history :bets="bets" :home-team="homeTeam" :away-team="awayTeam"></bet-history>
       </header>
       <div class="tabs">
-        <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
+        <div v-if="!lockInput" class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
           <div class="tab__image">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -123,6 +123,7 @@ export default {
       return this.peek;
     },
     lockInput() {
+      if (!this.gameBet) return false;
       return isAfter(new Date(), new Date(this.gameBet.start_date));
     },
     canSave() {
@@ -167,6 +168,14 @@ export default {
         this.homeScore = newVal.home_team_score;
         this.awayScore = newVal.away_team_score;
       }
+    },
+    lockInput: {
+      handler(newVal) {
+        if (newVal) {
+          this.selectedTab = 2;
+        }
+      },
+      immediate: true,
     },
   },
   methods: {
@@ -242,7 +251,7 @@ export default {
   border-radius: 4px;
   display: flex;
   flex-direction: column;
-  max-height: 550px;
+  max-height: 700px;
   height: 90vh;
 }
 
@@ -296,7 +305,7 @@ export default {
   font-size: 50px;
   text-align: center;
   width: 100%;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
     Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
   padding: 1px;
 }
@@ -375,16 +384,26 @@ input[type="number"] {
 }
 
 .bet {
-  border-bottom: 1px solid #f2f2f2;
+  // border-bottom: 1px solid #f2f2f2;
   padding: 0 10px;
 
-  &:lsat-child {
-    border-bottom: none;
+  // &:last-child {
+  //   border-bottom: none;
+  // }
+
+  &:not(.bet--highlight):nth-child(even) {
+    background: #fbfbfb;
   }
 }
 
 .bet--highlight {
-  background-color: rgba(255, 236, 61, 0.2);
+  background-color: #434f8e;
+  color: #fff;
+
+  .points {
+    color: #fff;
+
+  }
 }
 
 // .bet--full-right {

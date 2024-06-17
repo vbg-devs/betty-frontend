@@ -100,8 +100,7 @@ export default {
 </script>
 <style lang="less">
 html {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
-    Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   font-size: 16px;
   word-spacing: 1px;
   -ms-text-size-adjust: 100%;

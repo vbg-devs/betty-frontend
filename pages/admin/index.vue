@@ -313,8 +313,7 @@ export default {
   font-size: 50px;
   text-align: center;
   width: 100%;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
-    Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
 /* Chrome, Safari, Edge, Opera */
