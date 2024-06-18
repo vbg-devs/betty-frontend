@@ -28,7 +28,7 @@
         </svg>
       </div> -->
     </section>
-    <section class="slant">
+    <section class="section slant">
       <div class="container">
         <div class="row row--center-v row--reverse-mobile">
           <div class="column">
@@ -44,7 +44,7 @@
         </div>
       </div>
     </section>
-    <section class="slant">
+    <section class="section slant">
       <div class="container">
         <div class="row row--center-v">
           <div class="column column--wrap">
@@ -77,7 +77,7 @@
             Log In
           </h2>
         </header>
-        <section class="modal__body">
+        <section class="section modal__body">
           <div id="firebaseui-auth-container"></div>
           <div id="loader">Loading...</div>
         </section>
@@ -610,11 +610,11 @@ export default {
 }
 
 @media(max-width: 767px) {
-  section .row {
+  .section .row {
     flex-direction: column;
   }
 
-  section .row.row--reverse-mobile {
+  .section .row.row--reverse-mobile {
     flex-direction: column-reverse;
   }
 }
