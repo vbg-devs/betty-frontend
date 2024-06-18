@@ -150,6 +150,14 @@ body {
   margin-bottom: 20px;
 }
 
+.page-title--smaller {
+  font-weight: 800;
+  /* margin-top: 30px; */
+  font-size: 26px;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
 .button {
   outline: none;
   border: none;
@@ -356,5 +364,28 @@ a {
 
 body.no-scroll {
   overflow: hidden;
+}
+
+.message {
+  background-color: #fbfbfb;
+  padding: 10px 6px;
+  padding-bottom: 0;
+  border-radius: 4px;
+}
+
+.message__text {
+  font-weight: 700;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.message--warning .message__text {
+  color: #856404;
+}
+
+.message--warning {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
 }
 </style>

@@ -187,11 +187,7 @@
             </template>
           </div>
           <div v-if="selectedTab === 3" key="leaderboard">
-            <div class="leaderboard-menu">
-              <a href="javascript:void(0)" :class="{ 'underline': leaderboardToShow === 'local' }" @click="leaderboardToShow = 'local'">Local</a> / <a href="javascript:void(0)" :class="{ 'underline': leaderboardToShow === 'global' }" @click="leaderboardToShow = 'global'">Global</a>
-            </div>
-            <global-leaderboard v-if="leaderboardToShow === 'global'" :id="group.tournament_id"></global-leaderboard>
-            <leaderboard v-else :users="group.members" @user-selected="userSelected"></leaderboard>
+            <leaderboard :users="group.members" @user-selected="userSelected"></leaderboard>
           </div>
         </transition-group>
       </section>

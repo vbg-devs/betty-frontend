@@ -23,6 +23,9 @@
           <div class="dropdown__item">
             <span class="warning">Groups</span>
           </div> -->
+          <div class="dropdown__item" @click="goToLeaderboard">
+            <span class="warning">Global leaderboard</span>
+          </div>
           <div class="dropdown__item" @click="logOut">
             <span class="warning">Log out</span>
           </div>
@@ -96,7 +99,12 @@ export default {
       this.showDropdown = false;
       this.showModal = true;
     },
+    goToLeaderboard() {
+      this.showDropdown = false;
+      this.$router.push('/leaderboard');
+    },
     logOut() {
+      this.showDropdown = false;
       firebase.auth().signOut();
     },
   },

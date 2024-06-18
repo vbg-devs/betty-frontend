@@ -18,7 +18,7 @@
               <game-bet-list-item :bet="message.message"></game-bet-list-item>
             </div>
           </template>
-          <template v-if="message.type === 'game_starting_soon'">
+          <template v-else-if="message.type === 'game_starting_soon'">
             <div class="column column--wrap column--no-padding">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-watch feed-item__icon">
                 <circle cx="12" cy="12" r="7"></circle>

@@ -57,27 +57,4 @@ export default {
   },
 };
 </script>
-<style>
-.message {
-  background-color: #fbfbfb;
-  padding: 10px 6px;
-  padding-bottom: 0;
-  border-radius: 4px;
-}
-
-.message__text {
-  font-weight: 700;
-  text-align: center;
-  font-size: 14px;
-  color: #333;
-}
-
-.message--warning .message__text {
-  color: #856404;
-}
-
-.message--warning {
-  background-color: #fff3cd;
-  border-color: #ffeeba;
-}
-</style>
+<style></style>
