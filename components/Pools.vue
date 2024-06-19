@@ -1,6 +1,6 @@
 <template>
   <div class="pools">
-    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" :class="{ 'day-group': true, 'closest': group.isClosest }" class="day-group">
+    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" class="day-group">
       <h3 v-if="group.name.includes('Group')" class="pool__title">{{ group.title }}</h3>
       <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
@@ -66,7 +66,7 @@ export default {
     allGames() {
       const allGames = [];
       this.pools.forEach((pool) => {
-        allGames.push(...(pool.games || []).map((game) => ({ ...game, poolName: pool.name })));
+        allGames.push(...(pool.games || []).map((x) => ({ ...x, poolName: pool.name })));
       });
       return allGames.toSorted((a, b) => new Date(a.start_date) - new Date(b.start_date));
     },
@@ -97,29 +97,10 @@ export default {
         group.games.push(game);
       });
 
-      const today = new Date();
-      const updatedGameGroups = gameGroups.map((group) => {
-        const isClosest = new Date(group.date) >= today;
-        return { ...group, isClosest };
-      });
-
-      if (!updatedGameGroups.some((group) => group.isClosest)) {
-        if (updatedGameGroups.length > 0) {
-          updatedGameGroups[updatedGameGroups.length - 1].isClosest = true;
-        }
-      }
-
-      return updatedGameGroups;
+      return gameGroups;
     },
   },
   mounted() {
-    this.$nextTick(() => {
-      const closestGroupElement = this.$el.querySelector('.day-group.closest');
-      if (closestGroupElement) {
-        closestGroupElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-
     this.handleScroll = () => {
       this.showBackToTop = window.scrollY > 300;
     };
@@ -250,7 +231,7 @@ export default {
   bottom: 20px;
   right: 20px;
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: #434f8e;
   color: white;
   border: none;
   border-radius: 5px;
