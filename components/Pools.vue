@@ -1,6 +1,6 @@
 <template>
   <div class="pools">
-    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" class="day-group">
+    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" :class="{ 'day-group': true, 'closest': group.isClosest }" class="day-group">
       <h3 v-if="group.name.includes('Group')" class="pool__title">{{ group.title }}</h3>
       <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
@@ -23,6 +23,7 @@
         </game>
       </div>
     </div>
+    <button class="back-to-top" @click="showBackToTop ? scrollToTop() : scrollToBottom()">{{ showBackToTop ? '↑' : '↓' }}</button>
   </div>
 </template>
 
@@ -52,6 +53,12 @@ export default {
       default: false,
     },
   },
+  emits: ['click-game'],
+  data() {
+    return {
+      showBackToTop: false,
+    };
+  },
   computed: {
     ...mapGetters({
       userId: 'user/id',
@@ -59,7 +66,7 @@ export default {
     allGames() {
       const allGames = [];
       this.pools.forEach((pool) => {
-        allGames.push(...(pool.games || []).map((x) => ({ ...x, poolName: pool.name })));
+        allGames.push(...(pool.games || []).map((game) => ({ ...game, poolName: pool.name })));
       });
       return allGames.toSorted((a, b) => new Date(a.start_date) - new Date(b.start_date));
     },
@@ -68,12 +75,10 @@ export default {
       this.allGames.forEach((game) => {
         const date = new Date(game.start_date);
         const key = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
-        const group = gameGroups.find((x) => x.key === key);
+        let group = gameGroups.find((g) => g.key === key);
 
-        if (group) {
-          group.games.push(game);
-        } else {
-          let title = '';
+        if (!group) {
+          let title;
           if (isToday(date)) {
             title = 'Today';
           } else if (isTomorrow(date)) {
@@ -83,18 +88,54 @@ export default {
             title = formatDistance(startOfDay(date), startOfDay(new Date()), { addSuffix: true });
           }
 
-          const name = game.poolName;
-
-          gameGroups.push({
-            key, date, title, name, games: [game],
-          });
+          group = {
+            key, date, title, name: game.poolName, games: [],
+          };
+          gameGroups.push(group);
         }
+
+        group.games.push(game);
       });
 
-      return gameGroups;
+      const today = new Date();
+      const updatedGameGroups = gameGroups.map((group) => {
+        const isClosest = new Date(group.date) >= today;
+        return { ...group, isClosest };
+      });
+
+      if (!updatedGameGroups.some((group) => group.isClosest)) {
+        if (updatedGameGroups.length > 0) {
+          updatedGameGroups[updatedGameGroups.length - 1].isClosest = true;
+        }
+      }
+
+      return updatedGameGroups;
     },
   },
+  mounted() {
+    this.$nextTick(() => {
+      const closestGroupElement = this.$el.querySelector('.day-group.closest');
+      if (closestGroupElement) {
+        closestGroupElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    this.handleScroll = () => {
+      this.showBackToTop = window.scrollY > 300;
+    };
+
+    window.addEventListener('scroll', this.handleScroll);
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+  },
   methods: {
+    scrollToBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    },
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
     clickGame(payload) {
       this.$emit('click-game', payload);
     },
@@ -202,5 +243,26 @@ export default {
 
 .day-group {
   margin-top: 30px;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  font-size: 16px;
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 14px;
+    bottom: 10px;
+    right: 10px;
+  }
 }
 </style>
