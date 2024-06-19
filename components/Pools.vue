@@ -23,6 +23,7 @@
         </game>
       </div>
     </div>
+    <button class="back-to-top" @click="showBackToTop ? scrollToTop() : scrollToBottom()">{{ showBackToTop ? '↑' : '↓' }}</button>
   </div>
 </template>
 
@@ -52,6 +53,12 @@ export default {
       default: false,
     },
   },
+  emits: ['click-game'],
+  data() {
+    return {
+      showBackToTop: false,
+    };
+  },
   computed: {
     ...mapGetters({
       userId: 'user/id',
@@ -68,33 +75,47 @@ export default {
       this.allGames.forEach((game) => {
         const date = new Date(game.start_date);
         const key = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
-        const group = gameGroups.find((x) => x.key === key);
+        let group = gameGroups.find((g) => g.key === key);
 
-        if (group) {
-          group.games.push(game);
-        } else {
-          let title = '';
+        if (!group) {
+          let title;
           if (isToday(date)) {
             title = 'Today';
           } else if (isTomorrow(date)) {
             title = 'Tomorrow';
           } else {
-            console.log(date, new Date());
             title = formatDistance(startOfDay(date), startOfDay(new Date()), { addSuffix: true });
           }
 
-          const name = game.poolName;
-
-          gameGroups.push({
-            key, date, title, name, games: [game],
-          });
+          group = {
+            key, date, title, name: game.poolName, games: [],
+          };
+          gameGroups.push(group);
         }
+
+        group.games.push(game);
       });
 
       return gameGroups;
     },
   },
+  mounted() {
+    this.handleScroll = () => {
+      this.showBackToTop = window.scrollY > 300;
+    };
+
+    window.addEventListener('scroll', this.handleScroll);
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+  },
   methods: {
+    scrollToBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    },
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
     clickGame(payload) {
       this.$emit('click-game', payload);
     },
@@ -202,5 +223,26 @@ export default {
 
 .day-group {
   margin-top: 30px;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background-color: #434f8e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  font-size: 16px;
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 14px;
+    bottom: 10px;
+    right: 10px;
+  }
 }
 </style>
