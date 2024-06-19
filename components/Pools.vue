@@ -84,7 +84,6 @@ export default {
           } else if (isTomorrow(date)) {
             title = 'Tomorrow';
           } else {
-            console.log(date, new Date());
             title = formatDistance(startOfDay(date), startOfDay(new Date()), { addSuffix: true });
           }
 
