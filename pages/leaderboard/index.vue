@@ -34,6 +34,16 @@ export default {
       return this.tournaments[0].id;
     },
   },
+  watch: {
+    tournaments: {
+      handler(newVal) {
+        if (newVal.length === 1) {
+          this.$router.push(`/leaderboard/${newVal[0].id}`);
+        }
+      },
+      immediate: true,
+    },
+  },
 };
 </script>
 <style scoped lang="less">
@@ -86,6 +96,6 @@ export default {
 }
 
 .tournament__image {
-  max-height: 169px;
+  max-height: 200px;
 }
 </style>

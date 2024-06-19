@@ -4,10 +4,15 @@
       <div class="row row--center-v">
         <div class="column column--wrap">{{ user.place }}</div>
         <div class="column column--wrap">
-          <user-badge :user="user" :block="true"></user-badge>
+          <user-badge :user="user" :clickable="false" :block="true"></user-badge>
         </div>
         <div class="column column--wrap">
-          <a href="javascript:void(0);" class="link" @click="$emit('user-selected', user)">{{ user.name }}</a>
+          <template v-if="global">
+            {{ user.name }}
+          </template>
+          <template v-else>
+            <a href="javascript:void(0);" class="link" @click="$emit('user-selected', user)">{{ user.name }}</a>
+          </template>
         </div>
         <div class="column text-right">
           <span class="points">{{ global ? user.normalized_score : user.score }}p</span>

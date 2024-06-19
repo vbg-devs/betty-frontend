@@ -28,7 +28,9 @@
 
 <script>
 import { mapGetters } from 'vuex'; //eslint-disable-line
-import { formatDistance, isToday, isTomorrow } from 'date-fns';
+import {
+  formatDistance, isToday, isTomorrow, startOfDay,
+} from 'date-fns';
 
 export default {
   name: 'Pools',
@@ -77,7 +79,8 @@ export default {
           } else if (isTomorrow(date)) {
             title = 'Tomorrow';
           } else {
-            title = formatDistance(date, new Date(), { addSuffix: true });
+            console.log(date, new Date());
+            title = formatDistance(startOfDay(date), startOfDay(new Date()), { addSuffix: true });
           }
 
           const name = game.poolName;

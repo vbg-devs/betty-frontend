@@ -1,6 +1,6 @@
 <template>
-  <div class="user-badge" :class="{'user-badge--small': small, 'user-badge--large': large, 'user-badge--medium': medium, 'block': block}" @click="$emit('click')">
-    <div v-if="hasImage" class="user-badge__image" :style="{'backgroundImage': `url(${user.image_url})`}">
+  <div class="user-badge" :class="{ 'user-badge--clickable': clickable, 'user-badge--small': small, 'user-badge--large': large, 'user-badge--medium': medium, 'block': block }" @click="$emit('click')">
+    <div v-if="hasImage" class="user-badge__image" :style="{ 'backgroundImage': `url(${user.image_url})` }">
 
     </div>
     <div v-else class="user-badge__initial">
@@ -32,6 +32,10 @@ export default {
     block: {
       type: Boolean,
       default: false,
+    },
+    clickable: {
+      type: Boolean,
+      default: true,
     },
   },
   computed: {
@@ -74,12 +78,15 @@ export default {
   border: 5px solid rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   transition: border-color ease 0.3s;
-  cursor: pointer;
   display: inline-block;
   overflow: hidden;
 
-  &:hover {
-    border-color: rgba(0, 0, 0, 0.2);
+  &.user-badge--clickable {
+    cursor: pointer;
+
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.2);
+    }
   }
 }
 

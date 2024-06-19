@@ -18,7 +18,9 @@
           </div>
         </div>
       </div>
-      {{ group.members.length }} members
+      <div class="pt-10">
+        {{ group.members.length }} members
+      </div>
     </card>
   </nuxt-link>
 </template>
@@ -46,6 +48,7 @@ export default {
   margin: 0;
   padding-top: 20px;
 }
+
 .group__image {
   display: block;
   border-radius: 50%;
@@ -74,6 +77,6 @@ export default {
 }
 
 .tournament__image {
-  max-height: 169px;
+  max-height: 200px;
 }
 </style>

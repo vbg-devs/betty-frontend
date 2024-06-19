@@ -388,4 +388,8 @@ body.no-scroll {
   background-color: #fff3cd;
   border-color: #ffeeba;
 }
+
+.pt-10 {
+  padding-top: 10px;
+}
 </style>
