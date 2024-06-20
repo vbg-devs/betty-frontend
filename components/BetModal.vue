@@ -48,7 +48,7 @@
               <div class="column column--wrap">
                 <template v-if="showScores">
                   <strong>{{ bet.home_team_score }} - {{ bet.away_team_score }}</strong>
-                  <span v-if="bet.processed_at" class="points">(+{{ bet.user_points }}p)</span>
+                  <span v-if="bet.processed_at" class="points">{{ bet.user_points > 0 ? `(+${bet.user_points}p)` : "(0p)" }}</span>
                 </template>
                 <hidden-score v-else></hidden-score>
               </div>

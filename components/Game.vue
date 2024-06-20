@@ -1,5 +1,5 @@
 <template>
-  <div class="game" :class="{'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12, 'game--over': game.status === 1}" @click="handleClick">
+  <div class="game" :class="{ 'game--clickable': clickable, 'game--alternative': alternative, 'game--bet-done': betted, 'game--bet-urgent': timeToBet <= 24, 'game--bet-danger': timeToBet <= 12, 'game--over': game.status === 1 }" @click="handleClick">
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
@@ -213,11 +213,14 @@ export default {
   font-size: 18px;
   text-align: center;
 }
+
 .my-score {
   padding-left: 2px;
   // padding-bottom: 15px;
 }
+
 .score--small {
+
   .score__label,
   .score__divider {
     font-size: 12px;
@@ -228,6 +231,7 @@ export default {
   .score__divider {
     padding: 0 2px;
   }
+
   position: relative;
   justify-content: center;
 
@@ -261,6 +265,7 @@ export default {
   animation: pulse-green 2s infinite;
   display: inline-block;
 }
+
 .game__row {
   display: flex;
   align-items: center;
@@ -292,6 +297,7 @@ export default {
   from {
     box-shadow: 0px 0px 4px #78cc14;
   }
+
   to {
     box-shadow: 0px 0px 7px #78cc14;
   }
@@ -302,10 +308,12 @@ export default {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(120, 204, 20, 0.7);
   }
+
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 10px rgba(120, 204, 20, 0);
   }
+
   100% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(120, 204, 20, 0);
