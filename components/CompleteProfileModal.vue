@@ -213,7 +213,7 @@ export default {
 
 .share-link__action__icon {
   display: block;
-  width: 18px;
+  width: 24px;
 }
 
 .peek-text {

@@ -22,6 +22,9 @@ export const mutations = {
       state.messages.splice(index, 1);
     }
   },
+  CLEAR_MESSAGES(state) {
+    state.messages = [];
+  },
 };
 
 export const actions = {
@@ -35,6 +38,12 @@ export const actions = {
     return new Promise((resolve) => {
       commit('DELETE_MESSAGE', payload);
       resolve(payload);
+    });
+  },
+  clearAll({ commit }) {
+    return new Promise((resolve) => {
+      commit('CLEAR_MESSAGES');
+      resolve();
     });
   },
 };

@@ -2,15 +2,15 @@
   <header v-if="user" class="header-bar">
     <div class="container header-bar__inner">
       <div class="header-bar__item">
-        <button class="header-bar__button" @click="showDropdown = !showDropdown">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
+        <button class="header-bar__button" @click="showUserMenu = !showUserMenu">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff" fill="none">
+            <path d="M4 5L20 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 12L20 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 19L20 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
-        <div v-if="showDropdown" class="dropdown">
-          <div v-if="user" class="dropdown__item" @click="openModal">
+        <div v-if="showUserMenu" class="dropdown">
+          <div v-if="user" class="dropdown__item usermenu" @click="openModal">
             <user-badge :user="user" :large="true"></user-badge>
             <p class="user-name">{{ user.name }}</p>
           </div>
@@ -31,23 +31,41 @@
           </div>
         </div>
       </div>
-      <div class="header-bar__item header-bar__item--fill text-center">
+      <div class="header-bar__item header-bar__item--fill text-center middle-logo">
         <nuxt-link to="/dashboard">
           <img src="@/assets/logo.svg" class="logo">
         </nuxt-link>
       </div>
-      <div class="header-bar__item ">
-        <button class="header-bar__button header-bar__button--dimmed" :class="{ 'dimmed': showNotifications }" @click="toggleNotifications">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      <div class="header-bar__item">
+        <button class="header-bar__button header-bar__button--dimmed" :class="{ 'dimmed': hideNotifications }" @click="toggleNotifications">
+          <svg v-if="!hideNotifications" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff" fill="none">
+            <path d="M2.52992 14.7696C2.31727 16.1636 3.268 17.1312 4.43205 17.6134C8.89481 19.4622 15.1052 19.4622 19.5679 17.6134C20.732 17.1312 21.6827 16.1636 21.4701 14.7696C21.3394 13.9129 20.6932 13.1995 20.2144 12.5029C19.5873 11.5793 19.525 10.5718 19.5249 9.5C19.5249 5.35786 16.1559 2 12 2C7.84413 2 4.47513 5.35786 4.47513 9.5C4.47503 10.5718 4.41272 11.5793 3.78561 12.5029C3.30684 13.1995 2.66061 13.9129 2.52992 14.7696Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M8 19C8.45849 20.7252 10.0755 22 12 22C13.9245 22 15.5415 20.7252 16 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <span v-show="messages.length > 0" class="header-bar__button__badge"></span>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff" fill="none">
+            <path d="M18 18.1673C13.7297 19.4388 8.39263 19.2542 4.43205 17.6135C3.268 17.1312 2.31727 16.1637 2.52992 14.7696C2.66061 13.9129 3.30684 13.1995 3.78561 12.5029C4.41272 11.5793 4.47503 10.5718 4.47513 9.50001C4.47513 8.12105 4.84851 6.61015 5.5 5.49998" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M7.5 3.48831C8.75404 2.55352 10.3103 2 11.9962 2C16.1487 2 19.5149 5.35786 19.5149 9.5C19.5149 10.5718 19.5772 11.5793 20.2038 12.5029C20.6822 13.1995 21.3279 13.9129 21.4584 14.7696C21.5788 15.5596 21.4422 15.9946 20.9887 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M22 22L2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M8 19C8.45849 20.7252 10.0755 22 12 22C13.9245 22 15.5415 20.7252 16 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </button>
-      </div>
-      <!-- <div v-if="user" class="header-bar__item">
-        <user-badge :user="user" @click="showDropdown = !showDropdown"></user-badge>
-        <div v-if="showDropdown" class="dropdown">
+        <!-- to be added later, show if user has games that needs actions -->
+        <!-- <button class="header-bar__button header-bar__button--dimmed" @click="showAlerts = !showAlerts">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#fff" fill="none">
+            <path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-width="1.5" />
+            <path d="M11.9998 16H12.0088" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 13L12 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button> -->
+
+        <!-- <span v-show="true" class="header-bar__button__badge"></span>
+        <div v-if="showAlerts" class="dropdown">
+          <div class="dropdown__item alerts">
+          </div>
+        </div> -->
+        <!-- <div v-if="user" class="header-bar__item">
+        <user-badge :user="user" @click="showUserMenu = !showUserMenu"></user-badge>
+        <div v-if="showUserMenu" class="dropdown">
           <div class="dropdown__item" @click="openModal">
             Edit profile
           </div>
@@ -56,10 +74,11 @@
           </div>
         </div>
       </div> -->
+      </div>
+      <transition name="page">
+        <update-profile-modal v-if="showModal === true" @close="showModal = false"></update-profile-modal>
+      </transition>
     </div>
-    <transition name="page">
-      <update-profile-modal v-if="showModal === true" @close="showModal = false"></update-profile-modal>
-    </transition>
   </header>
 </template>
 
@@ -80,9 +99,9 @@ export default {
   },
   data() {
     return {
-      showDropdown: false,
+      showUserMenu: false,
       showModal: false,
-      showNotifications: false,
+      hideNotifications: false,
     };
   },
   computed: {
@@ -92,19 +111,19 @@ export default {
   },
   methods: {
     toggleNotifications() {
-      this.showNotifications = !this.showNotifications;
+      this.hideNotifications = !this.hideNotifications;
       this.$emit('toggle-notifications');
     },
     openModal() {
-      this.showDropdown = false;
+      this.showUserMenu = false;
       this.showModal = true;
     },
     goToLeaderboard() {
-      this.showDropdown = false;
+      this.showUserMenu = false;
       this.$router.push('/leaderboard');
     },
     logOut() {
-      this.showDropdown = false;
+      this.showUserMenu = false;
       firebase.auth().signOut();
     },
   },
@@ -127,6 +146,7 @@ export default {
 }
 
 .header-bar__inner {
+  justify-content: space-between;
   display: flex;
   align-items: center;
   height: 100%;
@@ -160,6 +180,7 @@ a:hover {
 
 .header-bar__item {
   position: relative;
+  display: flex;
 }
 
 .dropdown {
@@ -223,7 +244,7 @@ a:hover {
 }
 
 .header-bar__item--fill {
-  flex: 1;
+  // flex: 1;
 }
 
 .header-bar__item--spacer {
@@ -282,4 +303,8 @@ a:hover {
 .user-name {
   margin-top: 15px;
 }
-</style>
+
+// for when the info dropdown button is added
+// .middle-logo {
+//   margin-right: -36px;
+// }</style>

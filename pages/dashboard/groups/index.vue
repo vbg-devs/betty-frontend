@@ -25,7 +25,7 @@
     <div v-if="groups.length === 0" class="empty">
       <img src="@/assets/group-empty.svg" class="empty__logo">
       <div class="empty__text">
-        <p>You don’t have any groups yet.</p>
+        <p>You don't have any groups yet.</p>
         <p>Invite a bunch of friends and get started!</p>
       </div>
     </div>
@@ -97,6 +97,7 @@ export default {
   display: flex;
   margin: 0 -10px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .group {
