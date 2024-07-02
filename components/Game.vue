@@ -32,6 +32,9 @@
         </div>
         <div v-else>
           {{ startDate }}
+          <span class="awarded-points">
+            {{ awardedScore }}
+          </span>
         </div>
       </div>
       <div class="teams">
@@ -67,9 +70,33 @@
 import {
   format, isToday, isTomorrow, differenceInHours, isAfter, formatDistanceStrict,
 } from 'date-fns';
+import { mapGetters } from 'vuex'; // eslint-disable-line
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 export default {
   name: 'Game',
+  data() {
+    return {
+      bets: [],
+    };
+  },
+  async fetch() {
+    const { $axios, route } = this.$nuxt.context;
+    const user = firebase.auth().currentUser;
+    const token = await user.getIdToken();
+
+    return new Promise((resolve) => {
+      $axios.get(`https://api.betty.social/api/v1/bets/bygroup/${route.params.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => {
+        this.bets = res.data;
+        resolve();
+      });
+    });
+  },
   props: {
     game: {
       type: Object,
@@ -90,6 +117,16 @@ export default {
   },
   emits: ['click-game'],
   computed: {
+    ...mapGetters({
+      userId: 'user/id',
+    }),
+    awardedScore() {
+      const filteredBets = this.bets
+        .filter((bet) => bet.user_id === this.userId)
+        .filter((bet) => bet.game_id === this.game.id);
+
+      return filteredBets.length > 0 ? filteredBets[0].user_points : null;
+    },
     timeToBet() {
       return differenceInHours(new Date(this.game.start_date), new Date());
     },
@@ -132,6 +169,12 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.awarded-points {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .game {
   // margin-bottom: 10px;
   // border-bottom: 1px solid #f2f2f2;

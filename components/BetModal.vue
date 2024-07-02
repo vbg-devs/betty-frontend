@@ -145,7 +145,7 @@ export default {
     },
     orderedBets() {
       const bets = this.bets.concat();
-      bets.sort((a, b) => a.user.name.localeCompare(b.user.name));
+      bets.sort((a, b) => b.user_points - a.user_points);
       return bets;
     },
     myBet() {
