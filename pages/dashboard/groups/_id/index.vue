@@ -345,10 +345,10 @@ export default {
       if (newVal !== 2) return;
       this.$nextTick().then(() => {
         setTimeout(() => {
-          const elem = document.getElementById('today');
+          const elem = document.querySelector('.day-group.is-next-upcoming');
           if (!elem) return;
           const yOffset = -70;
-          const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          const y = elem.getBoundingClientRect().top + window.scrollY + yOffset;
           window.scrollTo({ top: y, behavior: 'smooth' });
         }, 500);
       });
