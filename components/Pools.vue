@@ -1,6 +1,6 @@
 <template>
   <div class="pools">
-    <div v-for="group in gameGroups" :id="group.title === 'Today' ? 'today' : null" :key="group.key" class="day-group">
+    <div v-for="group in gameGroups" :key="group.key" :class="['day-group', { 'is-next-upcoming': group.isNextUpcoming }]">
       <h3 v-if="group.name.includes('Group')" class="pool__title">{{ group.title }}</h3>
       <h3 v-else class="pool__title">{{ group.name }} - {{ group.title }}</h3>
       <div class="games">
@@ -92,6 +92,9 @@ export default {
     },
     gameGroups() {
       const gameGroups = [];
+      const now = new Date();
+      let nextUpcomingGroup = null;
+
       this.allGames.forEach((game) => {
         const date = new Date(game.start_date);
         const key = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
@@ -111,10 +114,18 @@ export default {
             key, date, title, name: game.poolName, games: [],
           };
           gameGroups.push(group);
+
+          if (!nextUpcomingGroup && date >= now) {
+            nextUpcomingGroup = group;
+          }
         }
 
         group.games.push(game);
       });
+
+      if (nextUpcomingGroup) {
+        nextUpcomingGroup.isNextUpcoming = true;
+      }
 
       return gameGroups;
     },
