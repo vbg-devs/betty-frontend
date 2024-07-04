@@ -35,6 +35,12 @@ export default {
   plugins: [
     '~/plugins/vue-jackbox.js',
   ],
+  vue: {
+    config: {
+      productionTip: false,
+      devtools: true,
+    },
+  },
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,

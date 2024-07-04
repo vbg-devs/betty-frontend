@@ -26,6 +26,14 @@
       </div>
       <div class="column column--wrap vs-container">
         <span class="vs">VS</span>
+        <div v-if="isFinished" class="finished-score">
+          <div class="finished-score__label">
+            FINISHED
+          </div>
+          <div class="finished-score__score">
+            {{ gameBet.home_team_score }} - {{ gameBet.away_team_score }}
+          </div>
+        </div>
       </div>
       <div class="column">
         <team-logo :team="awayTeam" class="team-logo"></team-logo>
@@ -58,8 +66,15 @@ export default {
       type: Boolean,
       default: false,
     },
+    gameBet: {
+      type: Object,
+      default: () => { },
+    },
   },
   computed: {
+    isFinished() {
+      return this.gameBet?.status === 1;
+    },
     homeWinPercentage() {
       const bets = this.bets.filter((x) => x.home_team_score > x.away_team_score);
       if (bets.length === 0) return 0;
@@ -84,10 +99,13 @@ export default {
   .column {
     padding: 20px;
   }
+
   .vs-container {
     padding-bottom: 50px;
+    position: relative;
   }
 }
+
 .team-logo {
   display: block;
   width: 64px;
@@ -130,5 +148,25 @@ export default {
   font-size: 12px;
   line-height: 1;
   display: block;
+}
+
+.finished-score {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-direction: column;
+  bottom: 0;
+  align-items: center;
+}
+
+.finished-score__label {
+  font-size: 12px;
+}
+
+.finished-score__score {
+  font-weight: 700;
 }
 </style>

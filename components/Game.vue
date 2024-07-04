@@ -32,8 +32,8 @@
         </div>
         <div v-else>
           {{ startDate }}
-          <span class="awarded-points">
-            {{ awardedScore }}
+          <span class="awarded-points" :class="{ 'awarded-points--win': awardedScore > 0 }">
+            {{ awardedScore }}<template v-if="awardedScore !== null">p</template>
           </span>
         </div>
       </div>
@@ -71,32 +71,9 @@ import {
   format, isToday, isTomorrow, differenceInHours, isAfter, formatDistanceStrict,
 } from 'date-fns';
 import { mapGetters } from 'vuex'; // eslint-disable-line
-import firebase from 'firebase/app';
-import 'firebase/auth';
 
 export default {
   name: 'Game',
-  data() {
-    return {
-      bets: [],
-    };
-  },
-  async fetch() {
-    const { $axios, route } = this.$nuxt.context;
-    const user = firebase.auth().currentUser;
-    const token = await user.getIdToken();
-
-    return new Promise((resolve) => {
-      $axios.get(`https://api.betty.social/api/v1/bets/bygroup/${route.params.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => {
-        this.bets = res.data;
-        resolve();
-      });
-    });
-  },
   props: {
     game: {
       type: Object,
@@ -114,6 +91,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    bets: {
+      type: Array,
+      default: () => [],
+    },
   },
   emits: ['click-game'],
   computed: {
@@ -121,6 +102,7 @@ export default {
       userId: 'user/id',
     }),
     awardedScore() {
+      if (this.game.status !== 1) return null;
       const filteredBets = this.bets
         .filter((bet) => bet.user_id === this.userId)
         .filter((bet) => bet.game_id === this.game.id);
@@ -278,17 +260,6 @@ export default {
   position: relative;
   justify-content: center;
 
-  &:before {
-    height: 12px;
-    width: 10px;
-    content: "";
-    position: absolute;
-    background: url("~@/assets/reciept.svg");
-    background-repeat: no-repeat;
-    background-size: 100%;
-    top: 2px;
-    left: -4px;
-  }
 }
 
 .live-badge {
@@ -334,6 +305,11 @@ export default {
   &:hover {
     opacity: 1;
   }
+}
+
+.awarded-points--win {
+  color: #78cc14;
+  font-weight: 700;
 }
 
 @keyframes live {

@@ -12,7 +12,7 @@
         <h2 class="modal__title">
           Bets
         </h2>
-        <bet-history :bets="bets" :home-team="homeTeam" :away-team="awayTeam"></bet-history>
+        <bet-history :bets="bets" :game-bet="gameBet" :home-team="homeTeam" :away-team="awayTeam"></bet-history>
       </header>
       <div class="tabs">
         <div v-if="!lockInput" class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
@@ -405,6 +405,12 @@ input[type="number"] {
   &:not(.bet--highlight):nth-child(even) {
     background: #fbfbfb;
   }
+}
+
+.points {
+  display: inline-block;
+  width: 40px;
+  text-align: right;
 }
 
 .bet--highlight {

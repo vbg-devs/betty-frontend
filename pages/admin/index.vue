@@ -223,7 +223,7 @@ export default {
   transition: background ease 0.3s, opacity ease 0.3s;
 
   &:hover {
-    background: #f2f2f2;
+    background: #fefefe;
   }
 }
 

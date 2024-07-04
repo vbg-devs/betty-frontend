@@ -28,7 +28,7 @@ export default {
   async mounted() {
     const user = firebase.auth().currentUser;
     const token = await user.getIdToken();
-    this.$axios.get(`https://api.betty.social/api/v1/tournament/${this.id}/leaderboard`, {
+    this.$axios.get(`https://api.betty.social/api/v1/tournament/${this.id}/leaderboard?limit=100`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
