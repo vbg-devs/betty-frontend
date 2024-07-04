@@ -88,38 +88,31 @@
                     <need-action :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></need-action>
                   </template>
                 </div>
-                <div class="row row--wrap">
-                  <div class="column">
-                    <div class="group__box">
-                      <h3 class="group__box__title">Games played</h3>
-                      <span class="big">{{ completeGamesPercentage }}</span><span class="big big--smaller">%</span>
-                      <progress-bar :progress="completeGamesPercentage"></progress-bar>
-                      <div class="games">
-                        {{ completeGames.length }} of {{ games.length }} games played
-                      </div>
-                    </div>
-                  </div>
-                  <div class="column">
-                    <div class="group__box group__box--flex">
-                      <h3 class="group__box__title">Your Rank</h3>
-                      <div class="group__box__body">
-                        <div class="big text-center">
-                          {{ yourPlacement }}<span class="big big--smaller dimmed"> of {{ group.members.length }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="column">
-                    <div class="group__box group__box--flex">
-                      <h3 class="group__box__title">Top 3</h3>
-                      <TopThree :users="group.members" @user-selected="userSelected"></TopThree>
+
+                <meme-board :members="group.members"></meme-board>
+              </section>
+              <aside class="sidebar column column--wrap">
+                <div class="group__box group__box--fit">
+                  <h3 class="group__box__title">Your Rank</h3>
+                  <div class="group__box__body">
+                    <div class="big text-center">
+                      {{ yourPlacement }}<span class="big big--smaller dimmed"> of {{ group.members.length }}</span>
                     </div>
                   </div>
                 </div>
 
-                <!-- <meme-board></meme-board> -->
-              </section>
-              <aside class="sidebar column column--wrap">
+                <div class="group__box group__box--fit">
+                  <h3 class="group__box__title">Top 3</h3>
+                  <TopThree :users="group.members" @user-selected="userSelected"></TopThree>
+                </div>
+                <div class="group__box group__box--fit">
+                  <h3 class="group__box__title">Games played</h3>
+                  <span class="big">{{ completeGamesPercentage }}</span><span class="big big--smaller">%</span>
+                  <progress-bar :progress="completeGamesPercentage"></progress-bar>
+                  <div class="games">
+                    {{ completeGames.length }} of {{ games.length }} games played
+                  </div>
+                </div>
                 <div class="group__box group__box--fit">
                   <h3 class="group__box__title">Invite link</h3>
                   <div class="big big--smaller text-center">
@@ -476,9 +469,13 @@ export default {
   font-size: 25px;
 }
 
-// .group__box {
-//   width: 50%;
-// }
+.group__box {
+  margin-top: 10px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
 
 .group__box__title {
   text-transform: uppercase;

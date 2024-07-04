@@ -5,7 +5,7 @@ export default {
     title: 'Betty.social - The go to place for friendly betting',
     meta: [
       { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
       { hid: 'description', name: 'description', content: 'Betty is your personal assistant who keeps track of everyones bets and scores and let´s you relax, sit back and enjoy the World Cup.' },
       { hid: 'og:title', property: 'og:title', content: 'Betty' },
       { hid: 'og:image', property: 'og:image', content: 'https://betty.social/apple-touch-icon.png' },
