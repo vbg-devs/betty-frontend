@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "betty-f676d",
     "public": "dist",
     "ignore": [
       "firebase.json",
