@@ -12,7 +12,9 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@giphy/js-fetch-api": "^4.0.1",
@@ -26,8 +28,12 @@
     "pinia": "^2.3.0"
   },
   "devDependencies": {
+    "@nuxt/test-utils": "^4.0.2",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.9.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^0.17.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.4"
   }
 }
