@@ -331,7 +331,7 @@
           </div>
           <div v-if="selectedTab === 2" key="games" class="games-section">
             <template v-if="tournamentDetails">
-              <pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></pools>
+              <Pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></Pools>
             </template>
           </div>
           <div v-if="selectedTab === 3" key="leaderboard">
@@ -362,6 +362,8 @@
 </template>
 
 <script setup lang="ts">
+import Pools from '~/components/Pools.vue';
+
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
