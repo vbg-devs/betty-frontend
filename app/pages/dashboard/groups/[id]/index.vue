@@ -2,7 +2,10 @@
   <div v-if="group && tournament" class="group">
     <card :no-padding="true">
       <template #header>
-        <img :src="tournament.image_url" class="img img--full" />
+        <div
+          class="card__header__image"
+          :style="{ backgroundImage: `url(${tournament.image_url})` }"
+        ></div>
         <div class="card__header__details row row--bottom-v">
           <div class="column">
             <h1 class="card__header__title">

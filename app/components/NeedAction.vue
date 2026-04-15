@@ -138,4 +138,40 @@ function placedBetAwayTeam(game: any) {
 }
 </script>
 
-<style></style>
+<style scoped>
+:deep(.game__information) {
+  padding: 0 12px;
+}
+.game__bets-info {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 5px;
+}
+
+.game__bets-info__icon {
+  height: 14px;
+  width: auto;
+  display: block;
+  margin-right: 3px;
+}
+
+.game__bets-info__label {
+  font-size: 12px;
+}
+
+.message {
+  padding: 12px;
+}
+
+.message,
+.games {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+</style>
