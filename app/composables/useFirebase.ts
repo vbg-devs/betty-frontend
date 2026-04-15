@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCK7EQZtS0JGRnS9WXdx3Ja4Sdl4914zpg',
-  authDomain: 'betty.social',
+  authDomain: 'betty-f676d.firebaseapp.com',
 };
 
 let _app: FirebaseApp | undefined;
