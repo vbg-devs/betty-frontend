@@ -7,17 +7,45 @@
     </mj-section>
     <mj-section background-color="#fff" border-radius="6px">
       <mj-column>
-        <mj-text font-size="28px" font-weight="700" color="#333" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji">Friendly Reminder!</mj-text>
-        <mj-text font-size="20px" color="#333" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji">It looks like you forgot to set one or more results for todays games. Do it now to make sure you don't get left behind.</mj-text>
-        <mj-text font-size="20px" color="#333" font-style="italic" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji">Love Betty</mj-text>
-        <mj-button font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji" font-weight="600" href="https://betty.social/dashboard" background-color="#78cc14" color="white">
+        <mj-text
+          font-size="28px"
+          font-weight="700"
+          color="#333"
+          font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji"
+          >Friendly Reminder!</mj-text
+        >
+        <mj-text
+          font-size="20px"
+          color="#333"
+          font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji"
+          >It looks like you forgot to set one or more results for todays games. Do it now to make
+          sure you don't get left behind.</mj-text
+        >
+        <mj-text
+          font-size="20px"
+          color="#333"
+          font-style="italic"
+          font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji"
+          >Love Betty</mj-text
+        >
+        <mj-button
+          font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji"
+          font-weight="600"
+          href="https://betty.social/dashboard"
+          background-color="#78cc14"
+          color="white"
+        >
           Set your scores now
         </mj-button>
       </mj-column>
     </mj-section>
     <mj-section padding-top="20px">
       <mj-column>
-        <mj-image width="80px" href="https://betty.social" src="https://betty.social/logo.png"></mj-image>
+        <mj-image
+          width="80px"
+          href="https://betty.social"
+          src="https://betty.social/logo.png"
+        ></mj-image>
       </mj-column>
     </mj-section>
   </mj-body>
