@@ -1,7 +1,7 @@
 <template>
   <div v-if="group && tournament" class="group">
     <card :no-padding="true">
-      <div class="card__header">
+      <template #header>
         <img :src="tournament.image_url" class="img img--full" />
         <div class="card__header__details row row--bottom-v">
           <div class="column">
@@ -13,7 +13,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </template>
       <div class="tabs">
         <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
           <div class="tab__image">
@@ -803,5 +803,9 @@ h2 {
 
 .dimmed {
   color: #c0cbd4;
+}
+
+.card__header {
+  aspect-ratio: 16/9;
 }
 </style>

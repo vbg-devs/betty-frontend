@@ -4,7 +4,11 @@
       <slot name="header"></slot>
     </header>
     <slot name="top"></slot>
-    <section class="card__body" :class="{ 'card__body--no-padding': noPadding }">
+    <section
+      class="card__body"
+      v-if="$slots.default"
+      :class="{ 'card__body--no-padding': noPadding }"
+    >
       <slot></slot>
     </section>
     <footer class="card__footer">

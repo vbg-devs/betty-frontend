@@ -1,8 +1,11 @@
 <template>
   <NuxtLink v-if="tournament" :to="`/dashboard/groups/${group.id}`">
     <Card class="card--clickable">
-      <div class="card__header">
-        <img :src="tournament.image_url" class="img img--full tournament__image" />
+      <template #header>
+        <div
+          class="card__header__image"
+          :style="{ backgroundImage: `url(${tournament.image_url})` }"
+        ></div>
         <div class="card__header__details row row--bottom-v">
           <div class="column">
             <h1 class="card__header__title">
@@ -13,8 +16,8 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="pt-10">{{ group.members.length }} members</div>
+      </template>
+      <div>{{ group.members.length }} members</div>
     </Card>
   </NuxtLink>
 </template>

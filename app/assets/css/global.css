@@ -184,6 +184,17 @@ body {
 
 .card__header {
   position: relative;
+  aspect-ratio: 16/9;
+  background-image: url(/assets/not-found.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.card__header__image {
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: absolute;
+  inset: 0;
 }
 
 .card__header__details {

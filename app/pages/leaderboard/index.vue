@@ -5,7 +5,7 @@
       <div class="card-box" v-for="tournament in tournaments" :key="tournament.id">
         <NuxtLink :to="`/leaderboard/${tournament.id}`">
           <card class="card--clickable">
-            <div class="card__header">
+            <template #header>
               <img :src="tournament.image_url" class="img img--full tournament__image" />
               <div class="card__header__details row row--bottom-v">
                 <div class="column">
@@ -14,7 +14,7 @@
                   </h1>
                 </div>
               </div>
-            </div>
+            </template>
           </card>
         </NuxtLink>
       </div>
