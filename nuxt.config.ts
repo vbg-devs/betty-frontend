@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   ssr: false,
 
-  modules: ['@pinia/nuxt', '@vite-pwa/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
+  modules: ['@pinia/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
 
   app: {
     head: {
@@ -42,13 +42,5 @@ export default defineNuxtConfig({
 
   sentry: {
     dsn: 'https://b938ff1b3bb541738a2dea8180b92cad@o86153.ingest.sentry.io/5813126',
-  },
-
-  pwa: {
-    manifest: {
-      name: 'Betty.social',
-      short_name: 'Betty',
-      lang: 'en',
-    },
   },
 });

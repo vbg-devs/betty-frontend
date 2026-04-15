@@ -20,7 +20,6 @@
     "@giphy/js-fetch-api": "^4.0.1",
     "@pinia/nuxt": "^0.9.0",
     "@sentry/nuxt": "^9.0.0",
-    "@vite-pwa/nuxt": "^1.0.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.0.0",
     "nuxt": "^4.4.0",
