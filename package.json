@@ -1,45 +1,33 @@
 {
   "name": "betty",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "nuxt",
+    "dev": "nuxt dev",
     "build": "nuxt build",
-    "start": "nuxt start",
     "generate": "nuxt generate",
-    "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
-    "lint": "yarn lint:js"
+    "preview": "nuxt preview",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@giphy/js-fetch-api": "^4.0.1",
-    "@nuxtjs/axios": "^5.13.1",
-    "@nuxtjs/google-gtag": "^1.0.4",
-    "@nuxtjs/pwa": "^3.3.5",
-    "@nuxtjs/sentry": "^5.1.0",
-    "core-js": "^3.9.1",
-    "date-fns": "^2.16.1",
-    "firebase": "^8.6.3",
-    "firebaseui": "^4.8.0",
-    "nuxt": "^2.15.3",
-    "vue-jackbox": "0.1.13"
+    "@pinia/nuxt": "^0.9.0",
+    "@sentry/nuxt": "^9.0.0",
+    "@vite-pwa/nuxt": "^1.0.0",
+    "date-fns": "^4.1.0",
+    "firebase": "^11.0.0",
+    "nuxt": "^4.4.0",
+    "nuxt-gtag": "^3.0.0",
+    "pinia": "^2.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.10",
-    "@nuxtjs/eslint-config": "10.0.0",
-    "@nuxtjs/eslint-module": "3.1.0",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-eslint": "^10.1.0",
-    "eslint-import-resolver-nuxt": "1.0.1",
-    "eslint-plugin-nuxt": "^2.0.0",
-    "less": "^3.11.2",
-    "less-loader": "^6.1.0",
-    "vue-eslint-parser": "7.1.0",
-    "@babel/eslint-parser": "7.16.3",
-    "eslint": "^8.7.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-import-resolver-alias": "^1.1.2",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-vue": "^8.3.0"
+    "oxfmt": "^0.45.0",
+    "oxlint": "^0.17.0",
+    "typescript": "^5.7.0"
   }
 }
