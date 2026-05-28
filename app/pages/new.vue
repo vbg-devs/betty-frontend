@@ -95,17 +95,21 @@
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-          <h2 class="modal__title">Log In</h2>
+          <h2 class="modal__title">{{ isSignUp ? 'Create Account' : 'Log In' }}</h2>
         </header>
         <section class="modal__body">
           <div class="auth-buttons">
             <button class="auth-button" @click="signInWithGoogle">
               <span class="auth-button__icon">G</span>
-              <span class="auth-button__text">Sign in with Google</span>
+              <span class="auth-button__text">
+                {{ isSignUp ? 'Sign up with Google' : 'Sign in with Google' }}
+              </span>
             </button>
             <button class="auth-button" @click="signInWithApple">
               <span class="auth-button__icon">&#63743;</span>
-              <span class="auth-button__text">Sign in with Apple</span>
+              <span class="auth-button__text">
+                {{ isSignUp ? 'Sign up with Apple' : 'Sign in with Apple' }}
+              </span>
             </button>
             <div v-if="showEmailForm" class="email-form">
               <input
@@ -120,16 +124,32 @@
                 placeholder="Password"
                 class="email-form__input"
               />
-              <button class="auth-button" @click="signInWithEmail">
-                <span class="auth-button__text">Sign in with Email</span>
+              <button class="auth-button" @click="submitEmailAuth">
+                <span class="auth-button__text">
+                  {{ isSignUp ? 'Create account' : 'Sign in with Email' }}
+                </span>
               </button>
             </div>
             <button v-else class="auth-button" @click="showEmailForm = true">
               <span class="auth-button__icon">&#9993;</span>
-              <span class="auth-button__text">Sign in with Email</span>
+              <span class="auth-button__text">
+                {{ isSignUp ? 'Sign up with Email' : 'Sign in with Email' }}
+              </span>
             </button>
           </div>
           <p v-if="authError" class="auth-error">{{ authError }}</p>
+          <p class="auth-toggle">
+            <template v-if="isSignUp">
+              Already have an account?
+              <button type="button" class="auth-toggle__link" @click="toggleMode">Log in</button>
+            </template>
+            <template v-else>
+              Don't have an account?
+              <button type="button" class="auth-toggle__link" @click="toggleMode">
+                Create one
+              </button>
+            </template>
+          </p>
         </section>
       </div>
     </div>
@@ -142,14 +162,21 @@ import {
   OAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
 } from 'firebase/auth';
 
 const showModal = ref(false);
 const showEmailForm = ref(false);
+const isSignUp = ref(false);
 const emailInput = ref('');
 const passwordInput = ref('');
 const authError = ref('');
 const router = useRouter();
+
+function toggleMode() {
+  isSignUp.value = !isSignUp.value;
+  authError.value = '';
+}
 
 const auth = useFirebaseAuth();
 
@@ -182,10 +209,14 @@ async function signInWithApple() {
   }
 }
 
-async function signInWithEmail() {
+async function submitEmailAuth() {
   try {
     authError.value = '';
-    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    if (isSignUp.value) {
+      await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    } else {
+      await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    }
     await handleSignInSuccess();
   } catch (e: any) {
     authError.value = e.message;
@@ -514,5 +545,24 @@ async function signInWithEmail() {
   font-size: 14px;
   text-align: center;
   margin-top: 10px;
+}
+
+.auth-toggle {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 10px 0 5px;
+}
+
+.auth-toggle__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: 4px;
+  color: #434f8e;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
 }
 </style>
