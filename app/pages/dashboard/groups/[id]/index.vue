@@ -94,12 +94,12 @@
           </main>
 
           <aside class="group-tab__side">
-            <div class="side-card">
+            <div class="side-card" style="order: 1">
               <span class="kicker kicker--accent">★ TOP 3</span>
               <TopThree :users="group.members" @user-selected="userSelected" />
             </div>
 
-            <div class="side-card">
+            <div class="side-card" style="order: 2">
               <span class="kicker kicker--accent">★ INVITE LINK</span>
               <div class="invite">
                 <input
@@ -115,7 +115,7 @@
               </div>
             </div>
 
-            <div class="side-card">
+            <div class="side-card" :style="{ order: manyMembers ? 4 : 3 }">
               <span class="kicker kicker--accent">★ GROUP ROSTER</span>
               <h3 class="roster__title">
                 {{ group.members.length }}
@@ -125,7 +125,7 @@
               </h3>
               <div class="roster">
                 <button
-                  v-for="m in rankedMembers"
+                  v-for="m in visibleRoster"
                   :key="m.user_id"
                   class="roster__row"
                   @click="userSelected(m)"
@@ -136,9 +136,16 @@
                   <span class="roster__pts">{{ m.score }}p</span>
                 </button>
               </div>
+              <button
+                v-if="rankedMembers.length > ROSTER_LIMIT"
+                class="roster__more"
+                @click="selectedTab = 3"
+              >
+                See all {{ rankedMembers.length }} →
+              </button>
             </div>
 
-            <div class="side-card">
+            <div class="side-card" :style="{ order: manyMembers ? 3 : 4 }">
               <span class="kicker kicker--accent">★ HOUSE RULES</span>
               <div class="rules">
                 <div class="rules__row">
@@ -161,7 +168,7 @@
               </div>
             </div>
 
-            <button class="leave-btn" @click="leaveGroup">Leave group</button>
+            <button class="leave-btn" style="order: 5" @click="leaveGroup">Leave group</button>
           </aside>
         </div>
       </section>
@@ -253,6 +260,11 @@ const yourPlacement = computed(() => {
   const me = rankedMembers.value.find((m: any) => m.user_id === userId.value);
   return me?.place ?? '–';
 });
+
+const manyMembers = computed(() => (group.value?.members.length ?? 0) > 8);
+
+const ROSTER_LIMIT = 6;
+const visibleRoster = computed(() => rankedMembers.value.slice(0, ROSTER_LIMIT));
 
 const shareUrl = computed(() => {
   if (!group.value) return '';
@@ -746,6 +758,26 @@ onBeforeUnmount(() => {
   font-weight: 800;
   color: var(--muted-strong);
   font-variant-numeric: tabular-nums;
+}
+
+.roster__more {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  cursor: pointer;
+  padding: 10px 6px 2px;
+  text-align: left;
+  align-self: flex-start;
+  transition: filter 0.15s ease;
+}
+
+.roster__more:hover {
+  filter: brightness(1.1);
 }
 
 /* ===== House rules ===== */
