@@ -11,10 +11,12 @@ html {
   box-sizing: border-box;
   background: #434f8e;
   color: #fffaeb;
+  overflow-x: hidden;
 }
 
 body {
   padding: 105px 0 50px 0;
+  overflow-x: hidden;
 }
 
 *,
