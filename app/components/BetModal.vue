@@ -3,7 +3,7 @@
     <div class="modal__backdrop" @click="emit('close')"></div>
     <div v-if="gameBet !== null" class="modal__inner">
       <header class="modal__header">
-        <span class="kicker kicker--accent">★ MATCH CALL</span>
+        <span class="kicker kicker--accent">★ PLACE YOUR BET</span>
         <h2 class="modal__title">{{ homeTeam?.name?.toUpperCase() }} <span class="vs">vs</span> {{ awayTeam?.name?.toUpperCase() }}</h2>
         <BetHistory :bets="bets" :game-bet="gameBet" :home-team="homeTeam" :away-team="awayTeam" />
         <button class="modal__close" @click="emit('close')" aria-label="Close">
@@ -31,7 +31,7 @@
           :class="{ 'tab--active': selectedTab === 1 }"
           @click="selectedTab = 1"
         >
-          Your call
+          Your bet
         </button>
         <button
           class="tab"
@@ -119,7 +119,7 @@
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
-          <span class="check__text">Place this call in all my groups</span>
+          <span class="check__text">Place this bet in all my groups</span>
         </label>
 
         <button
@@ -134,8 +134,8 @@
                 ? 'UPDATING…'
                 : 'PLACING…'
               : myBet
-                ? 'UPDATE CALL'
-                : 'LOCK IT IN'
+                ? 'UPDATE BET'
+                : 'PLACE BET'
           }}
         </button>
       </footer>

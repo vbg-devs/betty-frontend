@@ -48,7 +48,7 @@
       <article class="step">
         <span class="kicker kicker--green">● BET</span>
         <div class="step__number">02</div>
-        <h3 class="step__title">Lock the calls</h3>
+        <h3 class="step__title">Lock the bets</h3>
         <p class="step__copy">
           Exact-score predictions per match. Apply to all your groups in one tap.
         </p>
@@ -160,7 +160,7 @@
               {{
                 isSignUp
                   ? '90 seconds to your first group. Betty handles the math, you handle the banter.'
-                  : 'Lock in your calls, settle the banter. Standings live forever.'
+                  : 'Lock in your bets, settle the banter. Standings live forever.'
               }}
             </p>
             <img src="~/assets/images/betty--idle.png" class="auth-pitch__art" />

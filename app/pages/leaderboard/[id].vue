@@ -28,7 +28,7 @@
             <div class="hero__side">
               <div class="kicker kicker--muted-light">★ THE RACE</div>
               <p class="hero__lede">
-                Every call counts. Top players earn bragging rights<br />across every group on
+                Every bet counts. Top players earn bragging rights<br />across every group on
                 Betty.
               </p>
               <div v-if="playerCount !== null" class="hero__stat">
@@ -44,7 +44,7 @@
     <section class="board-section">
       <div class="section-head">
         <span class="kicker kicker--accent">● STANDINGS</span>
-        <h2 class="section-head__title">WHO'S CALLING IT RIGHT.</h2>
+        <h2 class="section-head__title">WHO'S BETTING IT RIGHT.</h2>
       </div>
       <global-leaderboard :id="tournamentId" @count="playerCount = $event"></global-leaderboard>
     </section>

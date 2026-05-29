@@ -17,6 +17,7 @@
       </div>
     </Transition>
     <NotificationProvider />
+    <NotificationTester v-if="user" />
   </div>
 </template>
 

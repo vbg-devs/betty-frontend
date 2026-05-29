@@ -13,7 +13,7 @@
         <h2 class="modal__title">{{ group.name?.toUpperCase() }}</h2>
         <p v-if="tournament" class="modal__tournament">{{ tournament.name }}</p>
         <p class="modal__lede">
-          Lock in your calls every matchday, climb the standings, settle the banter.
+          Lock in your bets every matchday, climb the standings, settle the banter.
         </p>
       </header>
 
