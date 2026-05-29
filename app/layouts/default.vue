@@ -17,7 +17,7 @@
       </div>
     </Transition>
     <NotificationProvider />
-    <NotificationTester v-if="user" />
+    <NotificationTester v-if="user && isDev" />
   </div>
 </template>
 
@@ -35,6 +35,7 @@ const groupStore = useGroupStore();
 const user = ref<UserProfile | null>(null);
 const showNotifications = ref(false);
 const loading = ref(true);
+const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {
   const name = route.name as string;
