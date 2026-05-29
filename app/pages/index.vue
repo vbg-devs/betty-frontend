@@ -1,19 +1,18 @@
 <template>
   <div class="landing">
-    <!-- Nav bar -->
-    <header class="nav">
-      <a href="/" class="nav__logo" aria-label="Betty">
-        <img src="~/assets/images/logo.svg" alt="Betty" />
-      </a>
-      <div class="nav__actions">
-        <button class="btn btn--orange btn--small" @click="openAuth(false)">Sign in</button>
-      </div>
-    </header>
-
     <!-- Hero -->
     <section class="hero">
       <div class="hero__card">
         <div class="hero__card-inner">
+          <!-- Nav bar -->
+          <header class="nav">
+            <a href="/" class="nav__logo" aria-label="Betty">
+              <img src="~/assets/images/logo.svg" alt="Betty" />
+            </a>
+            <div class="nav__actions">
+              <button class="btn btn--orange btn--small" @click="openAuth(false)">Sign in</button>
+            </div>
+          </header>
           <div class="hero__meta">
             <span class="kicker kicker--accent">★ THE GROUP OF RECORD</span>
             <span class="kicker kicker--muted">EDITION XII · 2026</span>
@@ -22,7 +21,7 @@
             <h1 class="hero__title">
               BET WITH<br />
               <span class="hero__title--green">FRIENDS.</span><br />
-              <span class="hero__title--outline">KEEP RECEIPTS.</span>
+              <span class="hero__title--outline">KEEP SCORE.</span>
             </h1>
             <div class="hero__media">
               <video class="hero__video" poster="/poster--new.jpg" autoplay muted loop playsinline>
@@ -32,7 +31,7 @@
             </div>
           </div>
           <p class="hero__lede">
-            14,302 friend-groups have already started their group for the next cup. Yours could too
+            Thousands of friends have already started their group for the next cup. Yours could too
             — Betty handles the math, you handle the banter.
           </p>
         </div>
@@ -67,10 +66,9 @@
 
     <!-- Testimonials -->
     <section id="stories" class="testimonials">
-      <span class="kicker kicker--accent">★ WHAT THE GROUPS SAY</span>
+      <span class="kicker kicker--accent">★ WHY?</span>
       <h2 class="testimonials__title">
-        The group of record<br />
-        for <span class="t-orange">every cup</span> since 2021.
+        Creating <span class="t-orange">frenemies</span> since 2021.
       </h2>
 
       <div class="testimonials__grid">
@@ -110,7 +108,7 @@
     <!-- Final CTA -->
     <section class="final-cta">
       <div class="final-cta__inner">
-        <span class="kicker kicker--dark-bold">★ FREE · 90 SECONDS · NO APP STORE</span>
+        <span class="kicker kicker--dark-bold">★ FREE · 30 SECONDS · NO APP STORE</span>
         <h2 class="final-cta__title">
           START<br />
           YOUR GROUP<br />
@@ -121,7 +119,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">BETTY.SOCIAL · EST. 2021 · VARBERG (SWEDEN)</footer>
+    <footer class="footer">BETTY.SOCIAL · EST. 2021 · VARBERG</footer>
 
     <!-- Auth modal -->
     <div class="modal" :class="{ 'modal--show': showModal }">
@@ -228,7 +226,7 @@ useHead({
   style: [
     {
       innerHTML:
-        'html.landing-active{background:#434f8e!important}body.landing-active{padding:0!important;margin:0!important;background:#434f8e}',
+        'html.landing-active{background:#434f8e!important;overflow-x:hidden}body.landing-active{padding:0!important;margin:0!important;background:#434f8e;overflow-x:hidden}',
     },
   ],
   htmlAttrs: { class: 'landing-active' },
@@ -334,23 +332,28 @@ async function submitEmailAuth() {
     BlinkMacSystemFont,
     sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
   max-width: 1280px;
   margin: 0 auto;
 }
 
-/* ===== Nav ===== */
+/* Full-bleed hero: break out of the 1280px wrapper so the dark card spans the viewport */
+.hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+/* ===== Nav (lives inside hero card) ===== */
 .nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
   gap: 32px;
+  margin-bottom: 48px;
 }
 
 .nav__logo img {
   display: block;
-  height: 36px;
+  height: 55px;
   width: auto;
 }
 
@@ -362,7 +365,7 @@ async function submitEmailAuth() {
 
 @media (max-width: 900px) {
   .nav {
-    padding: 16px 20px;
+    margin-bottom: 28px;
   }
 }
 
@@ -518,6 +521,8 @@ async function submitEmailAuth() {
   position: relative;
   padding: 56px;
   z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .hero__meta {
@@ -556,6 +561,7 @@ async function submitEmailAuth() {
   color: transparent;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 2px var(--cream);
+  font-size: clamp(48px, 10.5vw, 110px);
 }
 
 .hero__media {
@@ -603,11 +609,8 @@ async function submitEmailAuth() {
 }
 
 @media (max-width: 900px) {
-  .hero {
-    padding: 0 20px;
-  }
   .hero__card-inner {
-    padding: 32px 24px;
+    padding: 24px 20px 32px;
   }
   .hero__meta {
     flex-direction: column;
@@ -697,7 +700,7 @@ async function submitEmailAuth() {
 
 /* ===== Testimonials ===== */
 .testimonials {
-  padding: 56px 56px 72px;
+  padding: 56px 0 72px;
 }
 
 .testimonials__title {
@@ -707,7 +710,6 @@ async function submitEmailAuth() {
   font-weight: 900;
   text-transform: uppercase;
   margin: 16px 0 40px;
-  max-width: 900px;
 }
 
 .t-orange {
