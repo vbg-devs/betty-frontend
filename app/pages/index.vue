@@ -14,8 +14,7 @@
             </div>
           </header>
           <div class="hero__meta">
-            <span class="kicker kicker--accent">★ THE GROUP OF RECORD</span>
-            <span class="kicker kicker--muted">EDITION XII · 2026</span>
+            <span class="kicker kicker--accent">★ HOME FOR BRAGGING RIGHTS</span>
           </div>
           <div class="hero__grid">
             <h1 class="hero__title">
