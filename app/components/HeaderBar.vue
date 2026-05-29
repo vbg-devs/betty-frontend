@@ -2,57 +2,30 @@
   <header v-if="user" class="header-bar">
     <div class="container header-bar__inner">
       <div class="header-bar__item">
-        <button class="header-bar__button" @click="showUserMenu = !showUserMenu">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            color="#ffffff"
-            fill="none"
-          >
-            <path
-              d="M4 5L20 5"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M4 12L20 12"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M4 19L20 19"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
-        <div v-if="showUserMenu" class="dropdown">
-          <div v-if="user" class="dropdown__item usermenu" @click="openModal">
-            <UserBadge :user="user" :large="true" />
-            <p class="user-name">{{ user.name }}</p>
-          </div>
-          <div class="dropdown__item" @click="goToLeaderboard">
-            <span class="warning">Global leaderboard</span>
-          </div>
-          <div class="dropdown__item" @click="logOut">
-            <span class="warning">Log out</span>
-          </div>
-        </div>
-      </div>
-      <div class="header-bar__item header-bar__item--fill text-center middle-logo">
-        <NuxtLink to="/dashboard">
-          <img src="~/assets/images/logo.svg" class="logo" />
+        <NuxtLink to="/dashboard" class="logo-link">
+          <img src="~/assets/images/logo.svg" class="logo" alt="Betty" />
         </NuxtLink>
       </div>
-      <div class="header-bar__item">
+
+      <nav class="header-bar__nav">
+        <NuxtLink
+          to="/dashboard"
+          class="nav-link"
+          :class="{ 'nav-link--active': isActive('/dashboard') }"
+        >
+          Groups
+        </NuxtLink>
+        <NuxtLink
+          to="/leaderboard"
+          class="nav-link"
+          :class="{ 'nav-link--active': isActive('/leaderboard') }"
+        >
+          Leaderboard
+        </NuxtLink>
+      </nav>
+
+      <div class="header-bar__item header-bar__item--right">
+        <button class="btn-new-group" @click="showCreateGroupModal = true">+ NEW GROUP</button>
         <button
           class="header-bar__button header-bar__button--dimmed"
           :class="{ dimmed: hideNotifications }"
@@ -115,9 +88,32 @@
             />
           </svg>
         </button>
+
+        <div class="profile-wrap">
+          <button class="profile-button" @click="showUserMenu = !showUserMenu">
+            <UserBadge :user="user" :small="true" :clickable="false" />
+          </button>
+          <div v-if="showUserMenu" class="dropdown">
+            <div v-if="user" class="dropdown__header">
+              <div class="dropdown__name">{{ user.name }}</div>
+              <div class="dropdown__email">{{ user.email }}</div>
+            </div>
+            <button class="dropdown__item" @click="openModal">Edit profile</button>
+            <button class="dropdown__item dropdown__item--danger" @click="logOut">
+              Log out
+            </button>
+          </div>
+        </div>
       </div>
+
       <Transition name="page">
         <UpdateProfileModal v-if="showModal === true" @close="showModal = false" />
+      </Transition>
+      <Transition name="page">
+        <CreateGroupModal
+          v-if="showCreateGroupModal"
+          @close="handleCloseCreateGroupModal"
+        ></CreateGroupModal>
       </Transition>
     </div>
   </header>
@@ -134,12 +130,17 @@ const emit = defineEmits<{
   'toggle-notifications': [];
 }>();
 
-const router = useRouter();
 const firebaseAuth = useFirebaseAuth();
 const messageStore = useMessageStore();
+const route = useRoute();
+
+function isActive(path: string) {
+  return route.path === path || route.path.startsWith(`${path}/`);
+}
 
 const showUserMenu = ref(false);
 const showModal = ref(false);
+const showCreateGroupModal = ref(false);
 const hideNotifications = ref(false);
 
 const messages = computed(() => messageStore.all);
@@ -154,14 +155,14 @@ function openModal() {
   showModal.value = true;
 }
 
-function goToLeaderboard() {
-  showUserMenu.value = false;
-  router.push('/leaderboard');
-}
-
 function logOut() {
   showUserMenu.value = false;
   signOut(firebaseAuth);
+}
+
+function handleCloseCreateGroupModal() {
+  showCreateGroupModal.value = false;
+  document.body.classList.remove('no-scroll');
 }
 </script>
 
@@ -171,13 +172,9 @@ function logOut() {
   top: 0;
   left: 0;
   right: 0;
-  height: 62px;
+  padding: 25px 0;
   z-index: 5;
   background: #434f8e;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 1px 4px rgba(0, 0, 0, 0.05),
-    0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .header-bar__inner {
@@ -185,11 +182,80 @@ function logOut() {
   display: flex;
   align-items: center;
   height: 100%;
+  gap: 24px;
 }
 
-.header-bar__item--mobile-only {
-  @media (min-width: 1024px) {
-    display: none;
+.logo-link {
+  display: inline-flex;
+}
+
+.logo {
+  height: 55px;
+  width: auto;
+  display: block;
+}
+
+.header-bar__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header-bar__item--right {
+  gap: 6px;
+}
+
+/* ===== Nav links ===== */
+.header-bar__nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-right: auto;
+  margin-left: 16px;
+}
+
+.nav-link {
+  position: relative;
+  color: rgba(255, 250, 235, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 8px 0;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #fffaeb;
+}
+
+.nav-link--active {
+  color: #fffaeb;
+}
+
+.nav-link--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #ff5a3a;
+  border-radius: 2px;
+}
+
+@media (max-width: 600px) {
+  .header-bar__nav {
+    gap: 16px;
+    margin-left: 8px;
+  }
+  .nav-link {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .logo {
+    height: 42px;
   }
 }
 
@@ -206,76 +272,125 @@ a:hover {
   color: #eee;
 }
 
-.logo {
-  height: 32px;
-  width: auto;
-  display: block;
-  margin-top: 6px;
-}
-
-.header-bar__item {
+/* ===== Profile button ===== */
+.profile-wrap {
   position: relative;
   display: flex;
+  align-items: center;
 }
 
+.profile-button {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease;
+}
+
+.profile-button:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===== New group button ===== */
+.btn-new-group {
+  background: #ff5a3a;
+  color: #fff;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 12px 18px;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.btn-new-group:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+@media (max-width: 600px) {
+  .btn-new-group {
+    padding: 10px 12px;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+}
+
+/* ===== Dropdown ===== */
 .dropdown {
   position: absolute;
   background: #fff;
-  border-radius: 5px;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  width: 300px;
-  left: 50%;
-  top: 50px;
-  transform: translateX(-50%);
+  border-radius: 2px;
+  box-shadow:
+    0 12px 32px -8px rgba(20, 25, 56, 0.18),
+    0 4px 12px -4px rgba(20, 25, 56, 0.1);
+  width: 240px;
+  right: 0;
+  top: calc(100% + 10px);
+  padding: 6px;
+  overflow: hidden;
+}
 
-  @media (max-width: 767px) {
-    position: fixed;
-    top: 62px;
-    left: 0;
-    bottom: 0;
-    transform: none;
-    border-radius: 0;
+.dropdown__header {
+  padding: 12px 14px 14px;
+  border-bottom: 1px solid #eef0f5;
+  margin-bottom: 6px;
+}
 
-    &:before {
-      display: none;
-    }
-  }
+.dropdown__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2752;
+  line-height: 1.2;
+}
 
-  &:before {
-    position: absolute;
-    content: '';
-    border: 10px solid transparent;
-    border-bottom-color: #fff;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, -100%);
-  }
+.dropdown__email {
+  font-size: 12px;
+  color: #6b7090;
+  margin-top: 3px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown__item {
-  padding: 35px 0;
-  text-align: center;
-  text-transform: uppercase;
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 13px;
   font-weight: 600;
-  border-bottom: 1px solid #e9e9e9;
+  color: #1f2752;
   cursor: pointer;
-  transition: background ease 0.3s;
-
-  &:last-child {
-    border: none;
-  }
-
-  &:hover {
-    background: #f2f2f2;
-  }
+  border-radius: 2px;
+  font-family: inherit;
+  transition: background 0.15s ease;
 }
 
-.header-bar__item--spacer {
-  width: 20px;
+.dropdown__item:hover {
+  background: #f4f5fa;
+}
 
-  @media (min-width: 1024px) {
-    width: 270px;
-  }
+.dropdown__item--danger {
+  color: #d8412f;
+}
+
+.dropdown__item--danger:hover {
+  background: #fdf0ee;
 }
 
 .header-bar__button {

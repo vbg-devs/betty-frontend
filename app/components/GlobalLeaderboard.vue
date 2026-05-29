@@ -12,6 +12,10 @@ const { id = -1 } = defineProps<{
   id?: number;
 }>();
 
+const emit = defineEmits<{
+  count: [count: number];
+}>();
+
 const { authFetch } = useApi();
 
 const users = ref<any[]>([]);
@@ -21,6 +25,7 @@ onMounted(async () => {
   const data = await authFetch<any[]>(`/tournament/${id}/leaderboard?limit=100`);
   users.value = data;
   loading.value = false;
+  emit('count', data?.length ?? 0);
 });
 </script>
 

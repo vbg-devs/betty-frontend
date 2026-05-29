@@ -139,39 +139,77 @@ function placedBetAwayTeam(game: any) {
 </script>
 
 <style scoped>
-:deep(.game__information) {
-  padding: 0 12px;
+.message {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --yellow: #ffd84a;
+
+  background: var(--indigo-dark);
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+  padding: 18px 20px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
+
+.message--warning {
+  border-left-color: var(--yellow);
+  background: var(--indigo-dark);
+}
+
+.message__text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.7);
+  text-align: left;
+}
+
+.message--warning .message__text {
+  color: var(--yellow);
+}
+
+.message__text::before {
+  content: '★ ';
+  color: var(--orange);
+}
+
+.games {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
 .game__bets-info {
   position: absolute;
   top: 10px;
   right: 10px;
-  border-radius: 2px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 2px 5px;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 250, 235, 0.7);
+  border-radius: 2px;
 }
 
 .game__bets-info__icon {
   height: 14px;
-  width: auto;
+  width: 14px;
   display: block;
-  margin-right: 3px;
 }
 
 .game__bets-info__label {
-  font-size: 12px;
-}
-
-.message {
-  padding: 12px;
-}
-
-.message,
-.games {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  font-size: 11px;
+  font-weight: 700;
 }
 </style>
