@@ -78,7 +78,10 @@
       <section v-if="selectedTab === 1" key="group" class="group-tab">
         <div class="group-tab__grid">
           <main class="group-tab__main">
-            <p v-if="group.welcome_message" class="welcome">{{ group.welcome_message }}</p>
+            <aside v-if="group.welcome_message" class="welcome">
+              <span class="kicker kicker--accent">★ WELCOME</span>
+              <p class="welcome__text">{{ group.welcome_message }}</p>
+            </aside>
             <template v-if="tournamentDetails">
               <NeedAction
                 :pools="pools"
@@ -592,11 +595,30 @@ onBeforeUnmount(() => {
 }
 
 .welcome {
-  font-size: 18px;
-  line-height: 1.4;
-  font-weight: 500;
-  color: var(--muted-strong);
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--orange);
+  padding: 18px 22px 20px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin: 0;
+}
+
+.welcome__text {
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--cream);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+@media (min-width: 768px) {
+  .welcome__text {
+    font-size: 22px;
+  }
 }
 
 /* ===== Sidebar cards ===== */

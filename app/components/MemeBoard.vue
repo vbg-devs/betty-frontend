@@ -1,6 +1,9 @@
 <template>
   <div class="meme-board">
-    <header class="meme-board__header"></header>
+    <header class="meme-board__header">
+      <span class="kicker kicker--accent">★ GROUP CHAT</span>
+      <span v-if="messages.length" class="meme-board__count">{{ messages.length }} MESSAGES</span>
+    </header>
     <section class="meme-board__body">
       <div v-show="images.length" class="gif-selector">
         <div>
@@ -65,7 +68,7 @@
             preserveAspectRatio="xMidYMid"
             width="34"
             height="34"
-            style="shape-rendering: auto; display: block; background: rgb(255, 255, 255)"
+            style="shape-rendering: auto; display: block"
             xmlns:xlink="http://www.w3.org/1999/xlink"
           >
             <g>
@@ -388,11 +391,46 @@ async function sendMessage(override?: boolean) {
 </script>
 
 <style scoped>
+.meme-board {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+}
+
+.meme-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.kicker--accent {
+  color: var(--orange);
+}
+
+.meme-board__count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--muted);
+}
+
 .meme-board__body {
   max-height: 400px;
   min-height: 1px;
   overflow-y: auto;
-  padding-right: 10px;
+  padding-right: 6px;
   display: flex;
   flex-direction: column-reverse;
 }
@@ -408,36 +446,72 @@ async function sendMessage(override?: boolean) {
   max-width: 100%;
   height: auto;
   max-height: 300px;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .meme-board__footer {
-  padding-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
 }
 
 .meme-board__message {
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #efefef;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meme-board__message:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.meme-board__message :deep(p) {
+  margin: 0;
+  color: var(--cream);
+  line-height: 1.4;
 }
 
 .meme-board__input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #efefef;
-  border-radius: 4px;
+  padding: 12px 44px 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--cream);
+  border-radius: 2px;
   outline: none;
   font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.meme-board__input::placeholder {
+  color: var(--muted);
+}
+
+.meme-board__input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .meme-board .row {
   margin: 0;
-  gap: 10px;
+  gap: 12px;
 }
 
 .meme-board__username {
-  font-size: 14px;
-  margin-bottom: 10px;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--muted-strong);
+}
+
+.meme-board__username :deep(strong) {
+  color: var(--cream);
+  font-weight: 800;
+  margin-right: 4px;
 }
 
 .meme-board .column {
@@ -457,16 +531,21 @@ async function sendMessage(override?: boolean) {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #eee;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.meme-board__toggle:hover {
+  color: var(--cream);
 }
 
 .meme-board__toggle--active {
-  color: #434f8e;
+  color: var(--orange);
 }
 
 .meme-board__toggle svg {
   display: block;
-  height: 26px;
+  height: 22px;
   width: auto;
 }
 
@@ -478,9 +557,20 @@ async function sendMessage(override?: boolean) {
 }
 
 .gif-selector {
-  background: #fbfbfb;
-  padding: 10px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px;
+  border-radius: 2px;
+  margin-bottom: 14px;
+  color: var(--cream);
+}
+
+.gif-selector :deep(strong) {
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
 }
 
 .gif-selector__image-wrapper {
@@ -490,17 +580,43 @@ async function sendMessage(override?: boolean) {
 .gif-selector__buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.button--select {
-  background: #434f8e;
+.gif-selector__buttons :deep(.button) {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-radius: 2px;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  height: auto;
+}
+
+.gif-selector__buttons :deep(.button--action) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
+}
+
+.gif-selector__buttons :deep(.button--select) {
+  background: var(--orange);
+  color: #fff;
+}
+
+.gif-selector__buttons :deep(.button--danger) {
+  background: transparent;
+  border: 1px solid rgba(255, 90, 58, 0.4);
+  color: var(--orange);
 }
 
 .gif-selector img {
   max-height: 300px;
   width: auto;
   max-width: 100%;
-  border-radius: 8px;
+  border-radius: 2px;
   display: block;
 }
 </style>

@@ -687,10 +687,18 @@ async function placeBet() {
 
 :deep(.bet-history .bets-progress) {
   margin-top: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+}
+
+:deep(.bet-history .bets-progress .row) {
+  margin: 0;
 }
 
 :deep(.bet-history .tie) {
+  position: static;
+  transform: none;
+  text-align: center;
+  margin-top: 4px;
   color: var(--muted-strong);
   font-weight: 700;
 }
