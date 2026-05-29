@@ -124,40 +124,92 @@
     <div class="modal" :class="{ 'modal--show': showModal }">
       <div class="modal__backdrop" @click="showModal = false"></div>
       <div class="modal__inner">
-        <header class="modal__header">
-          <button class="modal__close" @click="showModal = false" aria-label="Close">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-          <img src="~/assets/images/betty--idle.png" class="modal__header__image" />
-          <h2 class="modal__title">{{ isSignUp ? 'Create Account' : 'Log In' }}</h2>
-        </header>
-        <section class="modal__body">
-          <div class="auth-buttons">
-            <button class="auth-button" @click="signInWithGoogle">
-              <span class="auth-button__icon">G</span>
-              <span class="auth-button__text">
-                {{ isSignUp ? 'Sign up with Google' : 'Sign in with Google' }}
+        <button class="modal__close" @click="showModal = false" aria-label="Close">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="modal__grid">
+          <aside class="auth-pitch">
+            <span class="kicker kicker--accent">{{
+              isSignUp ? '★ NEW HERE?' : '★ WELCOME BACK'
+            }}</span>
+            <h2 v-if="isSignUp" class="auth-pitch__title">
+              JOIN<br />
+              <span class="t-green">THE</span><br />
+              <span class="t-orange">CHAOS.</span>
+            </h2>
+            <h2 v-else class="auth-pitch__title">
+              LOG<br />
+              <span class="t-green">IN.</span><br />
+              <span class="t-orange">PWN.</span>
+            </h2>
+            <p class="auth-pitch__lede">
+              {{
+                isSignUp
+                  ? '90 seconds to your first group. Betty handles the math, you handle the banter.'
+                  : 'Lock in your calls, settle the banter. Standings live forever.'
+              }}
+            </p>
+            <img src="~/assets/images/betty--idle.png" class="auth-pitch__art" />
+          </aside>
+
+          <section class="auth-options">
+            <h3 class="auth-options__title">
+              {{ isSignUp ? 'Create account' : 'Sign in' }}
+            </h3>
+
+            <button class="auth-btn" @click="signInWithGoogle">
+              <span class="auth-btn__icon">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path
+                    fill="#FFC107"
+                    d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"
+                  />
+                  <path
+                    fill="#FF3D00"
+                    d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+                  />
+                  <path
+                    fill="#4CAF50"
+                    d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
+                  />
+                  <path
+                    fill="#1976D2"
+                    d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2c-.4.4 6.6-4.8 6.6-14.8 0-1.3-.1-2.3-.4-3.5z"
+                  />
+                </svg>
               </span>
+              <span class="auth-btn__text">{{
+                isSignUp ? 'Sign up with Google' : 'Continue with Google'
+              }}</span>
             </button>
-            <button class="auth-button" @click="signInWithApple">
-              <span class="auth-button__icon">&#63743;</span>
-              <span class="auth-button__text">
-                {{ isSignUp ? 'Sign up with Apple' : 'Sign in with Apple' }}
+
+            <button class="auth-btn" @click="signInWithApple">
+              <span class="auth-btn__icon">
+                <svg width="18" height="20" viewBox="0 0 384 512" fill="currentColor">
+                  <path
+                    d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
+                  />
+                </svg>
               </span>
+              <span class="auth-btn__text">{{
+                isSignUp ? 'Sign up with Apple' : 'Continue with Apple'
+              }}</span>
             </button>
+
             <div v-if="showEmailForm" class="email-form">
               <input
                 v-model="emailInput"
@@ -171,33 +223,49 @@
                 placeholder="Password"
                 class="email-form__input"
               />
-              <button class="auth-button" @click="submitEmailAuth">
-                <span class="auth-button__text">
-                  {{ isSignUp ? 'Create account' : 'Sign in with Email' }}
+              <button class="auth-btn auth-btn--primary" @click="submitEmailAuth">
+                <span class="auth-btn__text">
+                  {{ isSignUp ? 'CREATE ACCOUNT →' : 'SIGN IN →' }}
                 </span>
               </button>
             </div>
-            <button v-else class="auth-button" @click="showEmailForm = true">
-              <span class="auth-button__icon">&#9993;</span>
-              <span class="auth-button__text">
-                {{ isSignUp ? 'Sign up with Email' : 'Sign in with Email' }}
+            <button v-else class="auth-btn" @click="showEmailForm = true">
+              <span class="auth-btn__icon">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
               </span>
+              <span class="auth-btn__text">{{
+                isSignUp ? 'Sign up with Email' : 'Continue with Email'
+              }}</span>
             </button>
-          </div>
-          <p v-if="authError" class="auth-error">{{ authError }}</p>
-          <p class="auth-toggle">
-            <template v-if="isSignUp">
-              Already have an account?
-              <button type="button" class="auth-toggle__link" @click="toggleMode">Log in</button>
-            </template>
-            <template v-else>
-              Don't have an account?
-              <button type="button" class="auth-toggle__link" @click="toggleMode">
-                Create one
-              </button>
-            </template>
-          </p>
-        </section>
+
+            <p v-if="authError" class="auth-error">{{ authError }}</p>
+
+            <p class="auth-toggle">
+              <template v-if="isSignUp">
+                Already have an account?
+                <button type="button" class="auth-toggle__link" @click="toggleMode">Log in</button>
+              </template>
+              <template v-else>
+                Don't have an account?
+                <button type="button" class="auth-toggle__link" @click="toggleMode">
+                  Create one
+                </button>
+              </template>
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -865,10 +933,12 @@ async function submitEmailAuth() {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity ease 0.3s;
+  transition: opacity ease 0.25s;
   z-index: 997;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .modal--show {
@@ -879,109 +949,171 @@ async function submitEmailAuth() {
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 25, 56, 0.7);
+  background: rgba(20, 25, 56, 0.78);
+  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
 .modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.4);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  max-height: 700px;
-  color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-.modal__header {
   background: var(--indigo-dark);
   color: var(--cream);
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
+  width: 100%;
+  max-width: 780px;
   position: relative;
-  padding-bottom: 15px;
+  z-index: 2;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  max-height: 92vh;
 }
 
 .modal__close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 16px;
+  right: 16px;
   background: transparent;
-  color: var(--cream);
+  color: rgba(255, 250, 235, 0.78);
   border: 0;
+  width: 36px;
+  height: 36px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+  z-index: 3;
 }
 
 .modal__close:hover {
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cream);
 }
 
-.modal__title {
-  text-align: center;
-  padding: 10px 0 5px;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  margin: 0;
+.modal__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 540px;
 }
 
-.modal__header__image {
-  display: block;
-  margin: 30px auto 0;
-  height: 100px;
-  width: auto;
-}
-
-.modal__body {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-.auth-buttons {
+/* ===== Left: editorial pitch ===== */
+.auth-pitch {
+  position: relative;
+  background: var(--indigo-deep);
+  padding: 40px 36px 32px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 8px 0;
+  overflow: hidden;
 }
 
-.auth-button {
+.auth-pitch__title {
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: var(--cream);
+  margin: 14px 0 18px;
+  text-transform: uppercase;
+}
+
+.t-green {
+  color: var(--green);
+}
+
+.t-orange {
+  color: var(--orange);
+}
+
+.auth-pitch__lede {
+  font-size: 14px;
+  color: var(--muted-strong);
+  line-height: 1.5;
+  margin: 0 0 16px;
+  max-width: 280px;
+}
+
+.auth-pitch__art {
+  position: absolute;
+  right: -20px;
+  bottom: -24px;
+  height: 180px;
+  width: auto;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+/* ===== Right: auth options ===== */
+.auth-options {
+  background: var(--indigo-dark);
+  padding: 40px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-options__title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  color: var(--cream);
+}
+
+.auth-btn {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  background: transparent;
+  gap: 12px;
+  padding: 13px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
   width: 100%;
-  transition: border-color ease 0.3s;
+  color: var(--cream);
   font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
-.auth-button:hover {
-  border-color: var(--indigo);
+.auth-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.07);
 }
 
-.auth-button__icon {
-  margin-right: 10px;
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
+.auth-btn__icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cream);
+  flex-shrink: 0;
 }
 
-.auth-button__text {
-  font-weight: 600;
+.auth-btn__text {
+  font-weight: 700;
   font-size: 14px;
+  color: var(--cream);
+}
+
+.auth-btn--primary {
+  background: var(--orange);
+  border-color: var(--orange);
+  justify-content: center;
+}
+
+.auth-btn--primary:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  filter: brightness(1.05);
+}
+
+.auth-btn--primary .auth-btn__text {
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #fff;
 }
 
 .email-form {
@@ -991,36 +1123,43 @@ async function submitEmailAuth() {
 }
 
 .email-form__input {
-  border: 1px solid #ddd;
-  padding: 10px 8px;
-  border-radius: 3px;
   width: 100%;
-  font-size: 15px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--cream);
+  padding: 13px 16px;
+  border-radius: 2px;
+  font-size: 14px;
   outline: none;
   font-family: inherit;
-  transition: border-color ease 0.3s;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
-.email-form__input:hover {
-  border-color: #aaa;
+.email-form__input::placeholder {
+  color: var(--muted);
 }
 
 .email-form__input:focus {
-  border-color: var(--indigo);
+  border-color: var(--orange);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .auth-error {
-  color: #f44336;
-  font-size: 14px;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 700;
   text-align: center;
-  margin-top: 10px;
+  margin: 4px 0 0;
 }
 
 .auth-toggle {
   text-align: center;
-  font-size: 14px;
-  color: #666;
-  margin: 10px 0 5px;
+  font-size: 13px;
+  color: var(--muted-strong);
+  margin: auto 0 0;
+  padding-top: 12px;
 }
 
 .auth-toggle__link {
@@ -1028,11 +1167,33 @@ async function submitEmailAuth() {
   border: 0;
   padding: 0;
   margin-left: 4px;
-  color: var(--indigo);
-  font-weight: 600;
-  font-size: 14px;
+  color: var(--orange);
+  font-weight: 800;
+  font-size: 13px;
   cursor: pointer;
   text-decoration: underline;
+  text-underline-offset: 3px;
   font-family: inherit;
+}
+
+@media (max-width: 720px) {
+  .modal__grid {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .auth-pitch {
+    padding: 28px 26px 22px;
+    text-align: left;
+  }
+  .auth-pitch__title {
+    font-size: clamp(38px, 12vw, 56px);
+    margin: 10px 0 12px;
+  }
+  .auth-pitch__art {
+    display: none;
+  }
+  .auth-options {
+    padding: 24px 26px 28px;
+  }
 }
 </style>
