@@ -33,6 +33,16 @@
             <input v-model="name" type="text" placeholder="Betty" class="field__input" />
           </label>
 
+          <label class="field">
+            <span class="field__label">Country</span>
+            <select v-model="country" class="field__input field__input--select">
+              <option :value="null">— Not set —</option>
+              <option v-for="c in countries" :key="c.code" :value="c.code">
+                {{ c.flag_emoji ? `${c.flag_emoji}  ` : '' }}{{ c.name }}
+              </option>
+            </select>
+          </label>
+
           <button
             type="submit"
             :disabled="saving || !canSave"
@@ -54,10 +64,12 @@ const emit = defineEmits<{
 
 const { authFetch } = useApi();
 const { alert } = useNotify();
+const { countries, load: loadCountries } = useCountries();
 
 const email = ref('');
 const name = ref('');
 const imageUrl = ref('');
+const country = ref<string | null>(null);
 const saving = ref(false);
 const id = ref<number | null>(null);
 
@@ -68,10 +80,12 @@ const canSave = computed(() => {
 
 onMounted(async () => {
   document.body.classList.add('no-scroll');
+  loadCountries();
   try {
     const data = await authFetch<any>('/user/me');
     name.value = data.name;
     imageUrl.value = data.image_url;
+    country.value = data.country ?? null;
     id.value = data.id;
   } catch (err) {
     console.error(err);
@@ -91,6 +105,7 @@ async function save() {
         email: email.value,
         name: name.value,
         image_url: imageUrl.value,
+        country: country.value,
       },
     });
     alert({
@@ -261,6 +276,20 @@ async function save() {
 .field__input:focus {
   border-color: var(--orange);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.field__input--select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23fffaebcc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.field__input--select option {
+  background: var(--indigo-dark);
+  color: var(--cream);
 }
 
 /* ===== Button ===== */

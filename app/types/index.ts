@@ -3,9 +3,16 @@ export interface UserProfile {
   email: string;
   name: string;
   image_url: string | null;
+  country: string | null;
   is_admin: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface Country {
+  code: string;
+  name: string;
+  flag_emoji: string | null;
 }
 
 export interface Tournament {
