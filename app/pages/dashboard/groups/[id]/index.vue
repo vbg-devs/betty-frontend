@@ -148,6 +148,9 @@
                 <div class="welcome-message">
                   {{ group.welcome_message }}
                 </div>
+                <p v-if="group.description" class="group-description">
+                  {{ group.description }}
+                </p>
                 <div>
                   <template v-if="tournamentDetails">
                     <need-action
@@ -325,6 +328,29 @@
                       <strong>{{ group.exact_result_points }}</strong>
                     </div>
                   </div>
+                  <div class="row row--center-v">
+                    <div class="column">
+                      Visibility
+                      <div class="visibility-hint">
+                        {{
+                          isPublic
+                            ? 'Anyone can find and bet in this group'
+                            : 'Only people with the invite link can bet'
+                        }}
+                      </div>
+                    </div>
+                    <div class="column column--wrap">
+                      <label class="toggle">
+                        <input
+                          type="checkbox"
+                          :checked="isPublic"
+                          :disabled="visibilityLoading"
+                          @change="toggleVisibility(($event.target as HTMLInputElement).checked)"
+                        />
+                        <span>{{ isPublic ? 'Public' : 'Private' }}</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div class="button-wrapper">
                   <button class="button button--danger" @click="leaveGroup">Leave group</button>
@@ -380,6 +406,7 @@ const gameBet = ref<any>(null);
 const copied = ref(false);
 const selectedTab = ref(1);
 const selectedUser = ref<any>(null);
+const visibilityLoading = ref(false);
 let interval: ReturnType<typeof setInterval> | null = null;
 
 const groupId = computed(() => parseFloat(route.params.id as string));
@@ -423,6 +450,8 @@ const yourPlacement = computed(() => {
   }
   return myPlace;
 });
+
+const isPublic = computed(() => !!group.value?.public_at);
 
 const shareUrl = computed(() => {
   if (!group.value) return '';
@@ -513,6 +542,31 @@ function leaveGroup() {
 function betPlaced() {
   gameBet.value = null;
   loadBets();
+}
+
+async function toggleVisibility(nextValue: boolean) {
+  if (!group.value) return;
+  visibilityLoading.value = true;
+  try {
+    await groupStore.setVisibility(group.value.id, nextValue);
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.status;
+    if (status === 401) {
+      notify({
+        title: 'Not allowed',
+        message: 'Only the group author can change visibility.',
+        state: 'warning',
+      });
+    } else {
+      notify({
+        title: 'Could not update visibility',
+        message: String(err),
+        state: 'error',
+      });
+    }
+  } finally {
+    visibilityLoading.value = false;
+  }
 }
 
 async function copyInviteCode() {
@@ -746,6 +800,27 @@ onBeforeUnmount(() => {
 
 .group-settings {
   margin-top: 25px;
+}
+
+.group-description {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 20px;
+  white-space: pre-wrap;
+}
+
+.visibility-hint {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 .group__box--flex {

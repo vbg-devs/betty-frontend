@@ -11,7 +11,8 @@
         <div class="tournament">
           {{ tournament.name }}
         </div>
-        <p class="question">Would you like to join this group?</p>
+        <p v-if="group.description" class="description">{{ group.description }}</p>
+        <p class="question">Would you like to bet in this group?</p>
       </div>
       <div class="buttons">
         <button class="join-button join-button--yes" :disabled="loading" @click="join">Yes</button>
@@ -213,6 +214,13 @@ async function join() {
 
 .question {
   margin: 10px 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #555;
+  margin: 12px 0 0;
+  white-space: pre-wrap;
 }
 
 .buttons {

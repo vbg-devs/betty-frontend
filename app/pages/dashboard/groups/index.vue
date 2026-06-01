@@ -43,6 +43,9 @@
     </div>
     <div class="empty__button">
       <button class="button button--action" @click="showModal = true">Start a group</button>
+      <NuxtLink to="/dashboard/groups/browse" class="button button--secondary">
+        Browse public groups
+      </NuxtLink>
     </div>
     <transition name="page">
       <create-group-modal
@@ -97,7 +100,9 @@ function handleCloseCreateGroupModal() {
 .empty__button {
   display: flex;
   justify-content: center;
+  gap: 10px;
   margin-top: 30px;
+  flex-wrap: wrap;
 }
 
 .groups {

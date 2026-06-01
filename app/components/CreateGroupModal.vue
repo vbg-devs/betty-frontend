@@ -56,6 +56,27 @@
               />
             </div>
             <div class="form-row">
+              <textarea
+                v-model="description"
+                placeholder="Description (visible when this group is public)"
+                class="form-input form-textarea"
+                rows="3"
+                :maxlength="MAX_DESCRIPTION_LEN"
+              ></textarea>
+              <div class="char-count" :class="{ 'char-count--limit': description.length >= MAX_DESCRIPTION_LEN }">
+                {{ description.length }} / {{ MAX_DESCRIPTION_LEN }}
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="checkbox-row">
+                <input v-model="isPublic" type="checkbox" />
+                <span>Make this group public</span>
+                <span class="peek-text">
+                  (anyone can discover and bet in this group without an invite link)
+                </span>
+              </label>
+            </div>
+            <div class="form-row">
               <input
                 v-model="winPoints"
                 type="number"
@@ -155,8 +176,12 @@ const emit = defineEmits<{
 const tournamentStore = useTournamentStore();
 const groupStore = useGroupStore();
 
+const MAX_DESCRIPTION_LEN = 1000;
+
 const name = ref('');
 const message = ref('');
+const description = ref('');
+const isPublic = ref(false);
 const winPoints = ref('');
 const exactScorePoints = ref('');
 const peak = ref(true);
@@ -203,7 +228,8 @@ async function copyInviteCode() {
 
 async function create() {
   if (!selectedTournament.value) return;
-  const payload = {
+  const trimmedDescription = description.value.trim();
+  const payload: Record<string, unknown> = {
     name: name.value,
     tournament_id: selectedTournament.value.id,
     correct_team_points: parseFloat(winPoints.value),
@@ -211,6 +237,8 @@ async function create() {
     allow_sneak_peek: peak.value,
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
+    description: trimmedDescription || null,
+    is_public: isPublic.value,
     mode: 0,
   };
 
@@ -218,7 +246,7 @@ async function create() {
   try {
     const res = await groupStore.create(payload);
     await groupStore.load();
-    group.value = groupStore.byId(res.group_id);
+    group.value = groupStore.byId(res.group_id) ?? null;
   } catch (err) {
     console.error(err);
     loading.value = false;
@@ -354,5 +382,35 @@ async function create() {
 
 .form-row {
   margin-bottom: 20px;
+}
+
+.form-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 10px;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.char-count--limit {
+  color: #f44336;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  & input {
+    margin-right: 4px;
+  }
 }
 </style>
