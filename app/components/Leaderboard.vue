@@ -3,27 +3,36 @@
     <div
       v-for="user in listWithPlacement"
       :key="user.user_id"
-      class="leaderbord-row"
-      :class="{ highlight: user.user_id === userId }"
+      class="lb-row"
+      :class="{
+        'lb-row--you': user.user_id === userId,
+        'lb-row--first': user.place === 1,
+        'lb-row--second': user.place === 2,
+        'lb-row--third': user.place === 3,
+      }"
     >
-      <div class="row row--center-v">
-        <div class="column column--wrap">{{ user.place }}</div>
-        <div class="column column--wrap">
-          <UserBadge :user="user" :clickable="false" :block="true" />
-        </div>
-        <div class="column column--wrap">
-          <template v-if="global">
-            {{ user.name }}
-          </template>
-          <template v-else>
-            <a href="javascript:void(0);" class="link" @click="emit('user-selected', user)">{{
-              user.name
-            }}</a>
-          </template>
-        </div>
-        <div class="column text-right">
-          <span class="points">{{ global ? user.normalized_score : user.score }}p</span>
-        </div>
+      <div class="lb-row__place">
+        {{ String(user.place).padStart(2, '0') }}
+      </div>
+      <div class="lb-row__avatar">
+        <UserBadge :user="user" :small="true" :clickable="false" :block="true" />
+      </div>
+      <div class="lb-row__name">
+        <template v-if="global">
+          {{ user.name }}
+        </template>
+        <template v-else>
+          <a href="javascript:void(0);" class="lb-row__link" @click="emit('user-selected', user)">{{
+            user.name
+          }}</a>
+        </template>
+        <span v-if="user.user_id === userId" class="lb-row__you">YOU</span>
+      </div>
+      <div class="lb-row__score">
+        <span class="lb-row__score-value">{{
+          global ? user.normalized_score : user.score
+        }}</span>
+        <span class="lb-row__score-unit">P</span>
       </div>
     </div>
   </div>
@@ -74,31 +83,142 @@ const listWithPlacement = computed(() => {
 </script>
 
 <style scoped>
-.highlight {
-  background-color: #434f8e;
-  color: #fff;
+.leaderboard {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --yellow: #ffd84a;
+  --green: #9bff3d;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--indigo-dark);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.points {
+.lb-row {
+  display: grid;
+  grid-template-columns: 56px 48px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+  background: var(--indigo-dark);
+  transition: background 0.15s ease;
+}
+
+.lb-row:hover {
+  background: #262e5e;
+}
+
+.lb-row__place {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: rgba(255, 250, 235, 0.45);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-row__avatar {
+  display: flex;
+  align-items: center;
+}
+
+.lb-row__name {
+  font-size: 15px;
   font-weight: 700;
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.highlight .link,
-.highlight .points {
+.lb-row__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lb-row__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lb-row__you {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  background: var(--orange);
   color: #fff;
+  padding: 3px 7px;
+  border-radius: 2px;
 }
 
-.leaderbord-row {
-  padding: 0 10px;
+.lb-row__score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
 }
 
-.leaderbord-row:not(.highlight):nth-child(even) {
-  background: #fbfbfb;
+.lb-row__score-value {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
-.link {
-  &:hover {
-    text-decoration: underline;
+.lb-row__score-unit {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: rgba(255, 250, 235, 0.5);
+}
+
+/* ===== Top 3 accents ===== */
+.lb-row--first .lb-row__place {
+  color: var(--orange);
+}
+
+.lb-row--first .lb-row__score-value {
+  color: var(--green);
+}
+
+.lb-row--second .lb-row__place {
+  color: var(--yellow);
+}
+
+.lb-row--third .lb-row__place {
+  color: rgba(255, 250, 235, 0.75);
+}
+
+/* ===== Highlight current user ===== */
+.lb-row--you {
+  background: rgba(255, 90, 58, 0.12);
+  box-shadow: inset 3px 0 0 var(--orange);
+}
+
+.lb-row--you:hover {
+  background: rgba(255, 90, 58, 0.18);
+}
+
+@media (max-width: 600px) {
+  .lb-row {
+    grid-template-columns: 40px 40px 1fr auto;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .lb-row__place {
+    font-size: 18px;
+  }
+  .lb-row__score-value {
+    font-size: 22px;
   }
 }
 </style>

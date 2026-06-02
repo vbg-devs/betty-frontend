@@ -2,20 +2,26 @@
   <div class="modal">
     <div class="modal__backdrop"></div>
     <section class="modal__inner">
-      <div class="padding">
-        <div class="logo" :style="{ backgroundImage: `url(${tournament.image_url})` }">
-          <img :src="tournament.image_url" class="logo__image img img--full" />
-        </div>
+      <header class="modal__header">
+        <div
+          v-if="tournament"
+          class="logo"
+          :style="{ backgroundImage: `url(${tournament.image_url})` }"
+          aria-hidden="true"
+        ></div>
+        <span class="kicker kicker--accent">★ INVITED TO JOIN</span>
+        <h2 class="modal__title">{{ group.name?.toUpperCase() }}</h2>
+        <p v-if="tournament" class="modal__tournament">{{ tournament.name }}</p>
+        <p class="modal__lede">
+          Lock in your bets every matchday, climb the standings, settle the banter.
+        </p>
+      </header>
 
-        <div class="group-name">{{ group.name }}</div>
-        <div class="tournament">
-          {{ tournament.name }}
-        </div>
-        <p class="question">Would you like to join this group?</p>
-      </div>
-      <div class="buttons">
-        <button class="join-button join-button--yes" :disabled="loading" @click="join">Yes</button>
-        <NuxtLink to="/dashboard" class="join-button join-button--no">No</NuxtLink>
+      <div class="modal__actions">
+        <NuxtLink to="/dashboard" class="btn btn--ghost">NO THANKS</NuxtLink>
+        <button class="btn btn--orange" :disabled="loading" @click="join">
+          {{ loading ? 'JOINING…' : "I'M IN →" }}
+        </button>
       </div>
     </section>
   </div>
@@ -45,6 +51,7 @@ onBeforeUnmount(() => {
 });
 
 async function join() {
+  loading.value = true;
   try {
     await groupStore.join((route.params as any).code);
     confirm({
@@ -65,12 +72,20 @@ async function join() {
       });
     }
     console.error(err);
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <style scoped>
 .modal {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
   position: fixed;
   z-index: 997;
   top: 0;
@@ -80,178 +95,137 @@ async function join() {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .modal__backdrop {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(20, 25, 56, 0.7);
+  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
 .modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
+  background: var(--indigo-dark);
+  color: var(--cream);
+  width: 100%;
+  max-width: 460px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
   max-height: 90vh;
   overflow: hidden;
-  text-align: center;
-}
-
-.padding {
-  padding: 15px;
+  text-align: left;
 }
 
 .modal__header {
-  padding-bottom: 15px;
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
-  position: relative;
-}
-
-.modal__close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  color: #333;
-  border: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
-
-  & svg {
-    display: block;
-  }
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
-.modal__title {
-  text-align: center;
-  padding: 10px 0 5px;
-}
-
-.share-link {
-  border: 1px solid #efefef;
-  display: flex;
-  margin-top: 20px;
-}
-
-.share-link__input {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 7px;
-  color: #969292;
-}
-
-.share-link__action {
-  border-left: 1px solid #efefef;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  cursor: pointer;
-  transition: all ease 0.3s;
-  color: #969292;
-}
-
-.share-link__action:hover {
-  color: #434f8e;
-}
-
-.share-link__action__icon {
-  display: block;
-  width: 18px;
-}
-
-.peek-text {
-  font-size: 12px;
-  color: #aaa;
-}
-
-.button-wrapper {
-  margin-top: 35px;
-  display: flex;
-  justify-content: center;
-}
-
-.group-name {
-  font-weight: bold;
-  font-size: 24px;
-}
-
-.tournament {
-  font-size: 14px;
-  color: #aaa;
+  padding: 28px 28px 24px;
 }
 
 .logo {
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 0 auto;
-  margin-bottom: 20px;
-  background-repeat: no-repeat;
-  background-position: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
   background-size: cover;
+  background-position: center;
+  margin: 0 0 18px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.question {
-  margin: 10px 0;
+.modal__title {
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin: 8px 0 6px;
+  color: var(--cream);
+  word-break: break-word;
 }
 
-.buttons {
-  display: flex;
+.modal__tournament {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  margin: 0 0 14px;
 }
 
-.join-button {
-  outline: none;
-  border: none;
-  text-decoration: none;
-  flex: 1;
-  color: #fff;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Helvetica,
-    Arial,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji;
-  font-weight: 600;
+.modal__lede {
   font-size: 14px;
-  -webkit-font-smoothing: auto;
+  color: var(--muted-strong);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ===== Kicker ===== */
+.kicker {
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.kicker--accent {
+  color: var(--orange);
+}
+
+/* ===== Actions ===== */
+.modal__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.btn {
+  border: 0;
   cursor: pointer;
-  display: flex;
-  height: 50px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 22px 18px;
+  text-decoration: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 15px;
-  line-height: 1;
-  white-space: nowrap;
+  transition: filter 0.15s ease;
 }
 
-.join-button--yes {
-  background: #8bc34a;
+.btn--ghost {
+  background: transparent;
+  color: var(--muted-strong);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.join-button--no {
-  background: #f44336;
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cream);
+}
+
+.btn--orange {
+  background: var(--orange);
+  color: #fff;
+}
+
+.btn--orange:hover {
+  filter: brightness(1.05);
+}
+
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

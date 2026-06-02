@@ -1,32 +1,36 @@
 <template>
-  <div v-if="show" class="update-profile-modal modal">
+  <div v-if="show" class="modal">
     <div class="modal__backdrop"></div>
-    <div class="modal__inner">
+    <section class="modal__inner">
       <header class="modal__header">
-        <h2 class="modal__title">Complete profile</h2>
+        <span class="kicker kicker--accent">★ ONE LAST STEP</span>
+        <h2 class="modal__title">COMPLETE YOUR PROFILE</h2>
+        <p class="modal__lede">
+          Pick a name your friends will recognize when you land in the standings.
+        </p>
       </header>
-      <div class="profile-image-wrapper">
-        <UserBadge :user="{ name: name, image_url: imageUrl }" :large="true" />
-      </div>
-      <form @submit.prevent="save">
-        <div class="form-row">
-          <label class="form-label">
-            <div class="form-label__text">User name</div>
-            <input v-model="name" type="text" placeholder="Betty" class="form-input" />
-          </label>
+
+      <div class="modal__body">
+        <div class="profile-image-wrapper">
+          <UserBadge :user="{ name: name, image_url: imageUrl }" :large="true" :clickable="false" />
         </div>
-        <div class="button-wrapper">
+        <form @submit.prevent="save">
+          <label class="field">
+            <span class="field__label">Your name</span>
+            <input v-model="name" type="text" placeholder="Betty" class="field__input" />
+          </label>
+
           <button
             type="submit"
             :disabled="saving || !canSave"
-            :class="{ 'button--loading': saving, 'button--disabled': !canSave }"
-            class="button button--action"
+            class="btn btn--orange btn--block"
+            :class="{ 'btn--disabled': !canSave || saving }"
           >
-            Save profile
+            {{ saving ? 'SAVING…' : 'SAVE PROFILE' }}
           </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -102,6 +106,12 @@ async function save() {
 
 <style scoped>
 .modal {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
   position: fixed;
   z-index: 999;
   top: 0;
@@ -111,120 +121,157 @@ async function save() {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .modal__backdrop {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(20, 25, 56, 0.7);
+  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
 .modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
+  background: var(--indigo-dark);
+  color: var(--cream);
+  width: 100%;
+  max-width: 440px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  padding: 15px;
+  overflow: hidden;
 }
 
 .modal__header {
-  padding-bottom: 15px;
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
+  padding: 28px 28px 14px;
   position: relative;
 }
 
-.modal__close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  color: #333;
-  border: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
-
-  & svg {
-    display: block;
-  }
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
 .modal__title {
-  text-align: center;
-  padding: 10px 0 5px;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 8px 0 12px;
+  color: var(--cream);
 }
 
-.share-link {
-  border: 1px solid #efefef;
-  display: flex;
-  margin-top: 20px;
+.modal__lede {
+  font-size: 14px;
+  color: var(--muted-strong);
+  margin: 0;
+  line-height: 1.5;
 }
 
-.share-link__input {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 7px;
-  color: #969292;
-}
-
-.share-link__action {
-  border-left: 1px solid #efefef;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  cursor: pointer;
-  transition: all ease 0.3s;
-  color: #969292;
-}
-
-.share-link__action:hover {
-  color: #434f8e;
-}
-
-.share-link__action__icon {
-  display: block;
-  width: 24px;
-}
-
-.peek-text {
-  font-size: 12px;
-  color: #aaa;
-}
-
-.button-wrapper {
-  margin-top: 35px;
-  display: flex;
-  justify-content: center;
+.modal__body {
+  padding: 8px 28px 28px;
+  overflow-y: auto;
 }
 
 .profile-image-wrapper {
-  text-align: center;
-  margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 22px;
 }
 
-.form-label__text {
-  font-weight: 600;
-  margin-bottom: 3px;
-  font-size: 14px;
+/* ===== Kicker ===== */
+.kicker {
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.kicker--accent {
+  color: var(--orange);
+}
+
+/* ===== Form field ===== */
+.field {
+  display: block;
+  margin-bottom: 22px;
+}
+
+.field__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  margin-bottom: 8px;
+}
+
+.field__input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 14px 16px;
+  border-radius: 2px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.field__input::placeholder {
+  color: var(--muted);
+}
+
+.field__input:focus {
+  border-color: var(--orange);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== Button ===== */
+.btn {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.btn--orange {
+  background: var(--orange);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 16px 22px;
+  border-radius: 2px;
+}
+
+.btn--orange:hover:not(.btn--disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 </style>

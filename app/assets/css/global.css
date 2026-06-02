@@ -9,12 +9,14 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  background: #f7f8fa;
-  color: #333;
+  background: #434f8e;
+  color: #fffaeb;
+  overflow-x: hidden;
 }
 
 body {
-  padding: 80px 0 50px 0;
+  padding: 105px 0 50px 0;
+  overflow-x: hidden;
 }
 
 *,
@@ -221,7 +223,7 @@ body {
 }
 
 .card__header__sub-title {
-  color: #bbb;
+  color: rgba(255, 250, 235, 0.65);
   font-weight: 500;
   font-size: 14px;
 
@@ -245,7 +247,7 @@ body {
 }
 
 a {
-  color: #333;
+  color: #fffaeb;
   text-decoration: none;
 }
 
@@ -273,7 +275,7 @@ a {
 }
 
 .points {
-  color: #888;
+  color: rgba(255, 250, 235, 0.7);
   font-size: 14px;
 }
 

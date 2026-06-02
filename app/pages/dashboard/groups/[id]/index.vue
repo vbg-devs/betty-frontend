@@ -1,365 +1,206 @@
 <template>
-  <div v-if="group && tournament" class="group">
-    <card :no-padding="true">
-      <template #header>
-        <div
-          class="card__header__image"
-          :style="{ backgroundImage: `url(${tournament.image_url})` }"
-        ></div>
-        <div class="card__header__details row row--bottom-v">
-          <div class="column">
-            <h1 class="card__header__title">
-              {{ group.name }}
-            </h1>
-            <div class="card__header__sub-title">
-              {{ tournament.name }}
+  <div v-if="group && tournament" class="group-page">
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+      <div class="hero__card">
+        <div class="hero__card-inner">
+          <div class="hero__meta-top">
+            <span class="kicker kicker--accent"
+              >★ YOUR GROUP · {{ tournament.name.toUpperCase() }}</span
+            >
+          </div>
+
+          <div class="hero__grid">
+            <div>
+              <h1 class="hero__title">{{ group.name.toUpperCase() }}</h1>
+              <div class="hero__meta">
+                <span class="kicker kicker--muted-light"
+                  >{{ group.members.length }} MEMBERS</span
+                >
+                <span class="dot">·</span>
+                <span class="kicker kicker--muted-light"
+                  >{{ completeGames.length }} OF {{ allGames.length }} GAMES</span
+                >
+                <span class="dot">·</span>
+                <span class="kicker kicker--green">● ACTIVE</span>
+              </div>
+            </div>
+
+            <div class="hero__stats">
+              <div class="stat stat--orange">
+                <span class="stat__kicker">YOUR RANK</span>
+                <div class="stat__value">
+                  {{ String(yourPlacement).padStart(2, '0') }}
+                </div>
+                <div class="stat__sub">OF {{ String(group.members.length).padStart(2, '0') }}</div>
+              </div>
+              <div class="stat stat--ghost">
+                <span class="stat__kicker">GAMES PLAYED</span>
+                <div class="stat__value">
+                  {{ completeGamesPercentage
+                  }}<span class="stat__value-unit">%</span>
+                </div>
+                <ProgressBar :progress="completeGamesPercentage" class="stat__progress" />
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-      <div class="tabs">
-        <div class="tab" :class="{ 'tab--selected': selectedTab === 1 }" @click="selectedTab = 1">
-          <div class="tab__image">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              color="currentColor"
-              fill="none"
-            >
-              <path
-                d="M20.774 18C21.5233 18 22.1193 17.5285 22.6545 16.8691C23.7499 15.5194 21.9513 14.4408 21.2654 13.9126C20.568 13.3756 19.7894 13.0714 19 13M18 11C19.3807 11 20.5 9.88071 20.5 8.5C20.5 7.11929 19.3807 6 18 6"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-              <path
-                d="M3.22596 18C2.47666 18 1.88067 17.5285 1.34555 16.8691C0.250089 15.5194 2.04867 14.4408 2.73465 13.9126C3.43197 13.3756 4.21058 13.0714 5 13M5.5 11C4.11929 11 3 9.88071 3 8.5C3 7.11929 4.11929 6 5.5 6"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-              <path
-                d="M8.0838 15.1112C7.06203 15.743 4.38299 17.0331 6.0147 18.6474C6.81178 19.436 7.69952 20 8.81563 20H15.1844C16.3005 20 17.1882 19.436 17.9853 18.6474C19.617 17.0331 16.938 15.743 15.9162 15.1112C13.5201 13.6296 10.4799 13.6296 8.0838 15.1112Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M15.5 7.5C15.5 9.433 13.933 11 12 11C10.067 11 8.5 9.433 8.5 7.5C8.5 5.567 10.067 4 12 4C13.933 4 15.5 5.567 15.5 7.5Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-              />
-            </svg>
-          </div>
-          <div class="tab__label">Group</div>
-        </div>
-        <div class="tab" :class="{ 'tab--selected': selectedTab === 2 }" @click="selectedTab = 2">
-          <div class="tab__image">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              color="currentColor"
-              fill="none"
-            >
-              <path
-                d="M18 2V4M6 2V4"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M10 17L9.99999 13.3472C9.99999 13.1555 9.86325 13 9.69458 13H9M13.6297 17L14.9842 13.3492C15.0475 13.1785 14.9128 13 14.7207 13H13"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-              <path
-                d="M2.5 12.2432C2.5 7.88594 2.5 5.70728 3.75212 4.35364C5.00424 3 7.01949 3 11.05 3H12.95C16.9805 3 18.9958 3 20.2479 4.35364C21.5 5.70728 21.5 7.88594 21.5 12.2432V12.7568C21.5 17.1141 21.5 19.2927 20.2479 20.6464C18.9958 22 16.9805 22 12.95 22H11.05C7.01949 22 5.00424 22 3.75212 20.6464C2.5 19.2927 2.5 17.1141 2.5 12.7568V12.2432Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6 8H18"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="tab__label">Games</div>
-        </div>
-        <div class="tab" :class="{ 'tab--selected': selectedTab === 3 }" @click="selectedTab = 3">
-          <div class="tab__image">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              color="currentColor"
-              fill="none"
-            >
-              <path
-                d="M8 21C8 19.5858 8 18.8787 8.43934 18.4393C8.87868 18 9.58579 18 11 18H13C14.4142 18 15.1213 18 15.5607 18.4393C16 18.8787 16 19.5858 16 21V22H8V21Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M12 13L12 18"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6 22H18"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M13.0366 2.86651L14.0925 4.99573C14.2364 5.29212 14.6204 5.57642 14.9444 5.63086L16.8582 5.95145C18.082 6.15712 18.37 7.05236 17.4881 7.9355L16.0003 9.43563C15.7483 9.68968 15.6103 10.1796 15.6883 10.5305L16.1142 12.3875C16.4502 13.8574 15.6763 14.426 14.3864 13.6578L12.5926 12.5871C12.2687 12.3935 11.7347 12.3935 11.4048 12.5871L9.61096 13.6578C8.3271 14.426 7.54719 13.8513 7.88315 12.3875L8.3091 10.5305C8.3871 10.1796 8.24911 9.68968 7.99714 9.43563L6.5093 7.9355C5.6334 7.05236 5.91537 6.15712 7.13923 5.95145L9.05302 5.63086C9.37099 5.57642 9.75494 5.29212 9.89893 4.99573L10.9548 2.86651C11.5307 1.71116 12.4666 1.71116 13.0366 2.86651Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="tab__label">Leaderboard</div>
         </div>
       </div>
-      <section class="group__body">
-        <transition-group name="page">
-          <div v-if="selectedTab === 1" key="group" class="group-section">
-            <div class="row row--wrap">
-              <section class="group__information column">
-                <div class="welcome-message">
-                  {{ group.welcome_message }}
-                </div>
-                <div>
-                  <template v-if="tournamentDetails">
-                    <need-action
-                      :pools="pools"
-                      :show-bets="true"
-                      :bets="bets"
-                      @click-game="clickGame"
-                    ></need-action>
-                  </template>
-                </div>
+    </section>
 
-                <meme-board :members="group.members"></meme-board>
-              </section>
-              <aside class="sidebar column column--wrap">
-                <div class="group__box group__box--fit">
-                  <h3 class="group__box__title">Your Rank</h3>
-                  <div class="group__box__body">
-                    <div class="big text-center">
-                      {{ yourPlacement
-                      }}<span class="big big--smaller dimmed"> of {{ group.members.length }}</span>
-                    </div>
-                  </div>
-                </div>
+    <!-- ===== Tabs ===== -->
+    <nav class="tabs">
+      <button
+        class="tab"
+        :class="{ 'tab--active': selectedTab === 1 }"
+        @click="selectedTab = 1"
+      >
+        Group
+      </button>
+      <button
+        class="tab"
+        :class="{ 'tab--active': selectedTab === 2 }"
+        @click="selectedTab = 2"
+      >
+        Games
+      </button>
+      <button
+        class="tab"
+        :class="{ 'tab--active': selectedTab === 3 }"
+        @click="selectedTab = 3"
+      >
+        Leaderboard
+      </button>
+    </nav>
 
-                <div class="group__box group__box--fit">
-                  <h3 class="group__box__title">Top 3</h3>
-                  <TopThree :users="group.members" @user-selected="userSelected"></TopThree>
-                </div>
-                <div class="group__box group__box--fit">
-                  <h3 class="group__box__title">Games played</h3>
-                  <span class="big">{{ completeGamesPercentage }}</span
-                  ><span class="big big--smaller">%</span>
-                  <progress-bar :progress="completeGamesPercentage"></progress-bar>
-                  <div class="games">
-                    {{ completeGames.length }} of {{ allGames.length }} games played
-                  </div>
-                </div>
-                <div class="group__box group__box--fit">
-                  <h3 class="group__box__title">Invite link</h3>
-                  <div class="big big--smaller text-center">
-                    <div class="share-link">
-                      <input v-model="shareUrl" type="text" class="share-link__input" readonly />
-                      <div class="share-link__action" @click="copyInviteCode">
-                        <svg
-                          v-if="!copied"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          color="currentColor"
-                          fill="none"
-                        >
-                          <path
-                            d="M7.5 3.5C5.9442 3.54667 5.01661 3.71984 4.37477 4.36227C3.49609 5.24177 3.49609 6.6573 3.49609 9.48836L3.49609 15.9944C3.49609 18.8255 3.49609 20.241 4.37477 21.1205C5.25345 22 6.66767 22 9.49609 22L14.4961 22C17.3245 22 18.7387 22 19.6174 21.1205C20.4961 20.241 20.4961 18.8255 20.4961 15.9944V9.48836C20.4961 6.6573 20.4961 5.24177 19.6174 4.36228C18.9756 3.71984 18.048 3.54667 16.4922 3.5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                          />
-                          <path
-                            d="M7.49609 3.75C7.49609 2.7835 8.2796 2 9.24609 2H14.7461C15.7126 2 16.4961 2.7835 16.4961 3.75C16.4961 4.7165 15.7126 5.5 14.7461 5.5H9.24609C8.2796 5.5 7.49609 4.7165 7.49609 3.75Z"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        <svg
-                          v-else
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          color="currentColor"
-                          fill="none"
-                        >
-                          <path
-                            d="M7.5 3.5C5.9442 3.54667 5.01661 3.71984 4.37477 4.36227C3.49609 5.24177 3.49609 6.6573 3.49609 9.48836L3.49609 15.9944C3.49609 18.8255 3.49609 20.241 4.37477 21.1205C5.25345 22 6.66767 22 9.49609 22L14.4961 22C17.3245 22 18.7387 22 19.6174 21.1205C20.4961 20.241 20.4961 18.8255 20.4961 15.9944V9.48836C20.4961 6.6573 20.4961 5.24177 19.6174 4.36228C18.9756 3.71984 18.048 3.54667 16.4922 3.5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                          />
-                          <path
-                            d="M7.49609 3.75C7.49609 2.7835 8.2796 2 9.24609 2H14.7461C15.7126 2 16.4961 2.7835 16.4961 3.75C16.4961 4.7165 15.7126 5.5 14.7461 5.5H9.24609C8.2796 5.5 7.49609 4.7165 7.49609 3.75Z"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M13.5 11H17"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                          <path
-                            d="M7 12C7 12 7.5 12 8 13C8 13 9.58824 10.5 11 10"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M13.5 17H17"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                          />
-                          <path
-                            d="M8 17H9"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="members-box">
-                  <h2>Members</h2>
-                  <div class="members">
-                    <user-badge
-                      v-for="member in group.members"
-                      :key="member.user_id"
-                      :user="member"
-                      class="member-icon"
-                      @click="userSelected(member)"
-                    ></user-badge>
-                  </div>
-                </div>
-                <div class="group-settings">
-                  <h2>Group settings</h2>
-                  <div class="row row--center-v">
-                    <div class="column">Allow sneak peek?</div>
-                    <div class="column column--wrap">
-                      <svg
-                        v-if="group.allow_sneak_peek"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-check icon-peek"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                      <svg
-                        v-else
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-x icon-peek"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="row row--center-v">
-                    <div class="column">Points for winning team</div>
-                    <div class="column column--wrap text-center" style="width: 44px">
-                      <strong>{{ group.correct_team_points }}</strong>
-                    </div>
-                  </div>
-                  <div class="row row--center-v">
-                    <div class="column">Points for exact score</div>
-                    <div class="column column--wrap text-center" style="width: 44px">
-                      <strong>{{ group.exact_result_points }}</strong>
-                    </div>
-                  </div>
-                </div>
-                <div class="button-wrapper">
-                  <button class="button button--danger" @click="leaveGroup">Leave group</button>
-                </div>
-              </aside>
-            </div>
-          </div>
-          <div v-if="selectedTab === 2" key="games" class="games-section">
+    <!-- ===== Tab content ===== -->
+    <transition-group name="page">
+      <section v-if="selectedTab === 1" key="group" class="group-tab">
+        <div class="group-tab__grid">
+          <main class="group-tab__main">
+            <aside v-if="group.welcome_message" class="welcome">
+              <span class="kicker kicker--accent">★ WELCOME</span>
+              <p class="welcome__text">{{ group.welcome_message }}</p>
+            </aside>
             <template v-if="tournamentDetails">
-              <Pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame"></Pools>
+              <NeedAction
+                :pools="pools"
+                :show-bets="true"
+                :bets="bets"
+                @click-game="clickGame"
+              />
             </template>
-          </div>
-          <div v-if="selectedTab === 3" key="leaderboard">
-            <leaderboard :users="group.members" @user-selected="userSelected"></leaderboard>
-          </div>
-        </transition-group>
+            <MemeBoard :members="group.members" />
+          </main>
+
+          <aside class="group-tab__side">
+            <div class="side-card" style="order: 1">
+              <span class="kicker kicker--accent">★ TOP 3</span>
+              <TopThree :users="group.members" @user-selected="userSelected" />
+            </div>
+
+            <div class="side-card" style="order: 2">
+              <span class="kicker kicker--accent">★ INVITE LINK</span>
+              <div class="invite">
+                <input
+                  v-model="shareUrl"
+                  type="text"
+                  class="invite__input"
+                  readonly
+                  @click="copyInviteCode"
+                />
+                <button class="invite__btn" @click="copyInviteCode">
+                  {{ copied ? 'COPIED ✓' : 'COPY →' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="side-card" :style="{ order: manyMembers ? 4 : 3 }">
+              <span class="kicker kicker--accent">★ GROUP ROSTER</span>
+              <h3 class="roster__title">
+                {{ group.members.length }}
+                {{ group.members.length === 1 ? 'FRIEND' : 'FRIENDS' }}.<br /><span class="t-orange"
+                  >ONE CHAMPION.</span
+                >
+              </h3>
+              <div class="roster">
+                <button
+                  v-for="m in visibleRoster"
+                  :key="m.user_id"
+                  class="roster__row"
+                  @click="userSelected(m)"
+                >
+                  <span class="roster__rank">#{{ m.place }}</span>
+                  <UserBadge :user="m" :small="true" :clickable="false" />
+                  <span class="roster__name">{{ m.name }}</span>
+                  <span class="roster__pts">{{ m.score }}p</span>
+                </button>
+              </div>
+              <button
+                v-if="rankedMembers.length > ROSTER_LIMIT"
+                class="roster__more"
+                @click="selectedTab = 3"
+              >
+                See all {{ rankedMembers.length }} →
+              </button>
+            </div>
+
+            <div class="side-card" :style="{ order: manyMembers ? 3 : 4 }">
+              <span class="kicker kicker--accent">★ HOUSE RULES</span>
+              <div class="rules">
+                <div class="rules__row">
+                  <span class="rules__label">Winning team</span>
+                  <span class="rules__value">{{ group.correct_team_points }} pts</span>
+                </div>
+                <div class="rules__row">
+                  <span class="rules__label">Exact score</span>
+                  <span class="rules__value">{{ group.exact_result_points }} pts</span>
+                </div>
+                <div class="rules__row">
+                  <span class="rules__label">Sneak peek</span>
+                  <span
+                    class="rules__value"
+                    :class="group.allow_sneak_peek ? 't-green' : 't-orange'"
+                  >
+                    {{ group.allow_sneak_peek ? 'Allowed' : 'Closed' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button class="leave-btn" style="order: 5" @click="leaveGroup">Leave group</button>
+          </aside>
+        </div>
       </section>
-    </card>
-    <bet-modal
+
+      <section v-if="selectedTab === 2" key="games" class="games-tab">
+        <template v-if="tournamentDetails">
+          <Pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame" />
+        </template>
+      </section>
+
+      <section v-if="selectedTab === 3" key="leaderboard" class="leaderboard-tab">
+        <Leaderboard :users="group.members" @user-selected="userSelected" />
+      </section>
+    </transition-group>
+
+    <BetModal
       :game-bet="gameBet"
       :show="gameBet !== null"
       :peek="group.allow_sneak_peek"
       :bets="betsForGame"
       @bet-placed="betPlaced"
       @close="gameBet = null"
-    ></bet-modal>
+    />
     <transition name="page">
-      <user-history
-        v-if="selectedUser"
+      <UserHistory
+        v-if="selectedUser && tournamentDetails"
         :user="selectedUser"
         :peek="group.allow_sneak_peek"
         :games="tournamentDetails.games"
         :bets="bets"
         @close="selectedUser = null"
-      ></user-history>
+      />
     </transition>
   </div>
 </template>
@@ -403,26 +244,27 @@ const completeGamesPercentage = computed(() => {
   return Math.round((completeGames.value.length / allGames.value.length) * 100);
 });
 
-const yourPlacement = computed(() => {
-  if (!group.value) return -1;
+const rankedMembers = computed(() => {
+  if (!group.value) return [];
   const members = JSON.parse(JSON.stringify(group.value.members)).concat();
   members.sort((a: any, b: any) => b.score - a.score);
-
   let currentPlace = 0;
-  let myPlace = -1;
-
-  for (let i = 0; i < members.length; i += 1) {
-    const currentUser = members[i];
-    const lastUser = members[i - 1];
-    if (!lastUser || currentUser.score < lastUser.score) {
-      currentPlace += 1;
-    }
-    if (currentUser.user_id === userId.value) {
-      myPlace = currentPlace;
-    }
-  }
-  return myPlace;
+  return members.map((m: any, i: number) => {
+    const prev = members[i - 1];
+    if (!prev || m.score < prev.score) currentPlace += 1;
+    return { ...m, place: currentPlace };
+  });
 });
+
+const yourPlacement = computed(() => {
+  const me = rankedMembers.value.find((m: any) => m.user_id === userId.value);
+  return me?.place ?? '–';
+});
+
+const manyMembers = computed(() => (group.value?.members.length ?? 0) > 8);
+
+const ROSTER_LIMIT = 6;
+const visibleRoster = computed(() => rankedMembers.value.slice(0, ROSTER_LIMIT));
 
 const shareUrl = computed(() => {
   if (!group.value) return '';
@@ -520,7 +362,7 @@ async function copyInviteCode() {
   copied.value = true;
   setTimeout(() => {
     copied.value = false;
-  }, 1000);
+  }, 1500);
 }
 
 function clickGame(payload: any) {
@@ -544,271 +386,487 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.group__image {
-  display: block;
-  border-radius: 50%;
-  border: 5px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  height: 140px;
-  width: 140px;
-  background-position: center;
-  background-repeat: no-repeat;
+.group-page {
+  --indigo: #434f8e;
+  --indigo-dark: #1f2752;
+  --indigo-deep: #141938;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --green: #9bff3d;
+  --yellow: #ffd84a;
+  --ink: #0d0e15;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
+  color: var(--cream);
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  padding-bottom: 40px;
 }
 
-.welcome-message {
-  font-size: 22px;
-  color: #999;
-  margin-bottom: 20px;
-  font-weight: 600;
+/* ===== Hero ===== */
+.hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: var(--indigo);
+  padding: 0 0 32px;
 }
 
-.sidebar {
-  @media (min-width: 768px) {
-    width: 300px;
-    margin-left: 25px;
-  }
+.hero__card {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--indigo-dark);
+  padding: 36px 40px 36px;
+  border-radius: 2px;
 }
 
-.big {
-  font-size: 50px;
-  font-weight: 800;
+.hero__card-inner {
+  max-width: 1100px;
 }
 
-.big--smaller {
-  font-size: 25px;
+.hero__meta-top {
+  margin-bottom: 14px;
 }
 
-.group__box {
-  margin-top: 10px;
-  background: #fbfbfb;
-  padding: 10px;
-  height: 100%;
-  border-radius: 4px;
-
-  &:first-child {
-    margin-top: 0;
-  }
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  align-items: end;
 }
 
-.group__box__title {
-  text-transform: uppercase;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.3);
-  font-weight: 400;
-}
-
-.games {
-  margin-top: 7px;
-  color: #c0cbd4;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.invite-code-button {
-  border: none;
-  background: transparent;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-
-  svg {
-    display: block;
-  }
-}
-
-.invite-code-input {
-  padding: 7px;
-}
-
-.share-link {
-  border: 1px solid #efefef;
-  display: flex;
-  margin-top: 8px;
-}
-
-.share-link__input {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 7px;
-  color: #969292;
-}
-
-.share-link__action {
-  border-left: 1px solid #efefef;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  cursor: pointer;
-  transition: all ease 0.3s;
-  color: #969292;
-
-  &:hover {
-    color: #434f8e;
-  }
-}
-
-.share-link__action__icon {
-  display: block;
-  width: 18px;
-}
-
-.members {
-  list-style-type: none;
+.hero__title {
+  font-size: clamp(48px, 7vw, 84px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
   margin: 0;
-  padding: 0;
-  padding-top: 10px;
-  padding-left: 10px;
+  color: var(--cream);
+  word-break: break-word;
 }
 
-.member {
+.hero__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.member__icon {
-  padding-right: 5px;
+.dot {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
 }
 
-.member__label {
-  flex: 1;
+/* ===== Stat tiles ===== */
+.hero__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.member-icon {
-  position: relative;
-  margin-left: -10px;
-  border-width: 2px !important;
-  height: 43.75px !important;
-  width: 43.75px !important;
+.stat {
+  padding: 18px 18px 16px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  min-height: 162px;
+  justify-content: space-between;
+}
 
-  &:hover {
-    z-index: 5;
-    transform: scale(1.2);
+.stat--orange {
+  background: var(--orange);
+  color: #fff;
+}
+
+.stat--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
+}
+
+.stat__kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.stat__value {
+  font-size: clamp(56px, 7vw, 80px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__value-unit {
+  font-size: 28px;
+  font-weight: 800;
+  margin-left: 4px;
+  opacity: 0.75;
+}
+
+.stat__sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  opacity: 0.85;
+}
+
+.stat__progress {
+  margin-top: 6px;
+}
+
+/* ProgressBar style override */
+.stat__progress :deep(.progress-bar) {
+  background: rgba(255, 255, 255, 0.12);
+  height: 6px;
+}
+.stat__progress :deep(.progress-bar__progress) {
+  background: var(--green);
+}
+
+@media (max-width: 800px) {
+  .hero__card {
+    padding: 28px 22px 28px;
+  }
+  .hero__grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    align-items: start;
   }
 }
 
+/* ===== Tabs ===== */
 .tabs {
+  max-width: 1180px;
+  margin: 28px auto 24px;
   display: flex;
+  gap: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tab {
-  flex: 1;
-  padding: 20px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.65);
+  padding: 12px 4px;
   cursor: pointer;
-  border-bottom: 1px solid #f2f2f2;
-  transition: border-color ease 0.3s;
-  cursor: pointer;
-  opacity: 0.6;
+  transition: color 0.18s ease;
+}
 
-  @media (max-width: 767px) {
-    justify-content: center;
+.tab:hover {
+  color: var(--cream);
+}
+
+.tab--active {
+  color: var(--cream);
+}
+
+.tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+/* ===== Group tab layout ===== */
+.group-tab__grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .group-tab__grid {
+    grid-template-columns: 1fr;
   }
 }
 
-.tab--selected {
-  border-color: #434f8e;
-  background: #fff;
-  opacity: 1;
-}
-
-.tab__image svg {
+.group-tab__main {
   display: flex;
-  margin-right: 5px;
-  height: 24px;
-  width: auto;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
 }
 
-.tab__label {
+.welcome {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--orange);
+  padding: 18px 22px 20px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
+.welcome__text {
+  font-size: 20px;
+  line-height: 1.35;
   font-weight: 600;
-  font-size: 14px;
-  -webkit-font-smoothing: auto;
-  line-height: 1;
+  color: var(--cream);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
 
-  @media (max-width: 767px) {
-    display: none;
+@media (min-width: 768px) {
+  .welcome__text {
+    font-size: 22px;
   }
 }
 
-.group-section,
-.games-section {
-  padding: 10px;
+/* ===== Sidebar cards ===== */
+.group-tab__side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.group-settings {
-  margin-top: 25px;
+.side-card {
+  background: var(--indigo-dark);
+  padding: 18px 20px 20px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.group__box--flex {
+.side-card .kicker--accent {
+  letter-spacing: 1.6px;
+}
+
+/* ===== Invite link ===== */
+.invite {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.invite__input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--muted-strong);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 12px 14px;
+  outline: none;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.invite__btn {
+  background: var(--orange);
+  border: 0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+}
+
+.invite__btn:hover {
+  filter: brightness(1.08);
+}
+
+/* ===== Roster ===== */
+.roster__title {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 4px 0 6px;
+  color: var(--cream);
+}
+
+.t-orange {
+  color: var(--orange);
+}
+
+.t-green {
+  color: var(--green);
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.roster__row {
+  display: grid;
+  grid-template-columns: 32px 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 2px;
+  color: var(--cream);
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.roster__row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.roster__rank {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(255, 250, 235, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+.roster__name {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.roster__pts {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.roster__more {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  cursor: pointer;
+  padding: 10px 6px 2px;
+  text-align: left;
+  align-self: flex-start;
+  transition: filter 0.15s ease;
+}
+
+.roster__more:hover {
+  filter: brightness(1.1);
+}
+
+/* ===== House rules ===== */
+.rules {
   display: flex;
   flex-direction: column;
 }
 
-.group__box__body {
-  flex: 1;
+.rules__row {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
 }
 
-.group__box--fit {
-  height: auto;
+.rules__row:last-child {
+  border-bottom: 0;
 }
 
-.icon-peek {
-  width: auto;
-  vertical-align: middle;
-
-  &.feather-x {
-    color: #f44336;
-  }
-
-  &.feather-check {
-    color: #78cc14;
-  }
+.rules__label {
+  color: var(--muted-strong);
 }
 
-.leaderboard-menu {
-  text-align: right;
-  padding: 10px;
-  font-size: 12px;
+.rules__value {
+  font-weight: 800;
+  color: var(--cream);
 }
 
-.underline {
-  text-decoration: underline;
+/* ===== Leave button ===== */
+.leave-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 90, 58, 0.4);
+  color: var(--orange);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.button-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
+.leave-btn:hover {
+  background: rgba(255, 90, 58, 0.1);
+  border-color: var(--orange);
 }
 
-.members-box {
-  margin: 20px 0;
+/* ===== Kickers ===== */
+.kicker {
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 700;
+  display: inline-block;
 }
 
-h2 {
-  border-bottom: 1px solid #fafafa;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
+.kicker--accent {
+  color: var(--orange);
 }
 
-.dimmed {
-  color: #c0cbd4;
+.kicker--green {
+  color: var(--green);
 }
 
-.card__header {
-  aspect-ratio: 16/9;
+.kicker--muted-light {
+  color: rgba(255, 250, 235, 0.7);
+}
+
+/* ===== Tab section wrappers ===== */
+.games-tab,
+.leaderboard-tab {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
 }
 </style>

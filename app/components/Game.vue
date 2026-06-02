@@ -37,13 +37,17 @@
     </template>
     <template v-else>
       <div class="game__information">
-        <div v-if="isLive" class="live-badge"><span class="live-badge__blob"></span>Live!</div>
-        <div v-else>
-          {{ startDate }}
-          <span class="awarded-points" :class="{ 'awarded-points--win': awardedScore > 0 }">
-            {{ awardedScore }}<template v-if="awardedScore !== null">p</template>
-          </span>
-        </div>
+        <span v-if="isLive" class="live-badge">
+          <span class="live-badge__blob"></span>LIVE
+        </span>
+        <span v-else class="game__date">{{ startDate }}</span>
+        <span
+          v-if="awardedScore !== null"
+          class="awarded-points"
+          :class="{ 'awarded-points--win': awardedScore > 0 }"
+        >
+          {{ awardedScore }}P
+        </span>
       </div>
       <div class="teams">
         <div class="team">
@@ -150,120 +154,176 @@ const isLive = computed(() => {
 </script>
 
 <style scoped>
-.awarded-points {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .game {
-  padding: 10px 0;
+  --indigo-dark: #1f2752;
+  --indigo-deeper: #262e5e;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --green: #9bff3d;
+  --yellow: #ffd84a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
   position: relative;
-  border: 1px solid #e9e9e9;
+  background: var(--indigo-dark);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 14px 16px 16px;
+  color: var(--cream);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .game--alternative {
-  padding: 5px 0;
+  padding: 8px 10px;
 }
 
 .game--clickable {
   cursor: pointer;
 }
 
-.game--bet-urgent {
-  border-color: #ff5722;
-}
-
-.game--bet-danger {
-  border-color: #900;
+.game--clickable:hover {
+  background: var(--indigo-deeper);
+  transform: translateY(-1px);
 }
 
 .game--bet-done {
-  border-color: #8bc34a;
+  border-color: rgba(155, 255, 61, 0.4);
+}
+
+.game--bet-urgent {
+  border-color: rgba(255, 216, 74, 0.55);
+}
+
+.game--bet-danger {
+  border-color: var(--orange);
 }
 
 .game__information {
-  color: #aaa;
-  font-size: 13px;
-  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-bottom: 12px;
+}
+
+.awarded-points {
+  font-weight: 800;
+  color: var(--muted-strong);
+}
+
+.awarded-points--win {
+  color: var(--green);
 }
 
 .teams {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .team {
   flex: 1;
+  min-width: 0;
 }
 
-.team__logo {
+.team__logo,
+:deep(.team__logo.team-logo) {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  margin: 0 auto;
-  margin-bottom: 5px;
+  margin: 0 auto 8px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .team__name {
   text-align: center;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .score {
   display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
 }
 
 .score__label {
-  flex: 1;
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 900;
+  font-size: 28px;
   text-align: center;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--cream);
+  line-height: 1;
 }
 
 .score__divider {
-  padding: 0 5px;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 18px;
-  text-align: center;
+  color: rgba(255, 250, 235, 0.35);
+  line-height: 1;
 }
 
 .my-score {
-  padding-left: 2px;
+  padding-top: 6px;
+  text-align: center;
 }
 
 .score--small {
-  & .score__label,
-  & .score__divider {
-    font-size: 12px;
-    flex: none;
-    font-weight: normal;
-  }
+  display: inline-flex;
+  align-items: baseline;
+  background: rgba(255, 90, 58, 0.15);
+  color: var(--orange);
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-top: 8px;
+}
 
-  & .score__divider {
-    padding: 0 2px;
-  }
+.score--small .score__label,
+.score--small .score__divider {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: var(--orange);
+  flex: none;
+}
 
-  position: relative;
-  justify-content: center;
+.score--small .score__divider {
+  padding: 0 3px;
 }
 
 .live-badge {
-  position: relative;
-  color: #ccc;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--orange);
+  font-weight: 800;
+  letter-spacing: 1.4px;
 }
 
 .live-badge__blob {
   border-radius: 50%;
-  margin-right: 10px;
-  height: 10px;
-  width: 10px;
-  transform: scale(1);
-  background: rgba(120, 204, 20, 1);
-  box-shadow: 0 0 0 0 rgba(120, 204, 20, 1);
-  animation: pulse-green 2s infinite;
+  margin-right: 8px;
+  height: 8px;
+  width: 8px;
+  background: var(--orange);
+  box-shadow: 0 0 0 0 rgba(255, 90, 58, 1);
+  animation: pulse-orange 2s infinite;
   display: inline-block;
 }
 
@@ -284,19 +344,32 @@ const isLive = computed(() => {
 
 .game__column--fill {
   flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
 }
 
 .game--over {
-  opacity: 0.3;
-
-  &:hover {
-    opacity: 1;
-  }
+  opacity: 0.45;
 }
 
-.awarded-points--win {
-  color: #78cc14;
-  font-weight: 700;
+.game--over:hover {
+  opacity: 1;
+}
+
+@keyframes pulse-orange {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 90, 58, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 90, 58, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 90, 58, 0);
+  }
 }
 
 @keyframes live {

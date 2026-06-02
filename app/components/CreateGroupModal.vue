@@ -3,33 +3,41 @@
     <div class="modal__backdrop" @click="emit('close')"></div>
     <section class="modal__inner">
       <header class="modal__header">
-        <button class="modal__close" @click="emit('close')">
+        <span class="kicker kicker--accent">{{
+          group === null ? '★ NEW GROUP' : '★ YOU NAILED IT'
+        }}</span>
+        <h2 class="modal__title">
+          {{ group === null ? 'START A GROUP' : 'GROUP CREATED.' }}
+        </h2>
+        <p v-if="group !== null" class="modal__lede">
+          <strong class="t-cream">{{ name }}</strong> is live. Share the link below to drag your
+          friends in.
+        </p>
+        <button class="modal__close" @click="emit('close')" aria-label="Close">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="feather feather-x"
           >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
-        <h2 class="modal__title">
-          {{ group === null ? 'Create new group' : 'Great!' }}
-        </h2>
       </header>
+
       <section class="modal__body">
         <template v-if="group === null">
-          <form>
-            <div class="form-row">
-              <select v-model="tournamentId" class="form-input">
-                <option value="null" disabled>Select tournament</option>
+          <form @submit.prevent>
+            <label class="field">
+              <span class="field__label">Tournament</span>
+              <select v-model="tournamentId" class="field__input field__input--select">
+                <option :value="null" disabled>Select tournament</option>
                 <option
                   v-for="tournament in tournaments"
                   :key="tournament.id"
@@ -38,110 +46,99 @@
                   {{ tournament.name }}
                 </option>
               </select>
-            </div>
-            <div class="form-row">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Group name</span>
               <input
                 v-model="name"
                 type="text"
-                placeholder="Name of the group"
-                class="form-input form-input--with-icon icon--tag"
+                placeholder="Sunday Roast XI"
+                class="field__input"
               />
-            </div>
-            <div class="form-row">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Welcome message</span>
               <input
                 v-model="message"
                 type="text"
-                placeholder="Welcome message"
-                class="form-input form-input--with-icon icon--message"
+                placeholder="The smack-talk starts here…"
+                class="field__input"
               />
-            </div>
-            <div class="form-row">
-              <input
-                v-model="winPoints"
-                type="number"
-                min="0"
-                placeholder="Points for winning team"
-                class="form-input form-input--with-icon icon--award"
-              />
-            </div>
-            <div class="form-row">
-              <input
-                v-model="exactScorePoints"
-                type="number"
-                min="0"
-                placeholder="Points for exact score"
-                class="form-input form-input--with-icon icon--target"
-              />
-            </div>
-            <div class="form-row">
-              <label>
-                <input v-model="peak" type="checkbox" /> Allow peeking
-                <span class="peek-text"
-                  >(this will allow all members of the group to see the bets placed by others before
-                  the game has started)</span
-                >
+            </label>
+
+            <div class="field__row">
+              <label class="field">
+                <span class="field__label">Winning team pts</span>
+                <input
+                  v-model="winPoints"
+                  type="number"
+                  min="0"
+                  placeholder="2"
+                  class="field__input"
+                />
+              </label>
+              <label class="field">
+                <span class="field__label">Exact score pts</span>
+                <input
+                  v-model="exactScorePoints"
+                  type="number"
+                  min="0"
+                  placeholder="4"
+                  class="field__input"
+                />
               </label>
             </div>
+
+            <label class="check">
+              <input v-model="peak" type="checkbox" class="check__input" />
+              <span class="check__box" aria-hidden="true">
+                <svg
+                  v-if="peak"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              <span class="check__text">
+                <span class="check__title">Allow sneak peek</span>
+                <span class="check__sub"
+                  >Members can see each other's bets before the game starts.</span
+                >
+              </span>
+            </label>
           </form>
         </template>
+
         <template v-else>
-          <p class="text-center">
-            Your group <strong>{{ name }}</strong> was just created!
-          </p>
-
-          <p class="text-center">Share this link to invite your friends</p>
-
-          <div class="share-link">
-            <input v-model="shareUrl" type="text" class="share-link__input" readonly />
-            <div class="share-link__action" @click="copyInviteCode">
-              <svg
-                v-if="!copied"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-clipboard share-link__action__icon"
-              >
-                <path
-                  d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-                ></path>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-              </svg>
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-check"
-              >
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
+          <span class="kicker kicker--muted-light">★ INVITE LINK</span>
+          <div class="invite">
+            <input v-model="shareUrl" type="text" class="invite__input" readonly />
+            <button class="invite__btn" @click="copyInviteCode">
+              {{ copied ? 'COPIED ✓' : 'COPY →' }}
+            </button>
           </div>
         </template>
       </section>
+
       <footer v-if="group === null" class="modal__footer">
-        <div class="button-wrapper">
-          <button
-            class="button button--action"
-            :disabled="loading || !canSave"
-            :class="{ 'button--loading': loading, 'button--disabled': !canSave }"
-            @click="create"
-          >
-            Create group
-          </button>
-        </div>
+        <button
+          class="btn btn--orange btn--block"
+          :disabled="loading || !canSave"
+          :class="{ 'btn--disabled': !canSave || loading }"
+          @click="create"
+        >
+          {{ loading ? 'CREATING…' : 'CREATE GROUP' }}
+        </button>
       </footer>
     </section>
   </div>
@@ -198,7 +195,7 @@ async function copyInviteCode() {
   copied.value = true;
   setTimeout(() => {
     copied.value = false;
-  }, 1000);
+  }, 1500);
 }
 
 async function create() {
@@ -228,6 +225,12 @@ async function create() {
 
 <style scoped>
 .modal {
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
   position: fixed;
   z-index: 997;
   top: 0;
@@ -237,122 +240,309 @@ async function create() {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .modal__backdrop {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(20, 25, 56, 0.7);
+  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
 .modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
+  background: var(--indigo-dark);
+  color: var(--cream);
+  width: 100%;
+  max-width: 480px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  overflow: hidden;
 }
 
 .modal__header {
-  padding-bottom: 15px;
-  background: #434f8e;
-  color: #fff;
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
+  padding: 26px 28px 16px;
   position: relative;
+}
+
+.modal__title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 8px 0 0;
+  color: var(--cream);
+}
+
+.modal__lede {
+  font-size: 14px;
+  color: var(--muted-strong);
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+.t-cream {
+  color: var(--cream);
+  font-weight: 800;
 }
 
 .modal__close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 18px;
+  right: 18px;
   background: transparent;
-  color: #fff;
+  color: var(--muted-strong);
   border: 0;
+  width: 32px;
+  height: 32px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
-
-  & svg {
-    display: block;
-  }
-
-  &:hover {
-    opacity: 1;
-  }
+  border-radius: 50%;
+  transition: background 0.15s ease;
 }
 
-.modal__title {
-  text-align: center;
-  padding: 30px 0 5px;
+.modal__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cream);
 }
 
 .modal__body {
-  flex: 1;
-  padding-top: 0;
+  padding: 8px 28px 20px;
   overflow-y: auto;
-  padding: 20px;
-}
-
-.share-link {
-  border: 1px solid #efefef;
   display: flex;
-  margin-top: 20px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.share-link__input {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 7px;
-  color: #969292;
+.modal__footer {
+  padding: 16px 28px 26px;
 }
 
-.share-link__action {
-  border-left: 1px solid #efefef;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  cursor: pointer;
-  transition: all ease 0.3s;
-  color: #969292;
+/* ===== Kicker ===== */
+.kicker {
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 800;
+  display: inline-block;
 }
 
-.share-link__action:hover {
-  color: #434f8e;
+.kicker--accent {
+  color: var(--orange);
 }
 
-.share-link__action__icon {
+.kicker--muted-light {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ===== Form field ===== */
+.field {
   display: block;
-  width: 18px;
+  margin-bottom: 18px;
+  cursor: pointer;
 }
 
-.peek-text {
-  font-size: 12px;
-  color: #aaa;
+.field__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.button-wrapper {
-  padding: 10px 0;
-  padding-bottom: 20px;
+.field__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  margin-bottom: 8px;
+}
+
+.field__input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 13px 16px;
+  border-radius: 2px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.field__input::placeholder {
+  color: var(--muted);
+}
+
+.field__input:focus {
+  border-color: var(--orange);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.field__input--select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23fffaebcc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+.field__input--select option {
+  background: var(--indigo-dark);
+  color: var(--cream);
+}
+
+/* ===== Checkbox ===== */
+.check {
   display: flex;
-  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  cursor: pointer;
+  margin-top: 4px;
 }
 
-.form-row {
-  margin-bottom: 20px;
+.check__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.check__box {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--orange);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.check__input:checked + .check__box {
+  background: rgba(255, 90, 58, 0.15);
+  border-color: var(--orange);
+}
+
+.check__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.check__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.check__sub {
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+/* ===== Invite ===== */
+.invite {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.invite__input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--muted-strong);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 14px 14px;
+  outline: none;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.invite__btn {
+  background: var(--orange);
+  border: 0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+}
+
+.invite__btn:hover {
+  filter: brightness(1.08);
+}
+
+/* ===== Button ===== */
+.btn {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.btn--orange {
+  background: var(--orange);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 16px 22px;
+  border-radius: 2px;
+}
+
+.btn--orange:hover:not(.btn--disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 </style>

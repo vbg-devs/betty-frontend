@@ -1,7 +1,14 @@
 <template>
-  <div>
-    <h1>Privacy Policy</h1>
-    <p>Last updated: September 24, 2022</p>
+  <div class="privacy-page">
+    <section class="hero">
+      <div class="hero__card">
+        <span class="kicker kicker--accent">★ THE FINE PRINT</span>
+        <h1 class="hero__title">PRIVACY<br /><span class="t-orange">POLICY.</span></h1>
+        <p class="hero__meta">Last updated · September 24, 2022</p>
+      </div>
+    </section>
+
+    <article class="privacy-page__body">
     <p>
       This Privacy Policy describes Our policies and procedures on the collection, use and
       disclosure of Your information when You use the Service and tells You about Your privacy
@@ -363,9 +370,158 @@
     <ul>
       <li>By email: privacy@betty.social</li>
     </ul>
+    </article>
   </div>
 </template>
 
 <script setup lang="ts"></script>
 
-<style scoped></style>
+<style scoped>
+.privacy-page {
+  --indigo: #434f8e;
+  --indigo-dark: #1f2752;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
+  color: var(--cream);
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  padding-bottom: 40px;
+}
+
+/* ===== Hero ===== */
+.hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: var(--indigo);
+  padding: 0 0 40px;
+}
+
+.hero__card {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--indigo-dark);
+  padding: 36px 40px 32px;
+  border-radius: 2px;
+}
+
+.hero__title {
+  font-size: clamp(48px, 7vw, 84px);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  margin: 14px 0 18px;
+  text-transform: uppercase;
+}
+
+.t-orange {
+  color: var(--orange);
+}
+
+.hero__meta {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  margin: 0;
+}
+
+@media (max-width: 800px) {
+  .hero__card {
+    padding: 28px 22px 24px;
+  }
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.kicker--accent {
+  color: var(--orange);
+}
+
+/* ===== Body ===== */
+.privacy-page__body {
+  max-width: 760px;
+  margin: 32px auto 0;
+  padding: 0 8px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted-strong);
+}
+
+.privacy-page__body :deep(h1) {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--cream);
+  margin: 48px 0 16px;
+  line-height: 1.1;
+}
+
+.privacy-page__body :deep(h1:first-child) {
+  margin-top: 0;
+}
+
+.privacy-page__body :deep(h2) {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: var(--cream);
+  margin: 28px 0 10px;
+}
+
+.privacy-page__body :deep(h3) {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin: 22px 0 8px;
+}
+
+.privacy-page__body :deep(p) {
+  margin: 0 0 14px;
+}
+
+.privacy-page__body :deep(ul),
+.privacy-page__body :deep(ol) {
+  margin: 0 0 18px;
+  padding-left: 22px;
+}
+
+.privacy-page__body :deep(li) {
+  margin-bottom: 8px;
+}
+
+.privacy-page__body :deep(li > p) {
+  margin: 0 0 6px;
+}
+
+.privacy-page__body :deep(strong) {
+  color: var(--cream);
+  font-weight: 800;
+}
+
+.privacy-page__body :deep(a) {
+  color: var(--orange);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 700;
+}
+
+.privacy-page__body :deep(a:hover) {
+  filter: brightness(1.1);
+}
+</style>

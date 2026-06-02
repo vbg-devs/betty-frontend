@@ -1,256 +1,184 @@
 <template>
-  <div>
+  <div class="feed">
     <Transition name="clear" tag="div">
-      <div v-if="list.length > 0" class="clear-all-container">
-        <div
-          class="clear-all"
-          @click="clearAll"
-          @mouseenter="hoverClear = true"
-          @mouseleave="hoverClear = false"
-        >
-          <span v-if="hoverClear">CLEAR ALL</span>
+      <header v-if="list.length > 0" class="feed__header">
+        <span class="kicker kicker--accent">★ ACTIVITY</span>
+        <button class="clear-btn" @click="clearAll">CLEAR ALL</button>
+      </header>
+    </Transition>
+    <TransitionGroup name="list" tag="div">
+      <article
+        v-for="message in list"
+        :key="message.id"
+        class="feed-item"
+        :class="`feed-item--${meta(message.type).accent}`"
+      >
+        <div class="feed-item__icon">
+          <!-- bet_placed / bet_updated / group_joined -->
           <svg
-            v-else
+            v-if="['bet_placed', 'bet_updated', 'group_joined'].includes(message.type)"
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="feather feather-x-circle"
           >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <polyline points="17 11 19 13 23 9" />
+          </svg>
+          <!-- game_starting_soon -->
+          <svg
+            v-else-if="message.type === 'game_starting_soon'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="7" />
+            <polyline points="12 9 12 12 13.5 13.5" />
+            <path
+              d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"
+            />
+          </svg>
+          <!-- group_left -->
+          <svg
+            v-else-if="message.type === 'group_left'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <line x1="18" y1="8" x2="23" y2="13" />
+            <line x1="23" y1="8" x2="18" y2="13" />
+          </svg>
+          <!-- group_created -->
+          <svg
+            v-else-if="message.type === 'group_created'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <!-- user_register -->
+          <svg
+            v-else-if="message.type === 'user_register'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <line x1="20" y1="8" x2="20" y2="14" />
+            <line x1="23" y1="11" x2="17" y2="11" />
+          </svg>
+          <!-- evaluate_game -->
+          <svg
+            v-else-if="message.type === 'evaluate_game'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M3 4a1 1 0 0 1 1.7-.71l1.3 1.3L7.3 3.3a1 1 0 0 1 1.4 0L10 4.6l1.3-1.3a1 1 0 0 1 1.4 0L14 4.6l1.3-1.3a1 1 0 0 1 1.4 0L18 4.6l1.3-1.3A1 1 0 0 1 21 4v16a1 1 0 0 1-1.7.71L18 19.4l-1.3 1.3a1 1 0 0 1-1.4 0L14 19.4l-1.3 1.3a1 1 0 0 1-1.4 0L10 19.4l-1.3 1.3a1 1 0 0 1-1.4 0L6 19.4l-1.3 1.3A1 1 0 0 1 3 20V4z"
+            />
+            <line x1="7" y1="9" x2="17" y2="9" />
+            <line x1="7" y1="13" x2="17" y2="13" />
+            <line x1="7" y1="17" x2="13" y2="17" />
+          </svg>
+          <!-- user_exact_score -->
+          <svg
+            v-else-if="message.type === 'user_exact_score'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            />
           </svg>
         </div>
-      </div>
-    </Transition>
-    <TransitionGroup name="list" tag="div">
-      <div v-for="message in list" :key="message.id" class="feed-item">
-        <div class="row row--center-v">
-          <template v-if="message.type === 'bet_placed'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-user-check feed-item__icon"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <polyline points="17 11 19 13 23 9"></polyline>
-              </svg>
-            </div>
-            <div class="column">
+
+        <div class="feed-item__body">
+          <span class="feed-item__kicker">{{ meta(message.type).label }}</span>
+          <div class="feed-item__text">
+            <template v-if="message.type === 'bet_placed'">
               <GameBetListItem :bet="message.message" />
-            </div>
-          </template>
-          <template v-else-if="message.type === 'game_starting_soon'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-watch feed-item__icon"
-              >
-                <circle cx="12" cy="12" r="7"></circle>
-                <polyline points="12 9 12 12 13.5 13.5"></polyline>
-                <path
-                  d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"
-                ></path>
-              </svg>
-            </div>
-            <div class="column">
-              <GameStartSoonListItem :match="message.message" />
-            </div>
-          </template>
-          <template v-else-if="message.type === 'bet_updated'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-user-check feed-item__icon"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <polyline points="17 11 19 13 23 9"></polyline>
-              </svg>
-            </div>
-            <div class="column">
+            </template>
+            <template v-else-if="message.type === 'bet_updated'">
               <GameBetListItem :bet="message.message" :update="true" />
-            </div>
-          </template>
-          <template v-else-if="message.type === 'group_joined'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-user-check feed-item__icon"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <polyline points="17 11 19 13 23 9"></polyline>
-              </svg>
-            </div>
-            <div class="column">
+            </template>
+            <template v-else-if="message.type === 'game_starting_soon'">
+              <GameStartSoonListItem :match="message.message" />
+            </template>
+            <template v-else-if="message.type === 'group_joined'">
               <GroupJoinedListItem :data="message.message" />
-            </div>
-          </template>
-          <template v-else-if="message.type === 'group_left'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-user-x feed-item__icon"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <line x1="18" y1="8" x2="23" y2="13"></line>
-                <line x1="23" y1="8" x2="18" y2="13"></line>
-              </svg>
-            </div>
-            <div class="column">
-              <div class="feed-item__label">Someone just left a group</div>
-            </div>
-          </template>
-          <template v-else-if="message.type === 'group_created'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-users feed-item__icon"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div class="column">
-              <div class="feed-item__label">New group created!</div>
-            </div>
-          </template>
-          <template v-else-if="message.type === 'user_register'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-user-plus feed-item__icon"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <line x1="20" y1="8" x2="20" y2="14"></line>
-                <line x1="23" y1="11" x2="17" y2="11"></line>
-              </svg>
-            </div>
-            <div class="column">
-              <div class="feed-item__label">
-                <strong>{{ message.message.name }}</strong> just joined, welcome!
-              </div>
-            </div>
-          </template>
-          <template v-else-if="message.type === 'evaluate_game'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                aria-hidden="true"
-                focusable="false"
-                data-prefix="fal"
-                data-icon="receipt"
-                role="img"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 448 512"
-                class="feed-item__icon"
-              >
-                <path
-                  fill="currentColor"
-                  d="M344 240H104c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8h240c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8zm0 96H104c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8h240c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8zM418.1 0c-5.8 0-11.8 1.8-17.3 5.7L357.3 37 318.7 9.2c-8.4-6-18.2-9.1-28.1-9.1-9.8 0-19.6 3-28 9.1L224 37 185.4 9.2C177 3.2 167.1.1 157.3.1s-19.6 3-28 9.1L90.7 37 47.2 5.7C41.8 1.8 35.8 0 29.9 0 14.4.1 0 12.3 0 29.9v452.3C0 499.5 14.3 512 29.9 512c5.8 0 11.8-1.8 17.3-5.7L90.7 475l38.6 27.8c8.4 6 18.2 9.1 28.1 9.1 9.8 0 19.6-3 28-9.1L224 475l38.6 27.8c8.4 6 18.3 9.1 28.1 9.1s19.6-3 28-9.1l38.6-27.8 43.5 31.3c5.4 3.9 11.4 5.7 17.3 5.7 15.5 0 29.8-12.2 29.8-29.8V29.9C448 12.5 433.7 0 418.1 0zM416 477.8L376 449l-18.7-13.5-18.7 13.5-38.6 27.8c-2.8 2-6 3-9.3 3-3.4 0-6.6-1.1-9.4-3.1L242.7 449 224 435.5 205.3 449l-38.6 27.8c-2.8 2-6 3-9.4 3-3.4 0-6.6-1.1-9.4-3.1L109.3 449l-18.7-13.5L72 449l-40 29.4V34.2L72 63l18.7 13.5L109.4 63 148 35.2c2.8-2 6-3 9.3-3 3.4 0 6.6 1.1 9.4 3.1L205.3 63 224 76.5 242.7 63l38.6-27.8c2.8-2 6-3 9.4-3 3.4 0 6.6 1.1 9.4 3.1L338.7 63l18.7 13.5L376 63l40-28.8v443.6zM344 144H104c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8h240c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8z"
-                  class=""
-                ></path>
-              </svg>
-            </div>
-            <div class="column">
+            </template>
+            <template v-else-if="message.type === 'group_left'">
+              Someone just left a group
+            </template>
+            <template v-else-if="message.type === 'group_created'">
+              New group on Betty
+            </template>
+            <template v-else-if="message.type === 'user_register'">
+              <strong>{{ message.message.name }}</strong> just joined Betty
+            </template>
+            <template v-else-if="message.type === 'evaluate_game'">
               <GameMessageListItem :message="message.message" />
-            </div>
-          </template>
-          <template v-else-if="message.type === 'user_exact_score'">
-            <div class="column column--wrap column--no-padding">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="feather feather-star feed-item__icon"
-              >
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                ></polygon>
-              </svg>
-            </div>
-            <div class="column">
+            </template>
+            <template v-else-if="message.type === 'user_exact_score'">
               <ExactScoreListItem :message="message.message" />
-            </div>
-          </template>
-          <template v-else>
-            <span v-text="message.type" />
-          </template>
+            </template>
+            <template v-else>
+              <span v-text="message.type" />
+            </template>
+          </div>
         </div>
-      </div>
+      </article>
     </TransitionGroup>
   </div>
 </template>
@@ -258,9 +186,23 @@
 <script setup lang="ts">
 const messageStore = useMessageStore();
 
-const hoverClear = ref(false);
-
 const list = computed(() => messageStore.all);
+
+const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }> = {
+  bet_placed: { label: '● NEW BET', accent: 'orange' },
+  bet_updated: { label: '● BET UPDATED', accent: 'orange' },
+  game_starting_soon: { label: '● KICKING OFF', accent: 'yellow' },
+  evaluate_game: { label: '★ FULL TIME', accent: 'cream' },
+  user_exact_score: { label: '★ EXACT SCORE', accent: 'green' },
+  group_joined: { label: '● JOINED GROUP', accent: 'green' },
+  group_left: { label: '● LEFT GROUP', accent: 'cream' },
+  group_created: { label: '★ NEW GROUP', accent: 'orange' },
+  user_register: { label: '★ WELCOME', accent: 'green' },
+};
+
+function meta(type: string) {
+  return TYPE_META[type] ?? { label: type.toUpperCase(), accent: 'cream' };
+}
 
 let msgIndex = 0;
 onMounted(() => {
@@ -283,122 +225,173 @@ function clearAll() {
 </script>
 
 <style scoped>
-.feed-item {
-  border-radius: 4px;
-  background: #434f8e;
-  color: #fff;
-  padding: 0 20px;
-  box-shadow: 0 5px 4px -2px rgba(0, 0, 0, 0.5);
+.feed {
+  --indigo-dark: #1f2752;
+  --indigo-deeper: #141938;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --green: #9bff3d;
+  --yellow: #ffd84a;
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  width: 320px;
+  max-width: 100%;
+}
+
+.feed__header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  height: 60px;
+  justify-content: space-between;
   margin-bottom: 10px;
-  font-size: 13px;
-  position: relative;
-
-  & > .row {
-    flex: 1;
-  }
+  padding: 0 4px;
 }
 
-.clear-all-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 5px;
+.kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
 }
 
-.clear-all {
-  background: #434f8e;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 30px;
-  width: 30px;
-  color: #fff;
-  border-radius: 50%;
-  font-size: 13px;
+.kicker--accent {
+  color: var(--orange);
+}
+
+.clear-btn {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
   cursor: pointer;
-  transition: all 0.2s ease;
-
-  & > svg {
-    opacity: 1;
-    transition: all 0.2s ease;
-  }
-
-  & > span {
-    transition: all 0.2s ease;
-    opacity: 0;
-    white-space: nowrap;
-  }
-
-  &:hover {
-    width: 100px;
-    background: #48569c;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-
-    & > svg {
-      opacity: 0;
-    }
-
-    & > span {
-      opacity: 1;
-    }
-  }
+  padding: 4px 8px;
+  border-radius: 2px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.feed-item__action {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  right: 10px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity ease 0.3s;
+.clear-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
 }
 
-.feed-item:hover .feed-item__action {
-  opacity: 1;
-  visibility: visible;
-}
-
-.feed-item__action__button {
-  background: #fff;
-  border-radius: 50%;
-  padding: 0;
-  border: none;
-  width: 100%;
-  height: 100%;
+/* ===== Feed item ===== */
+.feed-item {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
+  gap: 12px;
+  background: var(--indigo-dark);
+  color: var(--cream);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 2px;
+  border-left: 3px solid var(--orange);
+  font-size: 13px;
+  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.45);
+}
 
-  &:hover {
-    background: #ccc;
-  }
+.feed-item--green {
+  border-left-color: var(--green);
+}
+
+.feed-item--yellow {
+  border-left-color: var(--yellow);
+}
+
+.feed-item--cream {
+  border-left-color: rgba(255, 255, 255, 0.2);
 }
 
 .feed-item__icon {
-  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--orange);
+}
+
+.feed-item--green .feed-item__icon {
+  color: var(--green);
+}
+
+.feed-item--yellow .feed-item__icon {
+  color: var(--yellow);
+}
+
+.feed-item--cream .feed-item__icon {
+  color: var(--muted-strong);
+}
+
+.feed-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feed-item__kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--orange);
+}
+
+.feed-item--green .feed-item__kicker {
+  color: var(--green);
+}
+
+.feed-item--yellow .feed-item__kicker {
+  color: var(--yellow);
+}
+
+.feed-item--cream .feed-item__kicker {
+  color: var(--muted-strong);
+}
+
+.feed-item__text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-item__text :deep(strong) {
+  font-weight: 800;
+}
+
+/* ===== Sub-list team logo overrides (small inline flags) ===== */
+.feed-item__text :deep(.team-logo.small) {
+  width: 18px;
   height: 18px;
-  width: auto;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  margin: 0 3px;
+  display: inline-block;
+  vertical-align: middle;
+  background-size: cover;
 }
 
-.timestamp {
-  color: #bbb;
-  font-size: 12px;
-  text-align: right;
-}
-
+/* ===== Transitions ===== */
 .list-enter-active,
 .list-leave-active,
 .clear-enter-active,
 .clear-leave-active {
-  transition: all 0.5s ease;
+  transition: all 0.35s ease;
 }
 
 .list-enter-from,
@@ -406,22 +399,10 @@ function clearAll() {
 .clear-enter-from,
 .clear-leave-to {
   opacity: 0;
-  transform: translateX(-100%);
+  transform: translateX(-20px);
 }
 
-.list-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-  height: 60px;
-}
-
-.clear-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-  height: 30px;
-}
-
-.column--no-padding {
-  padding-right: 0;
+.list-leave-active {
+  position: absolute;
 }
 </style>

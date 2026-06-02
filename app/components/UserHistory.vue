@@ -1,36 +1,51 @@
 <template>
   <div class="modal">
     <div class="modal__backdrop" @click="emit('close')"></div>
-    <div class="modal__inner">
+    <section class="modal__inner">
       <header class="modal__header">
-        <button class="modal__close" @click="emit('close')">
+        <button class="modal__close" @click="emit('close')" aria-label="Close">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="feather feather-x"
           >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
-        <div class="user-badge-wrapper">
-          <UserBadge :user="user" :medium="true" />
+
+        <div class="modal__user">
+          <UserBadge :user="user" :medium="true" :clickable="false" />
+          <div class="modal__user-info">
+            <span class="kicker kicker--accent">★ BET HISTORY</span>
+            <h2 class="modal__title">{{ user.name?.toUpperCase() }}</h2>
+            <div class="modal__stats">
+              <span class="kicker kicker--muted-light">{{ userBets.length }} BETS</span>
+              <span class="dot">·</span>
+              <span class="kicker kicker--green">{{ totalPoints }} PTS</span>
+            </div>
+          </div>
         </div>
-        <h2 class="modal__title">
-          {{ user.name }}
-        </h2>
       </header>
+
       <section class="modal__body">
-        <UserBetListItem v-for="bet in userBets" :key="bet.id" :peek="peek" :bet="bet" />
+        <div v-if="userBets.length === 0" class="empty">
+          <span class="kicker kicker--muted-light">★ NO BETS YET</span>
+        </div>
+        <UserBetListItem
+          v-for="bet in userBets"
+          :key="bet.id"
+          :peek="peek"
+          :bet="bet"
+        />
       </section>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -55,13 +70,18 @@ const userBets = computed(() => {
   const filtered = bets
     .concat()
     .filter((x: any) => x.user_id === user.user_id)
-    .map((x: any) => ({ ...x, game: games.find((z: any) => z.id === x.game_id) }));
+    .map((x: any) => ({ ...x, game: games.find((z: any) => z.id === x.game_id) }))
+    .filter((x: any) => x.game);
   filtered.sort(
     (a: any, b: any) =>
       new Date(a.game.start_date).getTime() - new Date(b.game.start_date).getTime(),
   );
   return filtered;
 });
+
+const totalPoints = computed(() =>
+  userBets.value.reduce((sum: number, b: any) => sum + (b.user_points || 0), 0),
+);
 
 onMounted(() => {
   document.body.classList.add('no-scroll');
@@ -74,6 +94,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .modal {
+  --indigo-dark: #1f2752;
+  --indigo-deeper: #141938;
+  --cream: #fffaeb;
+  --orange: #ff5a3a;
+  --green: #9bff3d;
+  --yellow: #ffd84a;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+
   position: fixed;
   z-index: 997;
   top: 0;
@@ -83,79 +112,135 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .modal__backdrop {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(20, 25, 56, 0.78);
+  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
 .modal__inner {
-  background: #fff;
-  width: 90%;
-  max-width: 420px;
+  background: var(--indigo-dark);
+  color: var(--cream);
+  width: 100%;
+  max-width: 480px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 5px 10px -7px rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
-  max-height: 600px;
-  height: 75vh;
+  max-height: 88vh;
+  overflow: hidden;
 }
 
 .modal__header {
-  padding-bottom: 15px;
-  background: #434f8e;
-  color: #fff;
-  border-top-right-radius: 3px;
-  border-top-left-radius: 3px;
+  padding: 26px 28px 22px;
   position: relative;
 }
 
 .modal__close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 16px;
+  right: 16px;
   background: transparent;
-  color: #fff;
+  color: var(--muted-strong);
   border: 0;
+  width: 32px;
+  height: 32px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity ease 0.3s;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+}
 
-  & svg {
-    display: block;
-  }
+.modal__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cream);
+}
 
-  &:hover {
-    opacity: 1;
-  }
+.modal__user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal__user-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .modal__title {
-  text-align: center;
-  padding: 10px 0 5px;
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 6px 0 8px;
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.user-badge-wrapper {
-  padding-top: 30px;
+.modal__stats {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.kicker--accent {
+  color: var(--orange);
+}
+
+.kicker--green {
+  color: var(--green);
+}
+
+.kicker--muted-light {
+  color: rgba(255, 250, 235, 0.65);
 }
 
 .modal__body {
   flex: 1;
-  padding-top: 0;
   overflow-y: auto;
-  padding: 20px;
+  padding: 4px 14px 18px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.empty__text {
+  font-size: 14px;
+  color: var(--muted-strong);
+  margin: 0;
 }
 </style>
