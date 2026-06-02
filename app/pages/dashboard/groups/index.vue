@@ -65,7 +65,11 @@
           <div
             class="group-card__image"
             :style="{ backgroundImage: `url(${group.tournament!.image_url})` }"
-          ></div>
+          >
+            <span v-if="group.public_at" class="group-card__public"
+              ><span class="group-card__public-dot">●</span> PUBLIC</span
+            >
+          </div>
           <div class="group-card__body">
             <span class="kicker kicker--accent">★ {{ group.tournament!.name.toUpperCase() }}</span>
             <h3 class="group-card__title">{{ group.name }}</h3>
@@ -334,10 +338,29 @@ function handleCloseCreateGroupModal() {
 }
 
 .group-card__image {
+  position: relative;
   aspect-ratio: 16 / 9;
   background-size: cover;
   background-position: center;
   background-color: var(--indigo);
+}
+
+.group-card__public {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--cream);
+  background: rgba(20, 25, 56, 0.78);
+  padding: 5px 9px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+}
+
+.group-card__public-dot {
+  color: var(--green);
 }
 
 .group-card__body {
