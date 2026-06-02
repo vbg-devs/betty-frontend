@@ -43,7 +43,7 @@
         <span class="kicker kicker--accent">★ SET</span>
         <div class="step__number">01</div>
         <h3 class="step__title">Make a group</h3>
-        <p class="step__copy">Pick a tournament, set the points, share one link. 90 seconds.</p>
+        <p class="step__copy">Pick a tournament, set the points, share one link. 30 seconds.</p>
       </article>
       <article class="step">
         <span class="kicker kicker--green">● BET</span>
@@ -107,7 +107,7 @@
     <!-- Final CTA -->
     <section class="final-cta">
       <div class="final-cta__inner">
-        <span class="kicker kicker--dark-bold">★ FREE · 30 SECONDS · NO APP STORE</span>
+        <span class="kicker kicker--dark-bold">★ FREE · 30 SECONDS</span>
         <h2 class="final-cta__title">
           START<br />
           YOUR GROUP<br />
@@ -159,7 +159,7 @@
             <p class="auth-pitch__lede">
               {{
                 isSignUp
-                  ? '90 seconds to your first group. Betty handles the math, you handle the banter.'
+                  ? '30 seconds to your first group. Betty handles the math, you handle the banter.'
                   : 'Lock in your bets, settle the banter. Standings live forever.'
               }}
             </p>
