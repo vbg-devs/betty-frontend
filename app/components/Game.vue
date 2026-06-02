@@ -37,9 +37,7 @@
     </template>
     <template v-else>
       <div class="game__information">
-        <span v-if="isLive" class="live-badge">
-          <span class="live-badge__blob"></span>LIVE
-        </span>
+        <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
         <span v-else class="game__date">{{ startDate }}</span>
         <span
           v-if="awardedScore !== null"
@@ -62,8 +60,12 @@
             <div class="score__divider">-</div>
             <div class="score__label">{{ game.away_team_score }}</div>
           </div>
-          <div class="my-score">
-            <slot name="test"></slot>
+          <div v-if="betted" class="my-score">
+            <div class="score score--small" aria-label="Your bet" data-balloon-pos="up">
+              <div class="score__label">{{ placedBetHomeTeam }}</div>
+              <div class="score__divider">-</div>
+              <div class="score__label">{{ placedBetAwayTeam }}</div>
+            </div>
           </div>
         </div>
         <div class="team">
@@ -94,12 +96,16 @@ const {
   alternative = false,
   betted = false,
   bets = [],
+  placedBetHomeTeam = null,
+  placedBetAwayTeam = null,
 } = defineProps<{
   game?: Record<string, any>;
   clickable?: boolean;
   alternative?: boolean;
   betted?: boolean;
   bets?: any[];
+  placedBetHomeTeam?: number | null;
+  placedBetAwayTeam?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -190,11 +196,11 @@ const isLive = computed(() => {
 }
 
 .game--bet-done {
-  border-color: rgba(155, 255, 61, 0.4);
+  border-color: var(--green);
 }
 
 .game--bet-urgent {
-  border-color: rgba(255, 216, 74, 0.55);
+  border-color: var(--orange);
 }
 
 .game--bet-danger {

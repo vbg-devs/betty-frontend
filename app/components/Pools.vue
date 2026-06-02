@@ -20,11 +20,6 @@
           class="game-box"
           @click-game="clickGame"
         >
-          <div v-if="hasBet(game)" class="score score--small">
-            <div class="score__label">{{ placedBetHomeTeam(game) }}</div>
-            <div class="score__divider">-</div>
-            <div class="score__label">{{ placedBetAwayTeam(game) }}</div>
-          </div>
           <div v-if="showBets" class="game__bets-info">
             <svg
               xmlns="http://www.w3.org/2000/svg"

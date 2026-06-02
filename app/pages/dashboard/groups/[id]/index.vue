@@ -691,6 +691,7 @@ onBeforeUnmount(() => {
   color: var(--cream);
   margin: 0;
   letter-spacing: -0.005em;
+  white-space: pre-wrap;
 }
 
 .welcome--quiet {

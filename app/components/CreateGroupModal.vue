@@ -60,19 +60,19 @@
 
             <label class="field">
               <span class="field__label">Welcome message</span>
-              <input
+              <textarea
                 v-model="message"
-                type="text"
+                rows="2"
                 placeholder="The smack-talk starts here…"
-                class="field__input"
-              />
+                class="field__input field__input--textarea"
+              ></textarea>
             </label>
 
             <label class="field">
               <span class="field__label">Description</span>
               <textarea
                 v-model="description"
-                rows="3"
+                rows="2"
                 :maxlength="MAX_DESCRIPTION_LEN"
                 placeholder="Shown on the public board. Pitch your group in a sentence or two…"
                 class="field__input field__input--textarea"
@@ -497,7 +497,7 @@ async function create() {
 
 .field__input--textarea {
   resize: vertical;
-  min-height: 78px;
+  min-height: 65px;
   line-height: 1.45;
   font-family: inherit;
 }

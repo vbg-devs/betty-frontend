@@ -34,7 +34,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/global.css'],
+  css: ['~/assets/css/global.css', 'balloon-css/balloon.min.css'],
 
   gtag: {
     id: 'G-71Z91KX62G',
