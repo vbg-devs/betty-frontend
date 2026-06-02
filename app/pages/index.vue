@@ -241,7 +241,9 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                  />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
               </span>
@@ -276,6 +278,8 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -331,6 +335,15 @@ onMounted(() => {
   onUnmounted(unsubscribe);
 });
 
+function isInAppBrowser() {
+  const ua = navigator.userAgent;
+  return (
+    /FBAN|FBAV|Instagram|Line|MicroMessenger|TikTok|Twitter/i.test(ua) ||
+    /; wv\)/i.test(ua) ||
+    (/iPhone|iPad/.test(ua) && !/Safari/.test(ua))
+  );
+}
+
 async function handleSignInSuccess() {
   const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
   if (returnUrl) {
@@ -340,11 +353,19 @@ async function handleSignInSuccess() {
   }
 }
 
+async function signInWithProvider(provider: GoogleAuthProvider | OAuthProvider) {
+  if (isInAppBrowser()) {
+    await signInWithRedirect(auth, provider);
+    return;
+  }
+  await signInWithPopup(auth, provider);
+  await handleSignInSuccess();
+}
+
 async function signInWithGoogle() {
   try {
     authError.value = '';
-    await signInWithPopup(auth, new GoogleAuthProvider());
-    await handleSignInSuccess();
+    await signInWithProvider(new GoogleAuthProvider());
   } catch (e: any) {
     authError.value = e.message;
   }
@@ -353,12 +374,20 @@ async function signInWithGoogle() {
 async function signInWithApple() {
   try {
     authError.value = '';
-    await signInWithPopup(auth, new OAuthProvider('apple.com'));
-    await handleSignInSuccess();
+    await signInWithProvider(new OAuthProvider('apple.com'));
   } catch (e: any) {
     authError.value = e.message;
   }
 }
+
+onMounted(async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) await handleSignInSuccess();
+  } catch (e: any) {
+    authError.value = e.message;
+  }
+});
 
 async function submitEmailAuth() {
   try {
