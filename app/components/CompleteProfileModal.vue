@@ -130,11 +130,22 @@ async function save() {
     sans-serif;
 }
 
+@keyframes modal-pop {
+  from {
+    transform: scale(0.94) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 25, 56, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 14, 35, 0.82);
+  backdrop-filter: blur(10px);
   z-index: 1;
 }
 
@@ -145,7 +156,10 @@ async function save() {
   max-width: 440px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
   flex-direction: column;

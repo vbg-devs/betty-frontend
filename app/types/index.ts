@@ -37,10 +37,35 @@ export interface Group {
   tournament_id: number;
   invite_code: string;
   welcome_message: string;
+  description: string | null;
   allow_sneak_peek: boolean;
   correct_team_points: number;
   exact_result_points: number;
+  public_at: string | null;
   members: GroupMember[];
+}
+
+export interface PublicGroupItem {
+  id: number;
+  name: string;
+  description: string | null;
+  tournament_id: number;
+  tournament_name: string;
+  tournament_image_url: string | null;
+  correct_team_points: number;
+  exact_result_points: number;
+  allow_sneak_peek: boolean;
+  bet_mode: number;
+  group_play_deadline: string | null;
+  public_at: string;
+  created_at: string;
+  member_count: number;
+  is_member: boolean;
+}
+
+export interface PublicGroupListResponse {
+  items: PublicGroupItem[];
+  next_cursor: string;
 }
 
 export interface GroupMember {

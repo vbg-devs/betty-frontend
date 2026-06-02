@@ -68,6 +68,23 @@
               />
             </label>
 
+            <label class="field">
+              <span class="field__label">Description</span>
+              <textarea
+                v-model="description"
+                rows="3"
+                :maxlength="MAX_DESCRIPTION_LEN"
+                placeholder="Shown on the public board. Pitch your group in a sentence or two…"
+                class="field__input field__input--textarea"
+              ></textarea>
+              <span
+                class="field__count"
+                :class="{ 'field__count--limit': description.length >= MAX_DESCRIPTION_LEN }"
+              >
+                {{ description.length }} / {{ MAX_DESCRIPTION_LEN }}
+              </span>
+            </label>
+
             <div class="field__row">
               <label class="field">
                 <span class="field__label">Winning team pts</span>
@@ -116,6 +133,32 @@
                 >
               </span>
             </label>
+
+            <label class="check">
+              <input v-model="isPublic" type="checkbox" class="check__input" />
+              <span class="check__box" aria-hidden="true">
+                <svg
+                  v-if="isPublic"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              <span class="check__text">
+                <span class="check__title">Make this group public</span>
+                <span class="check__sub"
+                  >Anyone can discover and bet in this group — no invite link needed.</span
+                >
+              </span>
+            </label>
           </form>
         </template>
 
@@ -152,8 +195,12 @@ const emit = defineEmits<{
 const tournamentStore = useTournamentStore();
 const groupStore = useGroupStore();
 
+const MAX_DESCRIPTION_LEN = 1000;
+
 const name = ref('');
 const message = ref('');
+const description = ref('');
+const isPublic = ref(false);
 const winPoints = ref('');
 const exactScorePoints = ref('');
 const peak = ref(true);
@@ -200,7 +247,8 @@ async function copyInviteCode() {
 
 async function create() {
   if (!selectedTournament.value) return;
-  const payload = {
+  const trimmedDescription = description.value.trim();
+  const payload: Record<string, unknown> = {
     name: name.value,
     tournament_id: selectedTournament.value.id,
     correct_team_points: parseFloat(winPoints.value),
@@ -208,6 +256,8 @@ async function create() {
     allow_sneak_peek: peak.value,
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
+    description: trimmedDescription || null,
+    is_public: isPublic.value,
     mode: 0,
   };
 
@@ -215,7 +265,7 @@ async function create() {
   try {
     const res = await groupStore.create(payload);
     await groupStore.load();
-    group.value = groupStore.byId(res.group_id);
+    group.value = groupStore.byId(res.group_id) ?? null;
   } catch (err) {
     console.error(err);
     loading.value = false;
@@ -249,11 +299,22 @@ async function create() {
     sans-serif;
 }
 
+@keyframes modal-pop {
+  from {
+    transform: scale(0.94) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 25, 56, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 14, 35, 0.82);
+  backdrop-filter: blur(10px);
   z-index: 1;
 }
 
@@ -264,7 +325,10 @@ async function create() {
   max-width: 480px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
   flex-direction: column;
@@ -332,6 +396,21 @@ async function create() {
   padding: 16px 28px 26px;
 }
 
+@media (max-width: 480px) {
+  .modal__header {
+    padding: 22px 20px 14px;
+  }
+  .modal__body {
+    padding: 8px 20px 16px;
+  }
+  .modal__footer {
+    padding: 14px 20px 22px;
+  }
+  .modal__title {
+    font-size: 28px;
+  }
+}
+
 /* ===== Kicker ===== */
 .kicker {
   font-size: 11px;
@@ -360,6 +439,13 @@ async function create() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+@media (max-width: 480px) {
+  .field__row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 
 .field__label {
@@ -407,6 +493,29 @@ async function create() {
 .field__input--select option {
   background: var(--indigo-dark);
   color: var(--cream);
+}
+
+.field__input--textarea {
+  resize: vertical;
+  min-height: 78px;
+  line-height: 1.45;
+  font-family: inherit;
+}
+
+.field__count {
+  display: block;
+  text-align: right;
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.field__count--limit {
+  color: var(--orange);
 }
 
 /* ===== Checkbox ===== */

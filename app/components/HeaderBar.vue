@@ -13,7 +13,14 @@
           class="nav-link"
           :class="{ 'nav-link--active': isActive('/dashboard') }"
         >
-          Groups
+          My Groups
+        </NuxtLink>
+        <NuxtLink
+          to="/dashboard/groups/browse"
+          class="nav-link"
+          :class="{ 'nav-link--active': isActive('/dashboard/groups/browse') }"
+        >
+          Public Groups
         </NuxtLink>
         <NuxtLink
           to="/leaderboard"
@@ -99,9 +106,7 @@
               <div class="dropdown__email">{{ user.email }}</div>
             </div>
             <button class="dropdown__item" @click="openModal">Edit profile</button>
-            <button class="dropdown__item dropdown__item--danger" @click="logOut">
-              Log out
-            </button>
+            <button class="dropdown__item dropdown__item--danger" @click="logOut">Log out</button>
           </div>
         </div>
       </div>
@@ -134,8 +139,14 @@ const firebaseAuth = useFirebaseAuth();
 const messageStore = useMessageStore();
 const route = useRoute();
 
+const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard'];
+
 function isActive(path: string) {
-  return route.path === path || route.path.startsWith(`${path}/`);
+  const current = route.path;
+  const best = navPaths
+    .filter((p) => current === p || current.startsWith(`${p}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return best === path;
 }
 
 const showUserMenu = ref(false);

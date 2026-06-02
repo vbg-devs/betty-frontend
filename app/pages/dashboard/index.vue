@@ -39,6 +39,9 @@
               <button class="btn btn--orange btn--block" @click="showModal = true">
                 + NEW GROUP
               </button>
+              <NuxtLink to="/dashboard/groups/browse" class="hero__browse">
+                OR BROWSE PUBLIC GROUPS →
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -249,6 +252,22 @@ function handleCloseCreateGroupModal() {
   line-height: 1.5;
   color: var(--muted-strong);
   margin: 0;
+}
+
+.hero__browse {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--cream);
+  text-decoration: none;
+  align-self: center;
+  padding: 6px 4px;
+  transition: color 0.15s ease;
+}
+
+.hero__browse:hover {
+  color: var(--orange);
 }
 
 @media (max-width: 800px) {

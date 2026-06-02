@@ -9,9 +9,10 @@
           :style="{ backgroundImage: `url(${tournament.image_url})` }"
           aria-hidden="true"
         ></div>
-        <span class="kicker kicker--accent">★ INVITED TO JOIN</span>
+        <span class="kicker kicker--accent">★ INVITED TO BET</span>
         <h2 class="modal__title">{{ group.name?.toUpperCase() }}</h2>
         <p v-if="tournament" class="modal__tournament">{{ tournament.name }}</p>
+        <p v-if="group.description" class="modal__description">{{ group.description }}</p>
         <p class="modal__lede">
           Lock in your bets every matchday, climb the standings, settle the banter.
         </p>
@@ -20,7 +21,7 @@
       <div class="modal__actions">
         <NuxtLink to="/dashboard" class="btn btn--ghost">NO THANKS</NuxtLink>
         <button class="btn btn--orange" :disabled="loading" @click="join">
-          {{ loading ? 'JOINING…' : "I'M IN →" }}
+          {{ loading ? 'PLACING…' : "I'M IN →" }}
         </button>
       </div>
     </section>
@@ -104,11 +105,22 @@ async function join() {
     sans-serif;
 }
 
+@keyframes modal-pop {
+  from {
+    transform: scale(0.94) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 25, 56, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 14, 35, 0.82);
+  backdrop-filter: blur(10px);
   z-index: 1;
 }
 
@@ -119,7 +131,10 @@ async function join() {
   max-width: 460px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
   flex-direction: column;
@@ -167,6 +182,16 @@ async function join() {
   color: var(--muted-strong);
   margin: 0;
   line-height: 1.5;
+}
+
+.modal__description {
+  font-size: 14px;
+  color: var(--cream);
+  margin: 0 0 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  padding-left: 12px;
+  border-left: 2px solid var(--orange);
 }
 
 /* ===== Kicker ===== */

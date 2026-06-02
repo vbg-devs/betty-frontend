@@ -1,4 +1,11 @@
-import type { Group } from '~/types';
+import type { Group, PublicGroupListResponse } from '~/types';
+
+export interface ListPublicParams {
+  cursor?: string;
+  q?: string;
+  tournamentId?: number;
+  limit?: number;
+}
 
 export const useGroupStore = defineStore('group', () => {
   const groups = ref<Group[]>([]);
@@ -14,12 +21,22 @@ export const useGroupStore = defineStore('group', () => {
 
   async function create(payload: Record<string, unknown>) {
     const { authFetch } = useApi();
-    return authFetch<Group>('/group', { method: 'POST', body: payload });
+    return authFetch<{ group_id: number }>('/group', { method: 'POST', body: payload });
   }
 
   async function join(code: string) {
     const { authFetch } = useApi();
-    const data = await authFetch<Group>(`/group/${code}`, { method: 'POST', body: {} });
+    const data = await authFetch<Group>(`/join/${code}`, { method: 'POST', body: {} });
+    await load();
+    return data;
+  }
+
+  async function joinPublic(id: number) {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ group_id: number }>(`/group/${id}/join`, {
+      method: 'POST',
+      body: {},
+    });
     await load();
     return data;
   }
@@ -31,5 +48,36 @@ export const useGroupStore = defineStore('group', () => {
     return data;
   }
 
-  return { groups, all, byId, load, create, join, leave };
+  async function setVisibility(id: number, isPublic: boolean) {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ public_at: string | null }>(`/group/${id}/visibility`, {
+      method: 'PUT',
+      body: { is_public: isPublic },
+    });
+    await load();
+    return data;
+  }
+
+  async function listPublic(params: ListPublicParams = {}) {
+    const { authFetch } = useApi();
+    const query: Record<string, string | number> = {};
+    if (params.cursor) query.cursor = params.cursor;
+    if (params.q) query.q = params.q;
+    if (params.tournamentId !== undefined) query.tournament_id = params.tournamentId;
+    if (params.limit !== undefined) query.limit = params.limit;
+    return authFetch<PublicGroupListResponse>('/groups/public', { query });
+  }
+
+  return {
+    groups,
+    all,
+    byId,
+    load,
+    create,
+    join,
+    joinPublic,
+    leave,
+    setVisibility,
+    listPublic,
+  };
 });

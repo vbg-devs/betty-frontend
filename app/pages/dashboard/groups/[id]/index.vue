@@ -81,6 +81,11 @@
             <aside v-if="group.welcome_message" class="welcome">
               <span class="kicker kicker--accent">★ WELCOME</span>
               <p class="welcome__text">{{ group.welcome_message }}</p>
+              <p v-if="group.description" class="welcome__description">{{ group.description }}</p>
+            </aside>
+            <aside v-else-if="group.description" class="welcome welcome--quiet">
+              <span class="kicker kicker--muted-light">★ ABOUT THIS GROUP</span>
+              <p class="welcome__description">{{ group.description }}</p>
             </aside>
             <template v-if="tournamentDetails">
               <NeedAction
@@ -142,6 +147,39 @@
                 @click="selectedTab = 3"
               >
                 See all {{ rankedMembers.length }} →
+              </button>
+            </div>
+
+            <div class="side-card side-card--visibility" :style="{ order: manyMembers ? 3 : 4 }">
+              <div class="visibility__head">
+                <span class="kicker kicker--accent">★ VISIBILITY</span>
+                <span
+                  class="kicker"
+                  :class="isPublic ? 'kicker--green' : 'kicker--muted-light'"
+                >
+                  {{ isPublic ? '● PUBLIC' : '○ PRIVATE' }}
+                </span>
+              </div>
+              <p class="visibility__hint">
+                {{
+                  isPublic
+                    ? 'Anyone can find this group on the public board and bet here.'
+                    : 'Only people with the invite link can bet here.'
+                }}
+              </p>
+              <button
+                class="visibility__btn"
+                :class="{ 'visibility__btn--loading': visibilityLoading }"
+                :disabled="visibilityLoading"
+                @click="toggleVisibility(!isPublic)"
+              >
+                {{
+                  visibilityLoading
+                    ? 'SAVING…'
+                    : isPublic
+                      ? 'MAKE PRIVATE'
+                      : 'GO PUBLIC →'
+                }}
               </button>
             </div>
 
@@ -221,6 +259,7 @@ const gameBet = ref<any>(null);
 const copied = ref(false);
 const selectedTab = ref(1);
 const selectedUser = ref<any>(null);
+const visibilityLoading = ref(false);
 let interval: ReturnType<typeof setInterval> | null = null;
 
 const groupId = computed(() => parseFloat(route.params.id as string));
@@ -270,6 +309,8 @@ const shareUrl = computed(() => {
   if (!group.value) return '';
   return `https://betty.social/dashboard/groups/join/${(group.value as any).invite_code}`;
 });
+
+const isPublic = computed(() => !!group.value?.public_at);
 
 const betsForGame = computed(() => {
   if (gameBet.value === null || !group.value) return [];
@@ -355,6 +396,31 @@ function leaveGroup() {
 function betPlaced() {
   gameBet.value = null;
   loadBets();
+}
+
+async function toggleVisibility(nextValue: boolean) {
+  if (!group.value) return;
+  visibilityLoading.value = true;
+  try {
+    await groupStore.setVisibility(group.value.id, nextValue);
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.status;
+    if (status === 401) {
+      notify({
+        title: 'Not allowed',
+        message: 'Only the group author can change visibility.',
+        state: 'warning',
+      });
+    } else {
+      notify({
+        title: 'Could not update visibility',
+        message: String(err),
+        state: 'error',
+      });
+    }
+  } finally {
+    visibilityLoading.value = false;
+  }
 }
 
 async function copyInviteCode() {
@@ -627,6 +693,18 @@ onBeforeUnmount(() => {
   letter-spacing: -0.005em;
 }
 
+.welcome--quiet {
+  border-left-color: rgba(255, 255, 255, 0.18);
+}
+
+.welcome__description {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted-strong);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 @media (min-width: 768px) {
   .welcome__text {
     font-size: 22px;
@@ -778,6 +856,51 @@ onBeforeUnmount(() => {
 
 .roster__more:hover {
   filter: brightness(1.1);
+}
+
+/* ===== Visibility card ===== */
+.visibility__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.visibility__hint {
+  font-size: 13px;
+  color: var(--muted-strong);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.visibility__btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  align-self: flex-start;
+}
+
+.visibility__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.visibility__btn:disabled,
+.visibility__btn--loading {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ===== House rules ===== */
