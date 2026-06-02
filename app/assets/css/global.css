@@ -17,6 +17,8 @@ html {
 body {
   padding: 105px 0 50px 0;
   overflow-x: hidden;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-width: thin;
 }
 
 *,
