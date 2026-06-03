@@ -155,7 +155,7 @@ function handleCloseCreateGroupModal() {
   document.body.classList.remove('no-scroll');
 }
 
-const tournaments = computed(() => tournamentStore.all);
+const tournaments = computed(() => tournamentStore.running);
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 

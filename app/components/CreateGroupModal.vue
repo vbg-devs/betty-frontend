@@ -209,7 +209,7 @@ const loading = ref(false);
 const group = ref<Record<string, any> | null>(null);
 const copied = ref(false);
 
-const tournaments = computed(() => tournamentStore.all);
+const tournaments = computed(() => tournamentStore.running);
 
 const shareUrl = computed(() => {
   if (!group.value) return '';

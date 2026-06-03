@@ -17,10 +17,10 @@
 
           <div class="hero__grid">
             <h1 class="hero__title">
-              <template v-if="groupsWithTournament.length > 0">
-                {{ groupsWithTournament.length }}
+              <template v-if="allGroups.length > 0">
+                {{ allGroups.length }}
                 <span class="hero__title--green">{{
-                  groupsWithTournament.length === 1 ? 'GROUP.' : 'GROUPS.'
+                  allGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
                 }}</span
                 ><br />
                 <span class="hero__title--outline">ONE CHAMPION.</span>
@@ -48,38 +48,97 @@
       </div>
     </section>
 
-    <section v-if="groupsWithTournament.length > 0" class="groups-section">
+    <section v-if="allGroups.length > 0" class="groups-section">
+      <nav class="tabs" role="tablist">
+        <button
+          class="tab"
+          :class="{ 'tab--active': selectedTab === 'running' }"
+          role="tab"
+          :aria-selected="selectedTab === 'running'"
+          @click="selectedTab = 'running'"
+        >
+          Running
+          <span class="tab__count">{{ runningGroups.length }}</span>
+        </button>
+        <button
+          class="tab"
+          :class="{ 'tab--active': selectedTab === 'ended' }"
+          role="tab"
+          :aria-selected="selectedTab === 'ended'"
+          @click="selectedTab = 'ended'"
+        >
+          Ended
+          <span class="tab__count">{{ endedGroups.length }}</span>
+        </button>
+      </nav>
+
       <div class="section-head">
-        <span class="kicker kicker--accent">● ACTIVE</span>
-        <h2 class="section-head__title">JUMP BACK IN.</h2>
+        <span
+          class="kicker"
+          :class="selectedTab === 'running' ? 'kicker--accent' : 'kicker--muted-dim'"
+        >
+          {{ selectedTab === 'running' ? '● ACTIVE' : '○ WRAPPED' }}
+        </span>
+        <h2 class="section-head__title">
+          {{ selectedTab === 'running' ? 'JUMP BACK IN.' : 'LOOK BACK.' }}
+        </h2>
       </div>
 
-      <div class="groups">
+      <div v-if="visibleGroups.length > 0" class="groups">
         <NuxtLink
-          v-for="group in groupsWithTournament"
+          v-for="group in visibleGroups"
           :key="group.id"
           :to="`/dashboard/groups/${group.id}`"
           class="group-card"
         >
           <div
             class="group-card__image"
-            :style="{ backgroundImage: `url(${group.tournament!.image_url})` }"
+            :style="
+              group.tournament
+                ? { backgroundImage: `url(${group.tournament.image_url})` }
+                : undefined
+            "
           >
+            <span v-if="group.recentlyEnded" class="group-card__badge group-card__badge--ended"
+              ><span class="group-card__badge-dot">●</span> JUST ENDED</span
+            >
             <span v-if="group.public_at" class="group-card__public"
               ><span class="group-card__public-dot">●</span> PUBLIC</span
             >
           </div>
           <div class="group-card__body">
-            <span class="kicker kicker--accent">★ {{ group.tournament!.name.toUpperCase() }}</span>
+            <span class="kicker kicker--accent"
+              >★ {{ (group.tournament?.name ?? 'TOURNAMENT').toUpperCase() }}</span
+            >
             <h3 class="group-card__title">{{ group.name }}</h3>
             <div class="group-card__meta">
               <span class="kicker kicker--muted-dim">{{ group.members.length }} MEMBERS</span>
               <span class="dot">·</span>
-              <span class="kicker kicker--green">● ACTIVE</span>
+              <span
+                class="kicker"
+                :class="group.ended ? 'kicker--muted-dim' : 'kicker--green'"
+              >
+                {{ group.ended ? '○ ENDED' : '● ACTIVE' }}
+              </span>
             </div>
-            <div class="group-card__cta">OPEN GROUP →</div>
+            <div class="group-card__cta">
+              {{ group.ended ? 'SEE RESULTS →' : 'OPEN GROUP →' }}
+            </div>
           </div>
         </NuxtLink>
+      </div>
+
+      <div v-else class="tab-empty">
+        <span class="kicker kicker--muted-dim">{{
+          selectedTab === 'running' ? '○ NOTHING RUNNING' : '○ NOTHING WRAPPED'
+        }}</span>
+        <p class="tab-empty__copy">
+          {{
+            selectedTab === 'running'
+              ? 'No active tournaments right now. Check the Ended tab to revisit past groups.'
+              : 'No tournaments have wrapped up yet. Recently-ended groups stay in Running for four weeks.'
+          }}
+        </p>
       </div>
     </section>
 
@@ -113,18 +172,34 @@ const tournamentStore = useTournamentStore();
 
 const showModal = ref(false);
 const hasLeaderboardNotice = ref(true);
+const selectedTab = ref<'running' | 'ended'>('running');
+
+const FOUR_WEEKS_MS = 1000 * 60 * 60 * 24 * 28;
 
 const groups = computed(() => groupStore.all);
 
-const groupsWithTournament = computed(() => {
-  const mapped = groups.value.map((x) =>
-    Object.freeze({
-      ...x,
-      tournament: tournamentStore.byId(x.tournament_id),
-    }),
-  );
-  return mapped.filter((x) => x.tournament);
+const allGroups = computed(() => {
+  const now = Date.now();
+  return groups.value.map((g) => {
+    const tournament = tournamentStore.byId(g.tournament_id);
+    const endTs = tournament?.end_date ? new Date(tournament.end_date).getTime() : NaN;
+    const ended = !tournament || (Number.isFinite(endTs) && endTs < now);
+    const recentlyEnded = ended && Number.isFinite(endTs) && now - endTs < FOUR_WEEKS_MS;
+    return Object.freeze({ ...g, tournament, ended, recentlyEnded });
+  });
 });
+
+const runningGroups = computed(() =>
+  allGroups.value.filter((g) => !g.ended || g.recentlyEnded),
+);
+
+const endedGroups = computed(() =>
+  allGroups.value.filter((g) => g.ended && !g.recentlyEnded),
+);
+
+const visibleGroups = computed(() =>
+  selectedTab.value === 'running' ? runningGroups.value : endedGroups.value,
+);
 
 function handleCloseCreateGroupModal() {
   showModal.value = false;
@@ -293,8 +368,84 @@ function handleCloseCreateGroupModal() {
   padding: 0 0;
 }
 
+.tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 22px;
+}
+
+.tab {
+  position: relative;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.55);
+  padding: 12px 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.18s ease;
+}
+
+.tab:hover {
+  color: var(--cream);
+}
+
+.tab--active {
+  color: var(--cream);
+}
+
+.tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+.tab__count {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted-strong);
+}
+
+.tab--active .tab__count {
+  background: rgba(255, 90, 58, 0.18);
+  color: var(--orange);
+}
+
 .section-head {
   margin-bottom: 22px;
+}
+
+.tab-empty {
+  background: var(--indigo-dark);
+  padding: 36px 32px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tab-empty__copy {
+  font-size: 14px;
+  color: var(--muted-strong);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 520px;
 }
 
 .section-head__title {
@@ -354,6 +505,26 @@ function handleCloseCreateGroupModal() {
 
 .group-card__public-dot {
   color: var(--green);
+}
+
+.group-card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--ink);
+  padding: 5px 9px;
+  border-radius: 2px;
+}
+
+.group-card__badge--ended {
+  background: var(--yellow);
+}
+
+.group-card__badge-dot {
+  color: var(--orange);
 }
 
 .group-card__body {

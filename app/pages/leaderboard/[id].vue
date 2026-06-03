@@ -26,9 +26,21 @@
               </template>
             </h1>
             <div class="hero__side">
-              <div class="kicker kicker--muted-light">★ THE RACE</div>
+              <div class="kicker kicker--muted-light">★ SWITCH TOURNAMENT</div>
+              <div class="picker">
+                <select
+                  :value="tournamentId"
+                  class="picker__select"
+                  @change="onTournamentChange"
+                >
+                  <option v-for="t in tournaments" :key="t.id" :value="t.id">
+                    {{ t.name }}{{ isEnded(t) ? ' · ENDED' : '' }}
+                  </option>
+                </select>
+                <span class="picker__chevron" aria-hidden="true">▾</span>
+              </div>
               <p class="hero__lede">
-                Every bet counts. Top players earn bragging rights<br />across every group on
+                Every bet counts. Top players earn bragging rights across every group on
                 Betty.
               </p>
               <div v-if="playerCount !== null" class="hero__stat">
@@ -52,11 +64,15 @@
 </template>
 
 <script setup lang="ts">
+import type { Tournament } from '~/types';
+
 const route = useRoute();
+const router = useRouter();
 const tournamentStore = useTournamentStore();
 
 const tournamentId = computed(() => parseFloat(route.params.id as string));
 const tournament = computed(() => tournamentStore.byId(tournamentId.value));
+const tournaments = computed(() => tournamentStore.all);
 const playerCount = ref<number | null>(null);
 
 const tournamentNameParts = computed<[string, string]>(() => {
@@ -66,6 +82,17 @@ const tournamentNameParts = computed<[string, string]>(() => {
   const mid = Math.ceil(words.length / 2);
   return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
 });
+
+function isEnded(t: Tournament) {
+  if (!t.end_date) return false;
+  return new Date(t.end_date).getTime() < Date.now();
+}
+
+function onTournamentChange(event: Event) {
+  const id = (event.target as HTMLSelectElement).value;
+  if (!id || Number(id) === tournamentId.value) return;
+  router.push(`/leaderboard/${id}`);
+}
 </script>
 
 <style scoped>
@@ -196,6 +223,49 @@ const tournamentNameParts = computed<[string, string]>(() => {
   line-height: 1.5;
   color: var(--muted-strong);
   margin: 0;
+}
+
+.picker {
+  position: relative;
+}
+
+.picker__select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cream);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 38px 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.picker__select:hover,
+.picker__select:focus {
+  border-color: var(--orange);
+  background: rgba(255, 255, 255, 0.09);
+  outline: none;
+}
+
+.picker__select option {
+  background: var(--indigo-dark);
+  color: var(--cream);
+}
+
+.picker__chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 800;
+  pointer-events: none;
 }
 
 .hero__stat {

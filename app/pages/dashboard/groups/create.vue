@@ -87,7 +87,7 @@ const peak = ref(true);
 const selectedTournament = ref<Tournament | null>(null);
 const loading = ref(false);
 
-const tournaments = computed(() => tournamentStore.all);
+const tournaments = computed(() => tournamentStore.running);
 
 function selectTournament(payload: Tournament) {
   selectedTournament.value = payload;
