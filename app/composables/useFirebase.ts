@@ -41,3 +41,4 @@ export async function useAuthToken(): Promise<string> {
   if (!user) throw new Error('Not authenticated');
   return user.getIdToken();
 }
+

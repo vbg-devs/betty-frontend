@@ -110,6 +110,7 @@
           >
             <div
               class="group-card__image"
+              :class="{ 'group-card__image--has-header': card.group.header_image_url }"
               :style="
                 card.group.header_image_url
                   ? { backgroundImage: `url(${card.group.header_image_url})` }
@@ -118,6 +119,12 @@
                     : undefined
               "
             >
+              <span
+                v-if="card.group.header_image_url && card.group.tournament"
+                class="group-card__tournament-icon"
+                :style="{ backgroundImage: `url(${card.group.tournament.image_url})` }"
+                :aria-label="card.group.tournament.name"
+              ></span>
               <span
                 v-if="card.group.recentlyEnded"
                 class="group-card__badge group-card__badge--ended"
@@ -615,6 +622,39 @@ function handleCloseCreateGroupModal() {
   background-color: var(--indigo);
 }
 
+.group-card__image--has-header {
+  background-color: var(--indigo-deep);
+}
+
+.group-card__image--has-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 25, 56, 0.35) 0%,
+    rgba(20, 25, 56, 0) 40%,
+    rgba(20, 25, 56, 0) 60%,
+    rgba(20, 25, 56, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.group-card__tournament-icon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--cream);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55);
+  z-index: 1;
+}
+
 .group-card__public {
   position: absolute;
   top: 10px;
@@ -627,6 +667,7 @@ function handleCloseCreateGroupModal() {
   padding: 5px 9px;
   border-radius: 2px;
   backdrop-filter: blur(4px);
+  z-index: 1;
 }
 
 .group-card__public-dot {
@@ -643,6 +684,7 @@ function handleCloseCreateGroupModal() {
   color: var(--ink);
   padding: 5px 9px;
   border-radius: 2px;
+  z-index: 1;
 }
 
 .group-card__badge--ended {
