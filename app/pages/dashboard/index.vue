@@ -1,6 +1,14 @@
 <template>
   <div class="dashboard">
     <section class="hero">
+      <NuxtLink to="/support" class="feedback-banner">
+        <span class="feedback-banner__kicker">● FEEDBACK</span>
+        <span class="feedback-banner__text">
+          Got feedback or a feature request? Betty's listening.
+        </span>
+        <span class="feedback-banner__arrow">→</span>
+      </NuxtLink>
+
       <div class="hero__card">
         <div class="hero__card-inner">
           <div class="hero__meta">
@@ -450,6 +458,69 @@ function handleCloseCreateGroupModal() {
     grid-template-columns: 1fr;
     gap: 24px;
     align-items: start;
+  }
+}
+
+/* ===== Feedback banner ===== */
+.feedback-banner {
+  max-width: 1180px;
+  margin: 0 auto 16px;
+  background: var(--indigo-deep);
+  border-left: 3px solid var(--green);
+  border-radius: 2px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: var(--cream);
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.feedback-banner:hover {
+  background: #1a2046;
+}
+
+.feedback-banner:hover .feedback-banner__arrow {
+  transform: translateX(3px);
+  color: var(--orange);
+}
+
+.feedback-banner__kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.feedback-banner__text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+.feedback-banner__arrow {
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255, 250, 235, 0.55);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
+}
+
+@media (max-width: 600px) {
+  .feedback-banner {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .feedback-banner__text {
+    font-size: 12px;
   }
 }
 
