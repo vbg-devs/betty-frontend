@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'betty:show-grouped';
 
-const grouped = ref(true);
+const grouped = ref(false);
 let initialized = false;
 
 export function useGroupingPref() {
