@@ -63,8 +63,17 @@
         >
           <div
             class="group-card__image"
-            :style="{ backgroundImage: `url(${group.tournament!.image_url})` }"
+            :class="{ 'group-card__image--has-header': group.header_image_url }"
+            :style="{
+              backgroundImage: `url(${group.header_image_url || group.tournament!.image_url})`,
+            }"
           >
+            <span
+              v-if="group.header_image_url"
+              class="group-card__tournament-icon"
+              :style="{ backgroundImage: `url(${group.tournament!.image_url})` }"
+              :aria-label="group.tournament!.name"
+            ></span>
             <span v-if="group.public_at" class="group-card__public"
               ><span class="group-card__public-dot">●</span> PUBLIC</span
             >
@@ -338,6 +347,40 @@ function handleCloseCreateGroupModal() {
   background-color: var(--indigo);
 }
 
+.group-card__image--has-header {
+  background-color: var(--indigo-deep);
+}
+
+.group-card__image--has-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 25, 56, 0.35) 0%,
+    rgba(20, 25, 56, 0) 40%,
+    rgba(20, 25, 56, 0) 60%,
+    rgba(20, 25, 56, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.group-card__tournament-icon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--cream);
+  background-size: 78%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55);
+  z-index: 1;
+  background-size: cover;
+}
+
 .group-card__public {
   position: absolute;
   top: 10px;
@@ -350,6 +393,7 @@ function handleCloseCreateGroupModal() {
   padding: 5px 9px;
   border-radius: 2px;
   backdrop-filter: blur(4px);
+  z-index: 1;
 }
 
 .group-card__public-dot {

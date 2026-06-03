@@ -2,12 +2,43 @@
   <div v-if="group && tournament" class="group-page">
     <!-- ===== Hero ===== -->
     <section class="hero">
-      <div class="hero__card">
+      <div
+        class="hero__card"
+        :class="{ 'hero__card--has-image': group.header_image_url }"
+        :style="
+          group.header_image_url
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(20, 25, 56, 0.55) 0%, rgba(20, 25, 56, 0.88) 100%), url(${group.header_image_url})`,
+              }
+            : {}
+        "
+      >
         <div class="hero__card-inner">
           <div class="hero__meta-top">
             <span class="kicker kicker--accent"
               >★ YOUR GROUP · {{ tournament.name.toUpperCase() }}</span
             >
+            <button
+              class="hero__upload-btn"
+              :class="{ 'hero__upload-btn--loading': uploadingImage }"
+              :disabled="uploadingImage"
+              @click="triggerFileInput"
+            >
+              {{
+                uploadingImage
+                  ? 'UPLOADING…'
+                  : group.header_image_url
+                    ? 'CHANGE COVER →'
+                    : 'ADD COVER →'
+              }}
+            </button>
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              hidden
+              @change="handleFileChange"
+            />
           </div>
 
           <div class="hero__grid">
@@ -260,6 +291,8 @@ const copied = ref(false);
 const selectedTab = ref(1);
 const selectedUser = ref<any>(null);
 const visibilityLoading = ref(false);
+const uploadingImage = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 let interval: ReturnType<typeof setInterval> | null = null;
 
 const groupId = computed(() => parseFloat(route.params.id as string));
@@ -398,6 +431,61 @@ function betPlaced() {
   loadBets();
 }
 
+function triggerFileInput() {
+  fileInput.value?.click();
+}
+
+async function handleFileChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file || !group.value) return;
+
+  if (!file.type.startsWith('image/')) {
+    notify({
+      title: 'Invalid file',
+      message: 'Please choose an image file.',
+      state: 'warning',
+    });
+    input.value = '';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    notify({
+      title: 'Image too large',
+      message: 'Please choose an image under 5MB.',
+      state: 'warning',
+    });
+    input.value = '';
+    return;
+  }
+
+  uploadingImage.value = true;
+  try {
+    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
+    const path = `groups/${group.value.id}/header/${Date.now()}.${ext}`;
+    const url = await uploadImage(path, file);
+    await groupStore.setHeaderImage(group.value.id, url);
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.status;
+    if (status === 401) {
+      notify({
+        title: 'Not allowed',
+        message: 'Only the group author can change the cover image.',
+        state: 'warning',
+      });
+    } else {
+      notify({
+        title: 'Could not upload image',
+        message: String(err),
+        state: 'error',
+      });
+    }
+  } finally {
+    uploadingImage.value = false;
+    input.value = '';
+  }
+}
+
 async function toggleVisibility(nextValue: boolean) {
   if (!group.value) return;
   visibilityLoading.value = true;
@@ -490,12 +578,53 @@ onBeforeUnmount(() => {
   border-radius: 2px;
 }
 
+.hero__card--has-image {
+  background-color: var(--indigo-deep);
+  background-size: cover;
+  background-position: center;
+}
+
 .hero__card-inner {
   max-width: 1100px;
 }
 
 .hero__meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin-bottom: 14px;
+}
+
+.hero__upload-btn {
+  background: rgba(255, 250, 235, 0.08);
+  border: 1px solid rgba(255, 250, 235, 0.22);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  white-space: nowrap;
+}
+
+.hero__upload-btn:hover:not(:disabled) {
+  background: rgba(255, 90, 58, 0.12);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.hero__upload-btn:disabled,
+.hero__upload-btn--loading {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .hero__grid {

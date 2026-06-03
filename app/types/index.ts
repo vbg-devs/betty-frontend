@@ -38,6 +38,7 @@ export interface Group {
   invite_code: string;
   welcome_message: string;
   description: string | null;
+  header_image_url: string | null;
   allow_sneak_peek: boolean;
   correct_team_points: number;
   exact_result_points: number;

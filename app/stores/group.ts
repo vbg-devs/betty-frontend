@@ -58,6 +58,16 @@ export const useGroupStore = defineStore('group', () => {
     return data;
   }
 
+  async function setHeaderImage(id: number, imageUrl: string | null) {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ header_image_url: string | null }>(
+      `/group/${id}/header-image`,
+      { method: 'PUT', body: { header_image_url: imageUrl } },
+    );
+    await load();
+    return data;
+  }
+
   async function listPublic(params: ListPublicParams = {}) {
     const { authFetch } = useApi();
     const query: Record<string, string | number> = {};
@@ -78,6 +88,7 @@ export const useGroupStore = defineStore('group', () => {
     joinPublic,
     leave,
     setVisibility,
+    setHeaderImage,
     listPublic,
   };
 });
