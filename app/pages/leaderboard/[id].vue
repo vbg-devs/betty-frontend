@@ -28,11 +28,7 @@
             <div class="hero__side">
               <div class="kicker kicker--muted-light">★ SWITCH TOURNAMENT</div>
               <div class="picker">
-                <select
-                  :value="tournamentId"
-                  class="picker__select"
-                  @change="onTournamentChange"
-                >
+                <select :value="tournamentId" class="picker__select" @change="onTournamentChange">
                   <option v-for="t in tournaments" :key="t.id" :value="t.id">
                     {{ t.name }}{{ isEnded(t) ? ' · ENDED' : '' }}
                   </option>
@@ -40,8 +36,7 @@
                 <span class="picker__chevron" aria-hidden="true">▾</span>
               </div>
               <p class="hero__lede">
-                Every bet counts. Top players earn bragging rights across every group on
-                Betty.
+                Every bet counts. Top players earn bragging rights across every group on Betty.
               </p>
               <div v-if="playerCount !== null" class="hero__stat">
                 <span class="hero__stat-value">{{ playerCount }}</span>
@@ -122,7 +117,7 @@ function onTournamentChange(event: Event) {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: var(--indigo);
-  padding: 0 0 56px;
+  padding: 0 0 40px;
 }
 
 .hero__card {
@@ -242,7 +237,9 @@ function onTournamentChange(event: Event) {
   font-weight: 700;
   padding: 12px 38px 12px 14px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .picker__select:hover,

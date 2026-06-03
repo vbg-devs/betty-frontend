@@ -4,12 +4,10 @@
       <section class="hero">
         <div class="hero__inner">
           <span class="kicker kicker--accent">★ ADMIN</span>
-          <h1 class="hero__title">
-            EVALUATE<br /><span class="hero__title--green">GAMES.</span>
-          </h1>
+          <h1 class="hero__title">EVALUATE<br /><span class="hero__title--green">GAMES.</span></h1>
           <p class="hero__lede">
-            Pick an ongoing tournament, choose a game that has kicked off, and post the final
-            score. Betty distributes the points.
+            Pick an ongoing tournament, choose a game that has kicked off, and post the final score.
+            Betty distributes the points.
           </p>
         </div>
       </section>
@@ -37,9 +35,7 @@
               <span
                 class="kicker"
                 :class="
-                  selectedTournament?.id === tournament.id
-                    ? 'kicker--accent'
-                    : 'kicker--muted-dim'
+                  selectedTournament?.id === tournament.id ? 'kicker--accent' : 'kicker--muted-dim'
                 "
               >
                 {{ selectedTournament?.id === tournament.id ? '● SELECTED' : 'SELECT →' }}
@@ -304,7 +300,7 @@ function selectTournament(tournament: Tournament) {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: var(--indigo);
-  padding: 0 0 56px;
+  padding: 0 0 40px;
 }
 
 .hero__inner {

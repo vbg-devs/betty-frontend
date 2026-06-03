@@ -181,9 +181,7 @@
                 <span class="kicker kicker--accent"
                   >★ {{ (card.tournament?.name ?? 'TOURNAMENT').toUpperCase() }}</span
                 >
-                <span class="group-card__count"
-                  >{{ card.groups.length }} GROUPS</span
-                >
+                <span class="group-card__count">{{ card.groups.length }} GROUPS</span>
               </div>
             </div>
             <div class="group-stack">
@@ -196,14 +194,9 @@
                 <div class="group-stack__main">
                   <span class="group-stack__name">{{ g.name }}</span>
                   <div class="group-stack__meta">
-                    <span class="kicker kicker--muted-dim"
-                      >{{ g.members.length }} MEMBERS</span
-                    >
+                    <span class="kicker kicker--muted-dim">{{ g.members.length }} MEMBERS</span>
                     <span class="dot">·</span>
-                    <span
-                      class="kicker"
-                      :class="g.ended ? 'kicker--muted-dim' : 'kicker--green'"
-                    >
+                    <span class="kicker" :class="g.ended ? 'kicker--muted-dim' : 'kicker--green'">
                       {{ g.ended ? '○ ENDED' : '● ACTIVE' }}
                     </span>
                     <span v-if="g.public_at" class="dot">·</span>
@@ -278,13 +271,9 @@ const allGroups = computed(() => {
   });
 });
 
-const runningGroups = computed(() =>
-  allGroups.value.filter((g) => !g.ended || g.recentlyEnded),
-);
+const runningGroups = computed(() => allGroups.value.filter((g) => !g.ended || g.recentlyEnded));
 
-const endedGroups = computed(() =>
-  allGroups.value.filter((g) => g.ended && !g.recentlyEnded),
-);
+const endedGroups = computed(() => allGroups.value.filter((g) => g.ended && !g.recentlyEnded));
 
 const visibleGroups = computed(() =>
   selectedTab.value === 'running' ? runningGroups.value : endedGroups.value,
@@ -377,7 +366,7 @@ function handleCloseCreateGroupModal() {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: var(--indigo);
-  padding: 0 0 56px;
+  padding: 0 0 40px;
 }
 
 .hero__card {
@@ -567,7 +556,9 @@ function handleCloseCreateGroupModal() {
   padding: 7px 12px;
   border-radius: 2px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .grouping-toggle__btn:hover {
@@ -858,7 +849,9 @@ function handleCloseCreateGroupModal() {
   font-size: 16px;
   font-weight: 800;
   color: rgba(255, 250, 235, 0.45);
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
 }
 
 .group-card__body {

@@ -179,7 +179,7 @@ function handleCloseCreateGroupModal() {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: var(--indigo);
-  padding: 0 0 56px;
+  padding: 0 0 40px;
 }
 
 .hero__card {
