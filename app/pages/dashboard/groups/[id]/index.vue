@@ -383,7 +383,12 @@ const groupId = computed(() => parseFloat(route.params.id as string));
 const userId = computed(() => userStore.id);
 const group = computed(() => groupStore.byId(groupId.value));
 const isAuthor = computed(
-  () => !!group.value && !!userId.value && group.value.members[0]?.user_id === userId.value,
+  () =>
+    !!group.value &&
+    !!userId.value &&
+    group.value.members.some(
+      (m) => m.user_id === userId.value && m.access_level === 0,
+    ),
 );
 const tournament = computed(() => {
   if (!group.value) return null;
