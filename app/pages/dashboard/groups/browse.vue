@@ -55,10 +55,35 @@
     <!-- ===== Results ===== -->
     <section class="results-section">
       <div class="section-head">
-        <span class="kicker kicker--accent">● LIVE</span>
-        <h2 class="section-head__title">
-          {{ items.length === 0 && !loading ? 'NOTHING HERE.' : 'OPEN GROUPS.' }}
-        </h2>
+        <div class="section-head__main">
+          <span class="kicker kicker--accent">● LIVE</span>
+          <h2 class="section-head__title">
+            {{ items.length === 0 && !loading ? 'NOTHING HERE.' : 'OPEN GROUPS.' }}
+          </h2>
+        </div>
+        <div
+          v-if="items.length > 0"
+          class="grouping-toggle"
+          role="group"
+          aria-label="Show as"
+        >
+          <button
+            class="grouping-toggle__btn"
+            :class="{ 'grouping-toggle__btn--active': grouped }"
+            :aria-pressed="grouped"
+            @click="grouped = true"
+          >
+            Grouped
+          </button>
+          <button
+            class="grouping-toggle__btn"
+            :class="{ 'grouping-toggle__btn--active': !grouped }"
+            :aria-pressed="!grouped"
+            @click="grouped = false"
+          >
+            List
+          </button>
+        </div>
       </div>
 
       <div v-if="loading && items.length === 0" class="state">
@@ -76,46 +101,106 @@
       </div>
 
       <div v-else class="groups">
-        <article v-for="g in items" :key="g.id" class="group-card">
-          <div
-            class="group-card__image"
-            :style="{
-              backgroundImage: g.tournament_image_url ? `url(${g.tournament_image_url})` : 'none',
-            }"
-          ></div>
-          <div class="group-card__body">
-            <span class="kicker kicker--accent">★ {{ g.tournament_name.toUpperCase() }}</span>
-            <h3 class="group-card__title">{{ g.name }}</h3>
-            <p v-if="g.description" class="group-card__description">{{ g.description }}</p>
-            <div class="group-card__meta">
-              <span class="kicker kicker--muted-dim">
-                {{ g.member_count }}
-                {{ g.member_count === 1 ? 'MEMBER' : 'MEMBERS' }}
-              </span>
-              <span class="dot">·</span>
-              <span class="kicker kicker--muted-dim">
-                {{ g.correct_team_points }} / {{ g.exact_result_points }} PTS
-              </span>
-            </div>
-            <div class="group-card__actions">
-              <NuxtLink
-                v-if="g.is_member"
-                :to="`/dashboard/groups/${g.id}`"
-                class="btn btn--ghost btn--block"
+        <template v-for="card in visibleCards" :key="card.key">
+          <article v-if="card.type === 'single'" class="group-card">
+            <div
+              class="group-card__image"
+              :style="{
+                backgroundImage: card.group.header_image_url
+                  ? `url(${card.group.header_image_url})`
+                  : card.group.tournament_image_url
+                    ? `url(${card.group.tournament_image_url})`
+                    : 'none',
+              }"
+            ></div>
+            <div class="group-card__body">
+              <span class="kicker kicker--accent"
+                >★ {{ card.group.tournament_name.toUpperCase() }}</span
               >
-                OPEN GROUP →
-              </NuxtLink>
-              <button
-                v-else
-                class="btn btn--orange btn--block"
-                :disabled="joiningId === g.id"
-                @click="join(g)"
-              >
-                {{ joiningId === g.id ? 'PLACING…' : 'BET HERE →' }}
-              </button>
+              <h3 class="group-card__title">{{ card.group.name }}</h3>
+              <p v-if="card.group.description" class="group-card__description">
+                {{ card.group.description }}
+              </p>
+              <div class="group-card__meta">
+                <span class="kicker kicker--muted-dim">
+                  {{ card.group.member_count }}
+                  {{ card.group.member_count === 1 ? 'MEMBER' : 'MEMBERS' }}
+                </span>
+                <span class="dot">·</span>
+                <span class="kicker kicker--muted-dim">
+                  {{ card.group.correct_team_points }} / {{ card.group.exact_result_points }} PTS
+                </span>
+              </div>
+              <div class="group-card__actions">
+                <NuxtLink
+                  v-if="card.group.is_member"
+                  :to="`/dashboard/groups/${card.group.id}`"
+                  class="btn btn--ghost btn--block"
+                >
+                  OPEN GROUP →
+                </NuxtLink>
+                <button
+                  v-else
+                  class="btn btn--orange btn--block"
+                  :disabled="joiningId === card.group.id"
+                  @click="join(card.group)"
+                >
+                  {{ joiningId === card.group.id ? 'PLACING…' : 'BET HERE →' }}
+                </button>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+
+          <article v-else class="group-card group-card--stack">
+            <div
+              class="group-card__image"
+              :style="{
+                backgroundImage: card.tournament_image_url
+                  ? `url(${card.tournament_image_url})`
+                  : 'none',
+              }"
+            >
+              <div class="group-card__overlay">
+                <span class="kicker kicker--accent"
+                  >★ {{ card.tournament_name.toUpperCase() }}</span
+                >
+                <span class="group-card__count">{{ card.groups.length }} GROUPS</span>
+              </div>
+            </div>
+            <div class="group-stack">
+              <div v-for="g in card.groups" :key="g.id" class="group-stack__row">
+                <div class="group-stack__main">
+                  <span class="group-stack__name">{{ g.name }}</span>
+                  <div class="group-stack__meta">
+                    <span class="kicker kicker--muted-dim">
+                      {{ g.member_count }}
+                      {{ g.member_count === 1 ? 'MEMBER' : 'MEMBERS' }}
+                    </span>
+                    <span class="dot">·</span>
+                    <span class="kicker kicker--muted-dim">
+                      {{ g.correct_team_points }} / {{ g.exact_result_points }} PTS
+                    </span>
+                  </div>
+                </div>
+                <NuxtLink
+                  v-if="g.is_member"
+                  :to="`/dashboard/groups/${g.id}`"
+                  class="btn btn--ghost btn--small"
+                >
+                  OPEN →
+                </NuxtLink>
+                <button
+                  v-else
+                  class="btn btn--orange btn--small"
+                  :disabled="joiningId === g.id"
+                  @click="join(g)"
+                >
+                  {{ joiningId === g.id ? '…' : 'BET →' }}
+                </button>
+              </div>
+            </div>
+          </article>
+        </template>
       </div>
 
       <div v-if="nextCursor" class="load-more">
@@ -156,6 +241,55 @@ function handleCloseCreateGroupModal() {
 }
 
 const tournaments = computed(() => tournamentStore.running);
+const grouped = useGroupingPref();
+
+type BrowseCard =
+  | { type: 'single'; key: string; group: PublicGroupItem }
+  | {
+      type: 'tournament';
+      key: string;
+      tournament_id: number;
+      tournament_name: string;
+      tournament_image_url: string | null;
+      groups: PublicGroupItem[];
+    };
+
+const visibleCards = computed<BrowseCard[]>(() => {
+  if (!grouped.value) {
+    return items.value.map((g) => ({ type: 'single', key: `g-${g.id}`, group: g }));
+  }
+
+  const cards: BrowseCard[] = [];
+  const buckets = new Map<number, PublicGroupItem[]>();
+
+  items.value.forEach((g) => {
+    if (g.header_image_url) {
+      cards.push({ type: 'single', key: `g-${g.id}`, group: g });
+      return;
+    }
+    const list = buckets.get(g.tournament_id);
+    if (list) list.push(g);
+    else buckets.set(g.tournament_id, [g]);
+  });
+
+  buckets.forEach((bucket, tid) => {
+    if (bucket.length === 1) {
+      cards.push({ type: 'single', key: `g-${bucket[0]!.id}`, group: bucket[0]! });
+      return;
+    }
+    const first = bucket[0]!;
+    cards.push({
+      type: 'tournament',
+      key: `t-${tid}`,
+      tournament_id: tid,
+      tournament_name: first.tournament_name,
+      tournament_image_url: first.tournament_image_url,
+      groups: bucket,
+    });
+  });
+
+  return cards;
+});
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -427,6 +561,49 @@ onMounted(() => {
 
 .section-head {
   margin-bottom: 22px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.section-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grouping-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  padding: 3px;
+  margin-bottom: 6px;
+}
+
+.grouping-toggle__btn {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.55);
+  padding: 7px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.grouping-toggle__btn:hover {
+  color: var(--cream);
+}
+
+.grouping-toggle__btn--active {
+  background: rgba(255, 90, 58, 0.18);
+  color: var(--orange);
 }
 
 .section-head__title {
@@ -514,6 +691,88 @@ onMounted(() => {
   padding-top: 16px;
 }
 
+/* ===== Stacked tournament card ===== */
+.group-card--stack:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.group-card--stack .group-card__image {
+  position: relative;
+}
+
+.group-card__overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 18px 16px;
+  background: linear-gradient(180deg, rgba(20, 25, 56, 0) 0%, rgba(20, 25, 56, 0.82) 100%);
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-card__count {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--cream);
+  background: rgba(20, 25, 56, 0.78);
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+
+.group-stack {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+.group-stack__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.group-stack__row:last-child {
+  border-bottom: 0;
+}
+
+.group-stack__row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-stack__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-stack__name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-stack__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 /* ===== State ===== */
 .state {
   background: var(--indigo-dark);
@@ -577,6 +836,13 @@ onMounted(() => {
 
 .btn--block {
   width: 100%;
+}
+
+.btn--small {
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  flex-shrink: 0;
 }
 
 .btn--orange {

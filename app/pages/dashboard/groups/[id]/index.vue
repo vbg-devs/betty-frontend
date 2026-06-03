@@ -288,14 +288,7 @@
               </div>
             </div>
 
-            <button
-              v-if="!tournamentEnded"
-              class="leave-btn"
-              style="order: 5"
-              @click="leaveGroup"
-            >
-              Leave group
-            </button>
+            <button class="leave-btn" style="order: 5" @click="leaveGroup">Leave group</button>
           </aside>
         </div>
       </section>
