@@ -29,6 +29,13 @@
         >
           Leaderboard
         </NuxtLink>
+        <NuxtLink
+          to="/about"
+          class="nav-link"
+          :class="{ 'nav-link--active': isActive('/about') }"
+        >
+          About
+        </NuxtLink>
       </nav>
 
       <div class="header-bar__item header-bar__item--right">
@@ -139,7 +146,7 @@ const firebaseAuth = useFirebaseAuth();
 const messageStore = useMessageStore();
 const route = useRoute();
 
-const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard'];
+const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard', '/about'];
 
 function isActive(path: string) {
   const current = route.path;
