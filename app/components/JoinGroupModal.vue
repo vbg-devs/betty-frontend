@@ -2,9 +2,22 @@
   <div class="modal">
     <div class="modal__backdrop"></div>
     <section class="modal__inner">
+      <div
+        v-if="group.header_image_url"
+        class="modal__hero"
+        :style="{ backgroundImage: `url(${group.header_image_url})` }"
+        aria-hidden="true"
+      >
+        <span
+          v-if="tournament"
+          class="modal__hero-icon"
+          :style="{ backgroundImage: `url(${tournament.image_url})` }"
+          :aria-label="tournament.name"
+        ></span>
+      </div>
       <header class="modal__header">
         <div
-          v-if="tournament"
+          v-if="tournament && !group.header_image_url"
           class="logo"
           :style="{ backgroundImage: `url(${tournament.image_url})` }"
           aria-hidden="true"
@@ -145,6 +158,34 @@ async function join() {
 
 .modal__header {
   padding: 28px 28px 24px;
+}
+
+.modal__hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modal__hero-icon {
+  position: absolute;
+  bottom: -22px;
+  left: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--indigo-dark);
+  background-size: cover;
+  background-position: center;
+  border: 3px solid var(--indigo-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.modal__hero + .modal__header {
+  padding-top: 38px;
 }
 
 .logo {
