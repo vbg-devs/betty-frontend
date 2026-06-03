@@ -5,6 +5,13 @@ export const useTournamentStore = defineStore('tournament', () => {
   const details = ref<Tournament[]>([]);
 
   const all = computed(() => tournaments.value);
+  const running = computed(() => {
+    const now = Date.now();
+    return tournaments.value.filter((t) => {
+      if (!t.end_date) return true;
+      return new Date(t.end_date).getTime() >= now;
+    });
+  });
   const byId = computed(() => (id: number) => tournaments.value.find((x) => x.id === id));
   const detailsById = computed(() => (id: number) => details.value.find((x) => x.id === id));
 
@@ -34,5 +41,5 @@ export const useTournamentStore = defineStore('tournament', () => {
     return frozen;
   }
 
-  return { tournaments, details, all, byId, detailsById, load, loadDetails };
+  return { tournaments, details, all, running, byId, detailsById, load, loadDetails };
 });

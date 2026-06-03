@@ -53,6 +53,7 @@ export interface PublicGroupItem {
   tournament_id: number;
   tournament_name: string;
   tournament_image_url: string | null;
+  header_image_url: string | null;
   correct_team_points: number;
   exact_result_points: number;
   allow_sneak_peek: boolean;

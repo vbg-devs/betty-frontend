@@ -3,27 +3,23 @@
     <section class="hero">
       <div class="hero__card">
         <div class="hero__card-inner">
-          <div v-if="hasLeaderboardNotice" class="notice">
-            <span class="notice__icon" aria-hidden="true">!</span>
-            <span class="notice__text">
-              The global leaderboard has moved to its own page.
-              <NuxtLink to="/leaderboard" class="notice__link">View it here →</NuxtLink>
-            </span>
-          </div>
-
           <div class="hero__meta">
             <span class="kicker kicker--accent">★ YOUR GROUPS</span>
           </div>
 
           <div class="hero__grid">
             <h1 class="hero__title">
-              <template v-if="groupsWithTournament.length > 0">
-                {{ groupsWithTournament.length }}
+              <template v-if="visibleGroups.length > 0">
+                {{ visibleGroups.length }}
                 <span class="hero__title--green">{{
-                  groupsWithTournament.length === 1 ? 'GROUP.' : 'GROUPS.'
+                  visibleGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
                 }}</span
                 ><br />
                 <span class="hero__title--outline">ONE CHAMPION.</span>
+              </template>
+              <template v-else-if="allGroups.length > 0">
+                NO {{ selectedTab === 'running' ? 'RUNNING' : 'ENDED' }}<br />
+                <span class="hero__title--green">GROUPS.</span>
               </template>
               <template v-else>
                 NO GROUPS<br />
@@ -48,47 +44,182 @@
       </div>
     </section>
 
-    <section v-if="groupsWithTournament.length > 0" class="groups-section">
-      <div class="section-head">
-        <span class="kicker kicker--accent">● ACTIVE</span>
-        <h2 class="section-head__title">JUMP BACK IN.</h2>
+    <section v-if="allGroups.length > 0" class="groups-section">
+      <div class="tabs-row">
+        <nav class="tabs" role="tablist">
+          <button
+            class="tab"
+            :class="{ 'tab--active': selectedTab === 'running' }"
+            role="tab"
+            :aria-selected="selectedTab === 'running'"
+            @click="selectedTab = 'running'"
+          >
+            Running
+            <span class="tab__count">{{ runningGroups.length }}</span>
+          </button>
+          <button
+            class="tab"
+            :class="{ 'tab--active': selectedTab === 'ended' }"
+            role="tab"
+            :aria-selected="selectedTab === 'ended'"
+            @click="selectedTab = 'ended'"
+          >
+            Ended
+            <span class="tab__count">{{ endedGroups.length }}</span>
+          </button>
+        </nav>
+
+        <div class="grouping-toggle" role="group" aria-label="Show as">
+          <button
+            class="grouping-toggle__btn"
+            :class="{ 'grouping-toggle__btn--active': grouped }"
+            :aria-pressed="grouped"
+            @click="grouped = true"
+          >
+            Grouped
+          </button>
+          <button
+            class="grouping-toggle__btn"
+            :class="{ 'grouping-toggle__btn--active': !grouped }"
+            :aria-pressed="!grouped"
+            @click="grouped = false"
+          >
+            List
+          </button>
+        </div>
       </div>
 
-      <div class="groups">
-        <NuxtLink
-          v-for="group in groupsWithTournament"
-          :key="group.id"
-          :to="`/dashboard/groups/${group.id}`"
-          class="group-card"
+      <div class="section-head">
+        <span
+          class="kicker"
+          :class="selectedTab === 'running' ? 'kicker--accent' : 'kicker--muted-dim'"
         >
-          <div
-            class="group-card__image"
-            :class="{ 'group-card__image--has-header': group.header_image_url }"
-            :style="{
-              backgroundImage: `url(${group.header_image_url || group.tournament!.image_url})`,
-            }"
+          {{ selectedTab === 'running' ? '● ACTIVE' : '○ WRAPPED' }}
+        </span>
+        <h2 class="section-head__title">
+          {{ selectedTab === 'running' ? 'JUMP BACK IN.' : 'LOOK BACK.' }}
+        </h2>
+      </div>
+
+      <div v-if="visibleCards.length > 0" class="groups">
+        <template v-for="card in visibleCards" :key="card.key">
+          <NuxtLink
+            v-if="card.type === 'single'"
+            :to="`/dashboard/groups/${card.group.id}`"
+            class="group-card"
           >
-            <span
-              v-if="group.header_image_url"
-              class="group-card__tournament-icon"
-              :style="{ backgroundImage: `url(${group.tournament!.image_url})` }"
-              :aria-label="group.tournament!.name"
-            ></span>
-            <span v-if="group.public_at" class="group-card__public"
-              ><span class="group-card__public-dot">●</span> PUBLIC</span
+            <div
+              class="group-card__image"
+              :class="{ 'group-card__image--has-header': card.group.header_image_url }"
+              :style="
+                card.group.header_image_url
+                  ? { backgroundImage: `url(${card.group.header_image_url})` }
+                  : card.group.tournament
+                    ? { backgroundImage: `url(${card.group.tournament.image_url})` }
+                    : undefined
+              "
             >
-          </div>
-          <div class="group-card__body">
-            <span class="kicker kicker--accent">★ {{ group.tournament!.name.toUpperCase() }}</span>
-            <h3 class="group-card__title">{{ group.name }}</h3>
-            <div class="group-card__meta">
-              <span class="kicker kicker--muted-dim">{{ group.members.length }} MEMBERS</span>
-              <span class="dot">·</span>
-              <span class="kicker kicker--green">● ACTIVE</span>
+              <span
+                v-if="card.group.header_image_url && card.group.tournament"
+                class="group-card__tournament-icon"
+                :style="{ backgroundImage: `url(${card.group.tournament.image_url})` }"
+                :aria-label="card.group.tournament.name"
+              ></span>
+              <span
+                v-if="card.group.recentlyEnded"
+                class="group-card__badge group-card__badge--ended"
+                ><span class="group-card__badge-dot">●</span> JUST ENDED</span
+              >
+              <span v-if="card.group.public_at" class="group-card__public"
+                ><span class="group-card__public-dot">●</span> PUBLIC</span
+              >
             </div>
-            <div class="group-card__cta">OPEN GROUP →</div>
-          </div>
-        </NuxtLink>
+            <div class="group-card__body">
+              <span class="kicker kicker--accent"
+                >★ {{ (card.group.tournament?.name ?? 'TOURNAMENT').toUpperCase() }}</span
+              >
+              <h3 class="group-card__title">{{ card.group.name }}</h3>
+              <div class="group-card__meta">
+                <span class="kicker kicker--muted-dim"
+                  >{{ card.group.members.length }} MEMBERS</span
+                >
+                <span class="dot">·</span>
+                <span
+                  class="kicker"
+                  :class="card.group.ended ? 'kicker--muted-dim' : 'kicker--green'"
+                >
+                  {{ card.group.ended ? '○ ENDED' : '● ACTIVE' }}
+                </span>
+              </div>
+              <div class="group-card__cta">
+                {{ card.group.ended ? 'SEE RESULTS →' : 'OPEN GROUP →' }}
+              </div>
+            </div>
+          </NuxtLink>
+
+          <article v-else class="group-card group-card--stack">
+            <div
+              class="group-card__image"
+              :style="
+                card.tournament
+                  ? { backgroundImage: `url(${card.tournament.image_url})` }
+                  : undefined
+              "
+            >
+              <span v-if="card.recentlyEnded" class="group-card__badge group-card__badge--ended"
+                ><span class="group-card__badge-dot">●</span> JUST ENDED</span
+              >
+              <div class="group-card__overlay">
+                <span class="kicker kicker--accent"
+                  >★ {{ (card.tournament?.name ?? 'TOURNAMENT').toUpperCase() }}</span
+                >
+                <span class="group-card__count"
+                  >{{ card.groups.length }} GROUPS</span
+                >
+              </div>
+            </div>
+            <div class="group-stack">
+              <NuxtLink
+                v-for="g in card.groups"
+                :key="g.id"
+                :to="`/dashboard/groups/${g.id}`"
+                class="group-stack__row"
+              >
+                <div class="group-stack__main">
+                  <span class="group-stack__name">{{ g.name }}</span>
+                  <div class="group-stack__meta">
+                    <span class="kicker kicker--muted-dim"
+                      >{{ g.members.length }} MEMBERS</span
+                    >
+                    <span class="dot">·</span>
+                    <span
+                      class="kicker"
+                      :class="g.ended ? 'kicker--muted-dim' : 'kicker--green'"
+                    >
+                      {{ g.ended ? '○ ENDED' : '● ACTIVE' }}
+                    </span>
+                    <span v-if="g.public_at" class="dot">·</span>
+                    <span v-if="g.public_at" class="kicker kicker--green">● PUBLIC</span>
+                  </div>
+                </div>
+                <span class="group-stack__arrow">→</span>
+              </NuxtLink>
+            </div>
+          </article>
+        </template>
+      </div>
+
+      <div v-else class="tab-empty">
+        <span class="kicker kicker--muted-dim">{{
+          selectedTab === 'running' ? '○ NOTHING RUNNING' : '○ NOTHING WRAPPED'
+        }}</span>
+        <p class="tab-empty__copy">
+          {{
+            selectedTab === 'running'
+              ? 'No active tournaments right now. Check the Ended tab to revisit past groups.'
+              : 'No tournaments have wrapped up yet. Recently-ended groups stay in Running for four weeks.'
+          }}
+        </p>
       </div>
     </section>
 
@@ -121,18 +252,85 @@ const groupStore = useGroupStore();
 const tournamentStore = useTournamentStore();
 
 const showModal = ref(false);
-const hasLeaderboardNotice = ref(true);
+const selectedTab = ref<'running' | 'ended'>('running');
+const grouped = useGroupingPref();
+
+const FOUR_WEEKS_MS = 1000 * 60 * 60 * 24 * 28;
 
 const groups = computed(() => groupStore.all);
 
-const groupsWithTournament = computed(() => {
-  const mapped = groups.value.map((x) =>
-    Object.freeze({
-      ...x,
-      tournament: tournamentStore.byId(x.tournament_id),
-    }),
-  );
-  return mapped.filter((x) => x.tournament);
+const allGroups = computed(() => {
+  const now = Date.now();
+  return groups.value.map((g) => {
+    const tournament = tournamentStore.byId(g.tournament_id);
+    const endTs = tournament?.end_date ? new Date(tournament.end_date).getTime() : NaN;
+    const ended = !tournament || (Number.isFinite(endTs) && endTs < now);
+    const recentlyEnded = ended && Number.isFinite(endTs) && now - endTs < FOUR_WEEKS_MS;
+    return Object.freeze({ ...g, tournament, ended, recentlyEnded });
+  });
+});
+
+const runningGroups = computed(() =>
+  allGroups.value.filter((g) => !g.ended || g.recentlyEnded),
+);
+
+const endedGroups = computed(() =>
+  allGroups.value.filter((g) => g.ended && !g.recentlyEnded),
+);
+
+const visibleGroups = computed(() =>
+  selectedTab.value === 'running' ? runningGroups.value : endedGroups.value,
+);
+
+type VisibleGroup = (typeof allGroups.value)[number];
+
+type DashboardCard =
+  | { type: 'single'; key: string; group: VisibleGroup }
+  | {
+      type: 'tournament';
+      key: string;
+      tournament: VisibleGroup['tournament'];
+      groups: VisibleGroup[];
+      ended: boolean;
+      recentlyEnded: boolean;
+    };
+
+const visibleCards = computed<DashboardCard[]>(() => {
+  if (!grouped.value) {
+    return visibleGroups.value.map((g) => ({ type: 'single', key: `g-${g.id}`, group: g }));
+  }
+
+  const cards: DashboardCard[] = [];
+  const buckets = new Map<number, VisibleGroup[]>();
+
+  visibleGroups.value.forEach((g) => {
+    if (g.header_image_url || !g.tournament) {
+      cards.push({ type: 'single', key: `g-${g.id}`, group: g });
+      return;
+    }
+    const tid = g.tournament.id;
+    const list = buckets.get(tid);
+    if (list) list.push(g);
+    else buckets.set(tid, [g]);
+  });
+
+  buckets.forEach((groupsInBucket, tid) => {
+    if (groupsInBucket.length === 1) {
+      cards.push({ type: 'single', key: `g-${groupsInBucket[0]!.id}`, group: groupsInBucket[0]! });
+      return;
+    }
+    const first = groupsInBucket[0]!;
+    cards.push({
+      type: 'tournament',
+      key: `t-${tid}`,
+      tournament: first.tournament,
+      groups: groupsInBucket,
+      ended: first.ended,
+      recentlyEnded: first.recentlyEnded,
+    });
+  });
+
+  return cards;
 });
 
 function handleCloseCreateGroupModal() {
@@ -184,45 +382,6 @@ function handleCloseCreateGroupModal() {
 
 .hero__card-inner {
   max-width: 1100px;
-}
-
-.notice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255, 250, 235, 0.06);
-  border-left: 3px solid var(--yellow);
-  padding: 12px 16px;
-  margin-bottom: 28px;
-  border-radius: 2px;
-}
-
-.notice__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--yellow);
-  color: var(--ink);
-  font-weight: 800;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.notice__text {
-  font-size: 13px;
-  color: var(--muted-strong);
-  line-height: 1.5;
-}
-
-.notice__link {
-  color: var(--cream);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  margin-left: 4px;
 }
 
 .hero__meta {
@@ -302,8 +461,124 @@ function handleCloseCreateGroupModal() {
   padding: 0 0;
 }
 
+.tabs-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+}
+
+.grouping-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  padding: 3px;
+  margin-bottom: 6px;
+}
+
+.grouping-toggle__btn {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.55);
+  padding: 7px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.grouping-toggle__btn:hover {
+  color: var(--cream);
+}
+
+.grouping-toggle__btn--active {
+  background: rgba(255, 90, 58, 0.18);
+  color: var(--orange);
+}
+
+.tab {
+  position: relative;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255, 250, 235, 0.55);
+  padding: 12px 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.18s ease;
+}
+
+.tab:hover {
+  color: var(--cream);
+}
+
+.tab--active {
+  color: var(--cream);
+}
+
+.tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+.tab__count {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted-strong);
+}
+
+.tab--active .tab__count {
+  background: rgba(255, 90, 58, 0.18);
+  color: var(--orange);
+}
+
 .section-head {
   margin-bottom: 22px;
+}
+
+.tab-empty {
+  background: var(--indigo-dark);
+  padding: 36px 32px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tab-empty__copy {
+  font-size: 14px;
+  color: var(--muted-strong);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 520px;
 }
 
 .section-head__title {
@@ -373,12 +648,11 @@ function handleCloseCreateGroupModal() {
   height: 64px;
   border-radius: 50%;
   background-color: var(--cream);
-  background-size: 78%;
   background-position: center;
   background-repeat: no-repeat;
+  background-size: cover;
   box-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55);
   z-index: 1;
-  background-size: cover;
 }
 
 .group-card__public {
@@ -398,6 +672,122 @@ function handleCloseCreateGroupModal() {
 
 .group-card__public-dot {
   color: var(--green);
+}
+
+.group-card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--ink);
+  padding: 5px 9px;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.group-card__badge--ended {
+  background: var(--yellow);
+}
+
+.group-card__badge-dot {
+  color: var(--orange);
+}
+
+/* ===== Stacked tournament card ===== */
+.group-card--stack {
+  cursor: default;
+}
+
+.group-card--stack:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.group-card__overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 18px 16px;
+  background: linear-gradient(180deg, rgba(20, 25, 56, 0) 0%, rgba(20, 25, 56, 0.82) 100%);
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-card__count {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--cream);
+  background: rgba(20, 25, 56, 0.78);
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+
+.group-stack {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+.group-stack__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  text-decoration: none;
+  color: var(--cream);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.group-stack__row:last-child {
+  border-bottom: 0;
+}
+
+.group-stack__row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-stack__row:hover .group-stack__arrow {
+  transform: translateX(3px);
+  color: var(--orange);
+}
+
+.group-stack__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-stack__name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-stack__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.group-stack__arrow {
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255, 250, 235, 0.45);
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .group-card__body {

@@ -2,7 +2,7 @@
   <div class="page">
     <HeaderBar :user="user" @toggle-notifications="showNotifications = !showNotifications" />
     <template v-if="!loading">
-      <CompleteProfileModal v-if="!isOpenPage" @set-user="setUser" />
+      <CompleteProfileModal @set-user="setUser" />
       <SideBar v-if="user" :show="showNotifications" />
       <div class="container">
         <div>
@@ -106,7 +106,7 @@ const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {
   const name = route.name as string;
-  return ['privacy', 'support'].includes(name);
+  return ['privacy', 'support', 'about'].includes(name);
 });
 
 function setUser(u: UserProfile | null) {
@@ -116,7 +116,6 @@ function setUser(u: UserProfile | null) {
 onMounted(() => {
   if (isOpenPage.value) {
     loading.value = false;
-    return;
   }
 
   const auth = useFirebaseAuth();
@@ -130,7 +129,7 @@ onMounted(() => {
     } else {
       userStore.set(null);
       setUser(null);
-      if (route.path !== '/') {
+      if (!isOpenPage.value && route.path !== '/') {
         if (route.path.includes('join')) {
           router.replace(`/?returnUrl=${route.path}`);
         } else {

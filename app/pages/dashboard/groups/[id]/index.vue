@@ -1,5 +1,5 @@
 <template>
-  <div v-if="group && tournament" class="group-page">
+  <div v-if="group" class="group-page">
     <!-- ===== Hero ===== -->
     <section class="hero">
       <div
@@ -16,7 +16,7 @@
         <div class="hero__card-inner">
           <div class="hero__meta-top">
             <span class="kicker kicker--accent"
-              >★ YOUR GROUP · {{ tournament.name.toUpperCase() }}</span
+              >★ YOUR GROUP{{ tournament ? ` · ${tournament.name.toUpperCase()}` : '' }}</span
             >
             <button
               v-if="isAuthor"
@@ -50,31 +50,68 @@
                 <span class="kicker kicker--muted-light"
                   >{{ group.members.length }} MEMBERS</span
                 >
+                <template v-if="allGames.length > 0">
+                  <span class="dot">·</span>
+                  <span class="kicker kicker--muted-light"
+                    >{{ completeGames.length }} OF {{ allGames.length }} GAMES</span
+                  >
+                </template>
                 <span class="dot">·</span>
-                <span class="kicker kicker--muted-light"
-                  >{{ completeGames.length }} OF {{ allGames.length }} GAMES</span
+                <span
+                  class="kicker"
+                  :class="tournamentEnded ? 'kicker--muted-light' : 'kicker--green'"
+                  >{{ tournamentEnded ? '○ FINAL' : '● ACTIVE' }}</span
                 >
-                <span class="dot">·</span>
-                <span class="kicker kicker--green">● ACTIVE</span>
               </div>
             </div>
 
             <div class="hero__stats">
-              <div class="stat stat--orange">
-                <span class="stat__kicker">YOUR RANK</span>
-                <div class="stat__value">
-                  {{ String(yourPlacement).padStart(2, '0') }}
+              <template v-if="tournamentEnded">
+                <div class="stat stat--orange stat--champion">
+                  <span class="stat__kicker">{{ youWon ? 'YOU WON' : 'CHAMPION' }}</span>
+                  <div class="stat__champion">
+                    <UserBadge
+                      v-if="champion"
+                      :user="champion"
+                      medium
+                      :clickable="false"
+                    />
+                    <div class="stat__champion-meta">
+                      <div class="stat__champion-name">
+                        {{ champion ? champion.name : '–' }}
+                      </div>
+                      <div class="stat__sub">{{ champion?.score ?? 0 }} PTS</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="stat__sub">OF {{ String(group.members.length).padStart(2, '0') }}</div>
-              </div>
-              <div class="stat stat--ghost">
-                <span class="stat__kicker">GAMES PLAYED</span>
-                <div class="stat__value">
-                  {{ completeGamesPercentage
-                  }}<span class="stat__value-unit">%</span>
+                <div class="stat stat--ghost">
+                  <span class="stat__kicker">YOUR FINISH</span>
+                  <div class="stat__value">
+                    {{ String(yourPlacement).padStart(2, '0') }}
+                  </div>
+                  <div class="stat__sub">
+                    OF {{ String(group.members.length).padStart(2, '0') }}
+                  </div>
                 </div>
-                <ProgressBar :progress="completeGamesPercentage" class="stat__progress" />
-              </div>
+              </template>
+              <template v-else>
+                <div class="stat stat--orange">
+                  <span class="stat__kicker">YOUR RANK</span>
+                  <div class="stat__value">
+                    {{ String(yourPlacement).padStart(2, '0') }}
+                  </div>
+                  <div class="stat__sub">
+                    OF {{ String(group.members.length).padStart(2, '0') }}
+                  </div>
+                </div>
+                <div class="stat stat--ghost">
+                  <span class="stat__kicker">GAMES PLAYED</span>
+                  <div class="stat__value">
+                    {{ completeGamesPercentage }}<span class="stat__value-unit">%</span>
+                  </div>
+                  <ProgressBar :progress="completeGamesPercentage" class="stat__progress" />
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -85,22 +122,23 @@
     <nav class="tabs">
       <button
         class="tab"
-        :class="{ 'tab--active': selectedTab === 1 }"
-        @click="selectedTab = 1"
+        :class="{ 'tab--active': currentTab === 1 }"
+        @click="setTab(1)"
       >
         Group
       </button>
       <button
+        v-if="!tournamentEnded"
         class="tab"
-        :class="{ 'tab--active': selectedTab === 2 }"
-        @click="selectedTab = 2"
+        :class="{ 'tab--active': currentTab === 2 }"
+        @click="setTab(2)"
       >
         Games
       </button>
       <button
         class="tab"
-        :class="{ 'tab--active': selectedTab === 3 }"
-        @click="selectedTab = 3"
+        :class="{ 'tab--active': currentTab === 3 }"
+        @click="setTab(3)"
       >
         Leaderboard
       </button>
@@ -108,7 +146,7 @@
 
     <!-- ===== Tab content ===== -->
     <transition-group name="page">
-      <section v-if="selectedTab === 1" key="group" class="group-tab">
+      <section v-if="currentTab === 1" key="group" class="group-tab">
         <div class="group-tab__grid">
           <main class="group-tab__main">
             <aside v-if="group.welcome_message" class="welcome">
@@ -120,7 +158,47 @@
               <span class="kicker kicker--muted-light">★ ABOUT THIS GROUP</span>
               <p class="welcome__description">{{ group.description }}</p>
             </aside>
-            <template v-if="tournamentDetails">
+
+            <section v-if="tournamentEnded && podium.length > 0" class="podium-card">
+              <div class="podium-card__head">
+                <span class="kicker kicker--accent">★ FINAL PODIUM</span>
+                <h2 class="podium-card__title">
+                  {{ youWon ? 'YOU TOOK IT.' : 'CHAMPION CROWNED.' }}
+                </h2>
+              </div>
+              <div class="podium">
+                <div
+                  v-for="slot in podium"
+                  :key="slot.place"
+                  class="podium__slot"
+                  :class="`podium__slot--${slot.place}`"
+                >
+                  <span class="podium__place">#{{ slot.place }}</span>
+                  <div class="podium__people">
+                    <button
+                      v-for="m in slot.members"
+                      :key="m.user_id"
+                      class="podium__person"
+                      @click="userSelected(m)"
+                    >
+                      <UserBadge
+                        :user="m"
+                        :large="slot.place === 1 && slot.members.length === 1"
+                        :medium="slot.place !== 1 || slot.members.length > 1"
+                        :clickable="false"
+                      />
+                      <span class="podium__name">{{ m.name }}</span>
+                      <span class="podium__pts">{{ m.score }} PTS</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button class="podium-card__more" @click="setTab(3)">
+                SEE FULL LEADERBOARD →
+              </button>
+            </section>
+
+            <template v-if="!tournamentEnded && tournamentDetails">
               <NeedAction
                 :pools="pools"
                 :show-bets="true"
@@ -132,12 +210,12 @@
           </main>
 
           <aside class="group-tab__side">
-            <div class="side-card" style="order: 1">
+            <div v-if="!tournamentEnded" class="side-card" style="order: 1">
               <span class="kicker kicker--accent">★ TOP 3</span>
               <TopThree :users="group.members" @user-selected="userSelected" />
             </div>
 
-            <div class="side-card" style="order: 2">
+            <div v-if="!tournamentEnded" class="side-card" style="order: 2">
               <span class="kicker kicker--accent">★ INVITE LINK</span>
               <div class="invite">
                 <input
@@ -183,7 +261,11 @@
               </button>
             </div>
 
-            <div class="side-card side-card--visibility" :style="{ order: manyMembers ? 3 : 4 }">
+            <div
+              v-if="!tournamentEnded"
+              class="side-card side-card--visibility"
+              :style="{ order: manyMembers ? 3 : 4 }"
+            >
               <div class="visibility__head">
                 <span class="kicker kicker--accent">★ VISIBILITY</span>
                 <span
@@ -244,13 +326,13 @@
         </div>
       </section>
 
-      <section v-if="selectedTab === 2" key="games" class="games-tab">
+      <section v-if="currentTab === 2" key="games" class="games-tab">
         <template v-if="tournamentDetails">
           <Pools :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame" />
         </template>
       </section>
 
-      <section v-if="selectedTab === 3" key="leaderboard" class="leaderboard-tab">
+      <section v-if="currentTab === 3" key="leaderboard" class="leaderboard-tab">
         <Leaderboard :users="group.members" @user-selected="userSelected" />
       </section>
     </transition-group>
@@ -290,7 +372,7 @@ const { alert: notify, confirm: confirmDialog } = useNotify();
 const bets = ref<any[]>([]);
 const gameBet = ref<any>(null);
 const copied = ref(false);
-const selectedTab = ref(1);
+const selectedTab = ref<number | null>(null);
 const selectedUser = ref<any>(null);
 const visibilityLoading = ref(false);
 const uploadingImage = ref(false);
@@ -306,6 +388,11 @@ const isAuthor = computed(
 const tournament = computed(() => {
   if (!group.value) return null;
   return tournamentStore.byId(group.value.tournament_id);
+});
+const tournamentEnded = computed(() => {
+  if (!tournament.value) return true;
+  if (!tournament.value.end_date) return false;
+  return new Date(tournament.value.end_date).getTime() < Date.now();
 });
 const tournamentDetails = computed(() => {
   if (!tournament.value) return null;
@@ -337,6 +424,28 @@ const yourPlacement = computed(() => {
   const me = rankedMembers.value.find((m: any) => m.user_id === userId.value);
   return me?.place ?? '–';
 });
+
+const podium = computed(() => {
+  const slots: { place: number; members: any[] }[] = [];
+  rankedMembers.value.forEach((m: any) => {
+    if (m.place > 3) return;
+    const slot = slots.find((s) => s.place === m.place);
+    if (slot) slot.members.push(m);
+    else slots.push({ place: m.place, members: [m] });
+  });
+  return slots;
+});
+const champion = computed(() => rankedMembers.value.find((m: any) => m.place === 1) ?? null);
+const youWon = computed(() => champion.value?.user_id === userId.value);
+
+const currentTab = computed(() => {
+  if (selectedTab.value !== null) return selectedTab.value;
+  return 1;
+});
+
+function setTab(value: number) {
+  selectedTab.value = value;
+}
 
 const manyMembers = computed(() => (group.value?.members.length ?? 0) > 8);
 
@@ -383,7 +492,7 @@ watch(
 );
 
 watch(
-  () => selectedTab.value,
+  () => currentTab.value,
   (newVal) => {
     if (newVal !== 2) return;
     nextTick().then(() => {
@@ -749,6 +858,36 @@ onBeforeUnmount(() => {
   background: var(--green);
 }
 
+.stat--champion {
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.stat__champion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.stat__champion-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat__champion-name {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 800px) {
   .hero__card {
     padding: 28px 22px 28px;
@@ -848,6 +987,172 @@ onBeforeUnmount(() => {
 
 .welcome--quiet {
   border-left-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ===== Podium (ended tournaments) ===== */
+.podium-card {
+  background: var(--indigo-dark);
+  padding: 24px 24px 22px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.podium-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.podium-card__title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 4px 0 0;
+  color: var(--cream);
+}
+
+.podium {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.podium__slot {
+  flex: 1 1 0;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  padding: 20px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--cream);
+}
+
+.podium__slot--1 {
+  order: 2;
+  flex: 1.2 1 0;
+  background: var(--orange);
+  padding-top: 28px;
+  padding-bottom: 22px;
+  color: #fff;
+}
+
+.podium__slot--2 {
+  order: 1;
+}
+
+.podium__slot--3 {
+  order: 3;
+}
+
+.podium__place {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.podium__slot--1 .podium__place {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.podium__slot--2 .podium__place {
+  color: var(--yellow);
+}
+
+.podium__slot--3 .podium__place {
+  color: rgba(255, 250, 235, 0.65);
+}
+
+.podium__people {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  align-items: center;
+}
+
+.podium__person {
+  background: transparent;
+  border: 0;
+  padding: 6px 4px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  max-width: 100%;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.podium__person:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.podium__slot--1 .podium__person:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.podium__name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium__slot--1 .podium__people:has(> .podium__person:only-child) .podium__name {
+  font-size: 20px;
+}
+
+.podium__pts {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.podium-card__more {
+  align-self: flex-start;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  cursor: pointer;
+  padding: 4px 0;
+  transition: filter 0.15s ease;
+}
+
+.podium-card__more:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 560px) {
+  .podium {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .podium__slot {
+    flex: 1 1 auto;
+  }
 }
 
 .welcome__description {

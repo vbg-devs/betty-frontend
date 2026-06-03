@@ -1,17 +1,29 @@
 <template>
   <header v-if="user" class="header-bar">
     <div class="container header-bar__inner">
+      <button
+        class="header-bar__menu-btn"
+        :aria-expanded="showMobileMenu"
+        aria-label="Toggle menu"
+        @click="showMobileMenu = !showMobileMenu"
+      >
+        <span class="header-bar__menu-bar"></span>
+        <span class="header-bar__menu-bar"></span>
+        <span class="header-bar__menu-bar"></span>
+      </button>
+
       <div class="header-bar__item">
-        <NuxtLink to="/dashboard" class="logo-link">
+        <NuxtLink to="/dashboard" class="logo-link" @click="showMobileMenu = false">
           <img src="~/assets/images/logo.svg" class="logo" alt="Betty" />
         </NuxtLink>
       </div>
 
-      <nav class="header-bar__nav">
+      <nav class="header-bar__nav" :class="{ 'header-bar__nav--open': showMobileMenu }">
         <NuxtLink
           to="/dashboard"
           class="nav-link"
           :class="{ 'nav-link--active': isActive('/dashboard') }"
+          @click="showMobileMenu = false"
         >
           My Groups
         </NuxtLink>
@@ -19,6 +31,7 @@
           to="/dashboard/groups/browse"
           class="nav-link"
           :class="{ 'nav-link--active': isActive('/dashboard/groups/browse') }"
+          @click="showMobileMenu = false"
         >
           Public Groups
         </NuxtLink>
@@ -26,13 +39,25 @@
           to="/leaderboard"
           class="nav-link"
           :class="{ 'nav-link--active': isActive('/leaderboard') }"
+          @click="showMobileMenu = false"
         >
           Leaderboard
+        </NuxtLink>
+        <NuxtLink
+          to="/about"
+          class="nav-link"
+          :class="{ 'nav-link--active': isActive('/about') }"
+          @click="showMobileMenu = false"
+        >
+          About
         </NuxtLink>
       </nav>
 
       <div class="header-bar__item header-bar__item--right">
-        <button class="btn-new-group" @click="showCreateGroupModal = true">+ NEW GROUP</button>
+        <button class="btn-new-group" @click="showCreateGroupModal = true">
+          <span class="btn-new-group__full">+ NEW GROUP</span>
+          <span class="btn-new-group__short" aria-hidden="true">+</span>
+        </button>
         <button
           class="header-bar__button header-bar__button--dimmed"
           :class="{ dimmed: hideNotifications }"
@@ -139,7 +164,7 @@ const firebaseAuth = useFirebaseAuth();
 const messageStore = useMessageStore();
 const route = useRoute();
 
-const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard'];
+const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard', '/about'];
 
 function isActive(path: string) {
   const current = route.path;
@@ -152,7 +177,15 @@ function isActive(path: string) {
 const showUserMenu = ref(false);
 const showModal = ref(false);
 const showCreateGroupModal = ref(false);
+const showMobileMenu = ref(false);
 const hideNotifications = ref(false);
+
+watch(
+  () => route.path,
+  () => {
+    showMobileMenu.value = false;
+  },
+);
 
 const messages = computed(() => messageStore.all);
 
@@ -194,6 +227,51 @@ function handleCloseCreateGroupModal() {
   align-items: center;
   height: 100%;
   gap: 24px;
+  position: relative;
+}
+
+/* ===== Hamburger button (mobile only) ===== */
+.header-bar__menu-btn {
+  display: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: -8px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.header-bar__menu-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.header-bar__menu-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fffaeb;
+  border-radius: 1px;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.header-bar__menu-btn[aria-expanded='true'] .header-bar__menu-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.header-bar__menu-btn[aria-expanded='true'] .header-bar__menu-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.header-bar__menu-btn[aria-expanded='true'] .header-bar__menu-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .logo-link {
@@ -256,17 +334,69 @@ function handleCloseCreateGroupModal() {
   border-radius: 2px;
 }
 
-@media (max-width: 600px) {
-  .header-bar__nav {
-    gap: 16px;
-    margin-left: 8px;
+@media (max-width: 760px) {
+  .header-bar {
+    padding: 10px 0;
   }
-  .nav-link {
-    font-size: 11px;
-    letter-spacing: 1px;
+
+  .header-bar__inner {
+    gap: 10px;
   }
+
+  .header-bar__inner > .header-bar__item:first-of-type {
+    margin-right: auto;
+  }
+
   .logo {
-    height: 42px;
+    height: 36px;
+  }
+
+  .header-bar__menu-btn {
+    display: inline-flex;
+  }
+
+  .header-bar__nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 16px;
+    background: #1f2752;
+    flex-direction: column;
+    gap: 0;
+    padding: 8px 16px;
+    box-shadow: 0 18px 40px -22px rgba(20, 25, 56, 0.55);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .header-bar__nav--open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 14px 4px;
+    font-size: 13px;
+    letter-spacing: 1.4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-link:last-child {
+    border-bottom: 0;
+  }
+
+  .nav-link--active::after {
+    left: 0;
+    right: auto;
+    width: 24px;
+    bottom: 6px;
   }
 }
 
@@ -330,11 +460,27 @@ a:hover {
   filter: brightness(1.05);
 }
 
-@media (max-width: 600px) {
+.btn-new-group__short {
+  display: none;
+}
+
+@media (max-width: 480px) {
   .btn-new-group {
-    padding: 10px 12px;
-    font-size: 10px;
-    letter-spacing: 1px;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    margin-right: 0;
+  }
+
+  .btn-new-group__full {
+    display: none;
+  }
+
+  .btn-new-group__short {
+    display: inline;
   }
 }
 
