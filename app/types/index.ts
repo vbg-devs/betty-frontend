@@ -76,6 +76,7 @@ export interface GroupMember {
   image_url: string | null;
   score: number;
   normalized_score?: number;
+  access_level: number;
 }
 
 export interface Game {
