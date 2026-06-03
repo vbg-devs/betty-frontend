@@ -19,6 +19,7 @@
               >★ YOUR GROUP · {{ tournament.name.toUpperCase() }}</span
             >
             <button
+              v-if="isAuthor"
               class="hero__upload-btn"
               :class="{ 'hero__upload-btn--loading': uploadingImage }"
               :disabled="uploadingImage"
@@ -33,9 +34,10 @@
               }}
             </button>
             <input
+              v-if="isAuthor"
               ref="fileInput"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               hidden
               @change="handleFileChange"
             />
@@ -298,6 +300,9 @@ let interval: ReturnType<typeof setInterval> | null = null;
 const groupId = computed(() => parseFloat(route.params.id as string));
 const userId = computed(() => userStore.id);
 const group = computed(() => groupStore.byId(groupId.value));
+const isAuthor = computed(
+  () => !!group.value && !!userId.value && group.value.members[0]?.user_id === userId.value,
+);
 const tournament = computed(() => {
   if (!group.value) return null;
   return tournamentStore.byId(group.value.tournament_id);
@@ -435,24 +440,27 @@ function triggerFileInput() {
   fileInput.value?.click();
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGE_BYTES = 1024 * 1024;
+
 async function handleFileChange(e: Event) {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file || !group.value) return;
 
-  if (!file.type.startsWith('image/')) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     notify({
       title: 'Invalid file',
-      message: 'Please choose an image file.',
+      message: 'Please choose a JPEG, PNG, WebP, or GIF image.',
       state: 'warning',
     });
     input.value = '';
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
+  if (file.size > MAX_IMAGE_BYTES) {
     notify({
       title: 'Image too large',
-      message: 'Please choose an image under 5MB.',
+      message: 'Please choose an image under 1MB.',
       state: 'warning',
     });
     input.value = '';
@@ -461,10 +469,7 @@ async function handleFileChange(e: Event) {
 
   uploadingImage.value = true;
   try {
-    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
-    const path = `groups/${group.value.id}/header/${Date.now()}.${ext}`;
-    const url = await uploadImage(path, file);
-    await groupStore.setHeaderImage(group.value.id, url);
+    await groupStore.uploadHeaderImage(group.value.id, file);
   } catch (err: any) {
     const status = err?.response?.status ?? err?.status;
     if (status === 401) {
@@ -472,6 +477,24 @@ async function handleFileChange(e: Event) {
         title: 'Not allowed',
         message: 'Only the group author can change the cover image.',
         state: 'warning',
+      });
+    } else if (status === 413) {
+      notify({
+        title: 'Image too large',
+        message: 'Please choose an image under 1MB.',
+        state: 'warning',
+      });
+    } else if (status === 415) {
+      notify({
+        title: 'Unsupported image',
+        message: 'Please choose a JPEG, PNG, WebP, or GIF image.',
+        state: 'warning',
+      });
+    } else if (status === 503) {
+      notify({
+        title: 'Image uploads unavailable',
+        message: 'Image uploads are temporarily unavailable. Please try again later.',
+        state: 'error',
       });
     } else {
       notify({

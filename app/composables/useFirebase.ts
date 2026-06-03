@@ -1,17 +1,9 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-  type FirebaseStorage,
-} from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCK7EQZtS0JGRnS9WXdx3Ja4Sdl4914zpg',
   authDomain: 'betty-f676d.firebaseapp.com',
-  storageBucket: 'betty-f676d.firebasestorage.app',
 };
 
 let _app: FirebaseApp | undefined;
@@ -50,12 +42,3 @@ export async function useAuthToken(): Promise<string> {
   return user.getIdToken();
 }
 
-export function useFirebaseStorage(): FirebaseStorage {
-  return getStorage(useFirebaseApp());
-}
-
-export async function uploadImage(path: string, file: File): Promise<string> {
-  const fileRef = storageRef(useFirebaseStorage(), path);
-  const result = await uploadBytes(fileRef, file, { contentType: file.type });
-  return getDownloadURL(result.ref);
-}

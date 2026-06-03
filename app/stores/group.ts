@@ -68,6 +68,28 @@ export const useGroupStore = defineStore('group', () => {
     return data;
   }
 
+  async function uploadHeaderImage(id: number, file: File) {
+    const { authFetch } = useApi();
+    const presign = await authFetch<{ upload_url: string; public_url: string }>(
+      `/group/${id}/header-image/upload-url`,
+      {
+        method: 'POST',
+        body: { content_type: file.type, content_length: file.size },
+      },
+    );
+
+    const res = await fetch(presign.upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    if (!res.ok) {
+      throw new Error(`R2 upload failed (${res.status})`);
+    }
+
+    return setHeaderImage(id, presign.public_url);
+  }
+
   async function listPublic(params: ListPublicParams = {}) {
     const { authFetch } = useApi();
     const query: Record<string, string | number> = {};
@@ -89,6 +111,7 @@ export const useGroupStore = defineStore('group', () => {
     leave,
     setVisibility,
     setHeaderImage,
+    uploadHeaderImage,
     listPublic,
   };
 });
