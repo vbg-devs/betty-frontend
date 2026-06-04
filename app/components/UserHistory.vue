@@ -24,7 +24,7 @@
           <UserBadge :user="user" :medium="true" :clickable="false" />
           <div class="modal__user-info">
             <span class="kicker kicker--accent">★ BET HISTORY</span>
-            <h2 class="modal__title">{{ user.name?.toUpperCase() }}</h2>
+            <h2 class="modal__title">{{ (user.nickname || user.name)?.toUpperCase() }}</h2>
             <div class="modal__stats">
               <span class="kicker kicker--muted-light">{{ userBets.length }} BETS</span>
               <span class="dot">·</span>

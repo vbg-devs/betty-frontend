@@ -25,8 +25,49 @@
 
       <div class="modal__body">
         <div class="profile-image-wrapper">
-          <UserBadge :user="{ name: name, image_url: imageUrl }" :large="true" :clickable="false" />
+          <button
+            type="button"
+            class="profile-image-button"
+            :disabled="uploadingImage"
+            :aria-label="uploadingImage ? 'Uploading photo' : 'Change profile photo'"
+            @click="pickImage"
+          >
+            <UserBadge
+              :user="{ name: name, image_url: imageUrl }"
+              :large="true"
+              :clickable="false"
+            />
+            <span class="profile-image-button__overlay">
+              <span
+                v-if="uploadingImage"
+                class="profile-image-button__spinner"
+                aria-hidden="true"
+              ></span>
+              <span v-else class="profile-image-button__overlay-text">CHANGE</span>
+            </span>
+          </button>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            class="profile-image-input"
+            @change="onFileChosen"
+          />
+          <button
+            v-if="hasCustomImage"
+            type="button"
+            class="profile-image-revert"
+            :disabled="uploadingImage"
+            @click="revertImage"
+          >
+            Revert to default photo
+          </button>
         </div>
+
+        <p v-if="imageError" class="form-error" role="alert">
+          {{ imageError }}
+        </p>
+
         <form @submit.prevent="save">
           <label class="field">
             <span class="field__label">User name</span>
@@ -91,10 +132,12 @@ const emit = defineEmits<{
 const { authFetch } = useApi();
 const { alert } = useNotify();
 const { countries, load: loadCountries } = useCountries();
+const userStore = useUserStore();
 
 const email = ref('');
 const name = ref('');
 const imageUrl = ref('');
+const firebaseImageUrl = ref<string | null>(null);
 const country = ref<string | null>(null);
 const saving = ref(false);
 const id = ref<number | null>(null);
@@ -108,9 +151,29 @@ function setTheme(light: boolean) {
   window.localStorage.setItem(THEME_KEY, light ? 'light' : 'dark');
 }
 
+const fileInput = ref<HTMLInputElement | null>(null);
+const uploadingImage = ref(false);
+const imageError = ref('');
+
+const MAX_IMAGE_BYTES = 1024 * 1024; // 1 MiB — matches backend cap
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+type PresignedUpload = {
+  upload_url: string;
+  method: string;
+  headers: Record<string, string[]>;
+  public_url: string;
+};
+
 const canSave = computed(() => {
   if (name.value.length === 0) return false;
   return true;
+});
+
+const hasCustomImage = computed(() => {
+  if (!imageUrl.value) return false;
+  if (!firebaseImageUrl.value) return true;
+  return imageUrl.value !== firebaseImageUrl.value;
 });
 
 onMounted(async () => {
@@ -121,12 +184,112 @@ onMounted(async () => {
     const data = await authFetch<any>('/user/me');
     name.value = data.name;
     imageUrl.value = data.image_url;
+    firebaseImageUrl.value = data.firebase_image_url ?? null;
     country.value = data.country ?? null;
     id.value = data.id;
   } catch (err) {
     console.error(err);
   }
 });
+
+function pickImage() {
+  if (uploadingImage.value) return;
+  imageError.value = '';
+  fileInput.value?.click();
+}
+
+function syncStoreImage(newImageUrl: string | null) {
+  const current = userStore.profile;
+  if (!current) return;
+  userStore.set({ ...current, image_url: newImageUrl });
+}
+
+async function onFileChosen(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    imageError.value = 'Please choose a PNG, JPG, WEBP, or GIF image.';
+    return;
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    imageError.value = 'That image is over 1 MB — please pick a smaller one.';
+    return;
+  }
+  if (file.size === 0) {
+    imageError.value = 'That file looks empty. Please choose another image.';
+    return;
+  }
+
+  uploadingImage.value = true;
+  imageError.value = '';
+  try {
+    const presigned = await authFetch<PresignedUpload>('/user/me/profile-image/upload-url', {
+      method: 'POST',
+      body: { content_type: file.type, content_length: file.size },
+    });
+
+    const uploadHeaders: Record<string, string> = {};
+    for (const [key, values] of Object.entries(presigned.headers ?? {})) {
+      // Browsers manage Content-Length and Host themselves and reject manual values.
+      if (!values || values.length === 0) continue;
+      const lower = key.toLowerCase();
+      if (lower === 'content-length' || lower === 'host') continue;
+      uploadHeaders[key] = values.join(', ');
+    }
+    if (!Object.keys(uploadHeaders).some((k) => k.toLowerCase() === 'content-type')) {
+      uploadHeaders['Content-Type'] = file.type;
+    }
+
+    const uploadRes = await fetch(presigned.upload_url, {
+      method: presigned.method || 'PUT',
+      headers: uploadHeaders,
+      body: file,
+    });
+    if (!uploadRes.ok) {
+      throw new Error(`Upload failed (${uploadRes.status})`);
+    }
+
+    const committed = await authFetch<{ image_url: string }>('/user/me/profile-image', {
+      method: 'PUT',
+      body: { image_url: presigned.public_url },
+    });
+    imageUrl.value = committed.image_url;
+    syncStoreImage(committed.image_url);
+  } catch (err: any) {
+    console.error(err);
+    const status = err?.response?.status ?? err?.statusCode ?? err?.status;
+    if (status === 413) {
+      imageError.value = 'That image is over 1 MB — please pick a smaller one.';
+    } else if (status === 415) {
+      imageError.value = 'Please choose a PNG, JPG, WEBP, or GIF image.';
+    } else {
+      imageError.value = "Couldn't upload your photo. Please try again.";
+    }
+  } finally {
+    uploadingImage.value = false;
+  }
+}
+
+async function revertImage() {
+  if (uploadingImage.value) return;
+  uploadingImage.value = true;
+  imageError.value = '';
+  try {
+    const reverted = await authFetch<{ image_url: string | null }>('/user/me/profile-image', {
+      method: 'DELETE',
+    });
+    imageUrl.value = reverted.image_url ?? '';
+    syncStoreImage(reverted.image_url);
+  } catch (err) {
+    console.error(err);
+    imageError.value = "Couldn't revert your photo. Please try again.";
+  } finally {
+    uploadingImage.value = false;
+  }
+}
 
 onBeforeUnmount(() => {
   document.body.classList.remove('no-scroll');
@@ -264,8 +427,109 @@ async function save() {
 
 .profile-image-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   padding: 12px 0 22px;
+}
+
+.profile-image-button {
+  position: relative;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+.profile-image-button:disabled {
+  cursor: progress;
+}
+
+.profile-image-button__overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(20, 25, 56, 0.6);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.profile-image-button:hover:not(:disabled) .profile-image-button__overlay,
+.profile-image-button:focus-visible .profile-image-button__overlay,
+.profile-image-button:disabled .profile-image-button__overlay {
+  opacity: 1;
+}
+
+.profile-image-button__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 250, 235, 0.25);
+  border-top-color: var(--cream);
+  animation: profile-image-spin 0.8s linear infinite;
+}
+
+@keyframes profile-image-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-image-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.profile-image-revert {
+  background: transparent;
+  border: 0;
+  color: var(--muted-strong);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.15s ease;
+}
+
+.profile-image-revert:hover:not(:disabled) {
+  color: var(--orange);
+}
+
+.profile-image-revert:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== Form error ===== */
+.form-error {
+  margin: -6px 0 18px;
+  padding: 12px 14px;
+  background: rgba(255, 90, 58, 0.12);
+  border-left: 3px solid var(--orange);
+  color: var(--cream);
+  font-size: 13px;
+  line-height: 1.45;
+  border-radius: 2px;
 }
 
 /* ===== Kicker ===== */

@@ -46,10 +46,12 @@ const hasImage = computed(() => {
   return user.image_url && user.image_url.length > 0;
 });
 
+const displayName = computed(() => user.nickname || user.name);
+
 const initial = computed(() => {
   if (hasImage.value) return '';
-  if (!user.name) return '';
-  const splitFullName = user.name.split(' ');
+  if (!displayName.value) return '';
+  const splitFullName = displayName.value.split(' ');
   if (splitFullName.length === 1) return splitFullName[0].substring(0, 1);
   return `${splitFullName[0].substring(0, 1)}${splitFullName[1].substring(0, 1)}`.toUpperCase();
 });
@@ -68,9 +70,9 @@ function stringToColour(str: string) {
 }
 
 const badgeColor = computed(() => {
-  if (!user.name) return '#efefef';
-  if (user.name.length < 5) return '#efefef';
-  return stringToColour(user.name.toLowerCase());
+  if (!displayName.value) return '#efefef';
+  if (displayName.value.length < 5) return '#efefef';
+  return stringToColour(displayName.value.toLowerCase());
 });
 </script>
 

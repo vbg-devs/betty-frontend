@@ -78,7 +78,7 @@
                     />
                     <div class="stat__champion-meta">
                       <div class="stat__champion-name">
-                        {{ champion ? champion.name : '–' }}
+                        {{ champion ? (champion.nickname || champion.name) : '–' }}
                       </div>
                       <div class="stat__sub">{{ champion?.score ?? 0 }} PTS</div>
                     </div>
@@ -187,7 +187,7 @@
                         :medium="slot.place !== 1 || slot.members.length > 1"
                         :clickable="false"
                       />
-                      <span class="podium__name">{{ m.name }}</span>
+                      <span class="podium__name">{{ m.nickname || m.name }}</span>
                       <span class="podium__pts">{{ m.score }} PTS</span>
                     </button>
                   </div>
@@ -231,6 +231,45 @@
               </div>
             </div>
 
+            <div v-if="!tournamentEnded && myMember" class="side-card" style="order: 2">
+              <div class="nickname__head">
+                <span class="kicker kicker--accent">★ YOUR NICKNAME</span>
+                <span
+                  class="kicker"
+                  :class="currentNickname ? 'kicker--green' : 'kicker--muted-light'"
+                >
+                  {{ currentNickname ? '● ACTIVE' : '○ OFF' }}
+                </span>
+              </div>
+              <p class="nickname__hint">
+                Override how you appear to the rest of the group. Leave it empty to fall back to
+                your real name.
+              </p>
+              <form class="nickname" @submit.prevent="saveNickname">
+                <input
+                  v-model="nicknameInput"
+                  type="text"
+                  maxlength="120"
+                  class="nickname__input"
+                  :placeholder="myMember.name"
+                />
+                <button
+                  type="submit"
+                  class="nickname__btn"
+                  :class="{ 'nickname__btn--loading': nicknameLoading }"
+                  :disabled="nicknameLoading || !nicknameDirty"
+                >
+                  {{
+                    nicknameLoading
+                      ? 'SAVING…'
+                      : nicknameInput.trim() === '' && currentNickname
+                        ? 'CLEAR →'
+                        : 'SAVE →'
+                  }}
+                </button>
+              </form>
+            </div>
+
             <div class="side-card" :style="{ order: manyMembers ? 4 : 3 }">
               <span class="kicker kicker--accent">★ GROUP ROSTER</span>
               <h3 class="roster__title">
@@ -248,7 +287,7 @@
                 >
                   <span class="roster__rank">#{{ m.place }}</span>
                   <UserBadge :user="m" :small="true" :clickable="false" />
-                  <span class="roster__name">{{ m.name }}</span>
+                  <span class="roster__name">{{ m.nickname || m.name }}</span>
                   <span class="roster__pts">{{ m.score }}p</span>
                 </button>
               </div>
@@ -377,6 +416,8 @@ const selectedUser = ref<any>(null);
 const visibilityLoading = ref(false);
 const uploadingImage = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
+const nicknameInput = ref('');
+const nicknameLoading = ref(false);
 let interval: ReturnType<typeof setInterval> | null = null;
 
 const groupId = computed(() => parseFloat(route.params.id as string));
@@ -389,6 +430,14 @@ const isAuthor = computed(
     group.value.members.some(
       (m) => m.user_id === userId.value && m.access_level === 0,
     ),
+);
+const myMember = computed(() => {
+  if (!group.value || !userId.value) return null;
+  return group.value.members.find((m) => m.user_id === userId.value) ?? null;
+});
+const currentNickname = computed(() => myMember.value?.nickname ?? null);
+const nicknameDirty = computed(
+  () => nicknameInput.value.trim() !== (currentNickname.value ?? ''),
 );
 const tournament = computed(() => {
   if (!group.value) return null;
@@ -492,6 +541,14 @@ watch(
   (newVal) => {
     if (!newVal) return;
     tournamentStore.loadDetails({ id: newVal.id });
+  },
+  { immediate: true },
+);
+
+watch(
+  () => currentNickname.value,
+  (value) => {
+    nicknameInput.value = value ?? '';
   },
   { immediate: true },
 );
@@ -645,6 +702,29 @@ async function toggleVisibility(nextValue: boolean) {
     }
   } finally {
     visibilityLoading.value = false;
+  }
+}
+
+async function saveNickname() {
+  if (!group.value || nicknameLoading.value) return;
+  const trimmed = nicknameInput.value.trim();
+  const payload = trimmed === '' ? null : trimmed;
+  nicknameLoading.value = true;
+  try {
+    await groupStore.setNickname(group.value.id, payload);
+    notify({
+      title: payload ? 'Nickname saved' : 'Nickname cleared',
+      message: payload ? `You will appear as "${payload}" in this group.` : 'Your real name is back.',
+      state: 'success',
+    });
+  } catch (err) {
+    notify({
+      title: 'Could not save nickname',
+      message: String(err),
+      state: 'error',
+    });
+  } finally {
+    nicknameLoading.value = false;
   }
 }
 
@@ -1232,6 +1312,71 @@ onBeforeUnmount(() => {
 
 .invite__btn:hover {
   filter: brightness(1.08);
+}
+
+/* ===== Nickname ===== */
+.nickname__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nickname__hint {
+  font-size: 13px;
+  color: var(--muted-strong);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.nickname {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nickname__input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 14px;
+  outline: none;
+  min-width: 0;
+}
+
+.nickname__input::placeholder {
+  color: rgba(255, 250, 235, 0.4);
+  font-weight: 500;
+}
+
+.nickname__btn {
+  background: var(--orange);
+  border: 0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+}
+
+.nickname__btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.nickname__btn:disabled,
+.nickname__btn--loading {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ===== Roster ===== */

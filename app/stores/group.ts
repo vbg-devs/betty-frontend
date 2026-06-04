@@ -68,6 +68,16 @@ export const useGroupStore = defineStore('group', () => {
     return data;
   }
 
+  async function setNickname(id: number, nickname: string | null) {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ nickname: string | null }>(`/group/${id}/nickname`, {
+      method: 'PUT',
+      body: { nickname },
+    });
+    await load();
+    return data;
+  }
+
   async function uploadHeaderImage(id: number, file: File) {
     const { authFetch } = useApi();
     const presign = await authFetch<{ upload_url: string; public_url: string }>(
@@ -111,6 +121,7 @@ export const useGroupStore = defineStore('group', () => {
     leave,
     setVisibility,
     setHeaderImage,
+    setNickname,
     uploadHeaderImage,
     listPublic,
   };
