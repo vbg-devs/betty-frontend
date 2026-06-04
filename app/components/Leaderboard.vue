@@ -23,7 +23,7 @@
         </template>
         <template v-else>
           <a href="javascript:void(0);" class="lb-row__link" @click="emit('user-selected', user)">{{
-            user.name
+            user.nickname || user.name
           }}</a>
         </template>
         <span v-if="user.user_id === userId" class="lb-row__you">YOU</span>

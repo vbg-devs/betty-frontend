@@ -39,7 +39,7 @@
           </div>
           <div class="column">
             <div class="meme-board__username">
-              <strong>{{ getUser(msg.user_id).name }}</strong>
+              <strong>{{ getUser(msg.user_id).nickname || getUser(msg.user_id).name }}</strong>
               - {{ formatDate(msg.created_at) }}
             </div>
             <template v-if="msg.image_url">
