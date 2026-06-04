@@ -383,7 +383,7 @@ function handleCloseCreateGroupModal() {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.4px;
-  color: var(--cream);
+  color: #fff;
   background: rgba(20, 25, 56, 0.78);
   padding: 5px 9px;
   border-radius: 2px;
@@ -392,7 +392,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .group-card__public-dot {
-  color: var(--green);
+  color: #9bff3d;
 }
 
 .group-card__body {

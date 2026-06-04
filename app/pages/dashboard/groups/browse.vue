@@ -708,7 +708,7 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.4px;
-  color: var(--cream);
+  color: #fff;
   background: rgba(20, 25, 56, 0.78);
   padding: 4px 8px;
   border-radius: 2px;
