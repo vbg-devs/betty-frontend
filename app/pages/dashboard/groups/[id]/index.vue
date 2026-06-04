@@ -709,6 +709,16 @@ onBeforeUnmount(() => {
   background-color: var(--indigo-deep);
   background-size: cover;
   background-position: center;
+  /* The image overlay is a hardcoded dark indigo gradient, so the hero stays a
+     dark surface even in light theme — pin text tokens to their dark-surface
+     values so descendants don't render dark-on-dark. */
+  --cream: #fffaeb;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+  --surface-overlay-04: rgba(255, 255, 255, 0.04);
+  --surface-overlay-06: rgba(255, 255, 255, 0.06);
+  --surface-overlay-08: rgba(255, 255, 255, 0.08);
+  --surface-overlay-10: rgba(255, 255, 255, 0.1);
 }
 
 .hero__card-inner {
