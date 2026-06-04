@@ -116,3 +116,19 @@ export interface ActivityMessage {
   message: unknown;
   timeStamp: Date;
 }
+
+export interface MessageReaction {
+  user_id: number;
+  emoji_id: string;
+  created_at: string;
+}
+
+export interface GroupMessage {
+  id: number;
+  user_id: number;
+  group_id: number;
+  body: string | null;
+  image_url: string | null;
+  created_at: string;
+  reactions: MessageReaction[];
+}
