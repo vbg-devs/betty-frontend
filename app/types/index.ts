@@ -3,6 +3,7 @@ export interface UserProfile {
   email: string;
   name: string;
   image_url: string | null;
+  firebase_image_url: string | null;
   country: string | null;
   is_admin: boolean;
   created_at: string;
