@@ -54,7 +54,7 @@
               'bet-row--full': bet.user_points === 3,
             }"
           >
-            <span class="bet-row__name">{{ bet.user.name }}</span>
+            <span class="bet-row__name">{{ bet.user.nickname || bet.user.name }}</span>
             <span class="bet-row__score">
               <template v-if="showScores">
                 <strong>{{ bet.home_team_score }} – {{ bet.away_team_score }}</strong>

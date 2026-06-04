@@ -44,7 +44,7 @@
           </div>
           <div class="column">
             <div class="meme-board__username">
-              <strong>{{ getUser(msg.user_id).name }}</strong>
+              <strong>{{ getUser(msg.user_id).nickname || getUser(msg.user_id).name }}</strong>
               - {{ formatDate(msg.created_at) }}
             </div>
             <button
@@ -251,7 +251,7 @@
         </div>
         <button
           class="meme-board__toggle"
-          aria-label="Send gif (Shift + Enter)"
+          aria-label="Toggle gif mode"
           data-balloon-pos="left"
           :class="{ 'meme-board__toggle--active': useGiphy }"
           @click="useGiphy = !useGiphy"
@@ -366,13 +366,8 @@ function getUser(userId: number) {
 }
 
 function handleKeyup(ev: KeyboardEvent) {
-  if (ev.shiftKey && ev.code === 'Enter') {
-    sendMessage(true);
-    return;
-  }
-  if (ev.code === 'Enter') {
-    sendMessage();
-  }
+  if (ev.key !== 'Enter') return;
+  sendMessage();
 }
 
 async function postMessage(msg: { message?: string; image?: string }) {
@@ -432,9 +427,9 @@ async function deleteMessage(id: number) {
   }
 }
 
-async function sendMessage(override?: boolean) {
+async function sendMessage() {
   if (!q.value) return;
-  if (!useGiphy.value && !override) {
+  if (!useGiphy.value) {
     const newMessage = {
       image: undefined,
       message: q.value,
@@ -467,8 +462,8 @@ async function sendMessage(override?: boolean) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -509,27 +504,28 @@ async function sendMessage(override?: boolean) {
   display: block;
   max-width: 100%;
   height: auto;
-  max-height: 300px;
   border-radius: 2px;
+  margin-top: 4px;
 }
 
 .meme-board__footer {
-  padding-top: 18px;
+  padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .meme-board__message {
   position: relative;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 2px solid var(--orange);
+  border-radius: 2px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
 }
 
 .meme-board__message:last-child {
-  border-bottom: 0;
   margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 .meme-board__message :deep(p) {
@@ -540,7 +536,7 @@ async function sendMessage(override?: boolean) {
 
 .meme-board__input {
   width: 100%;
-  padding: 12px 44px 12px 14px;
+  padding: 14px 48px 14px 16px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--cream);
@@ -564,12 +560,12 @@ async function sendMessage(override?: boolean) {
 
 .meme-board .row {
   margin: 0;
-  gap: 12px;
+  gap: 16px;
 }
 
 .meme-board__username {
   font-size: 13px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   color: var(--muted-strong);
 }
 

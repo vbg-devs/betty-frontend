@@ -73,6 +73,7 @@ export interface PublicGroupListResponse {
 export interface GroupMember {
   user_id: number;
   name: string;
+  nickname: string | null;
   image_url: string | null;
   score: number;
   normalized_score?: number;
