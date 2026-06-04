@@ -222,7 +222,7 @@
         </div>
         <button
           class="meme-board__toggle"
-          aria-label="Send gif (Shift + Enter)"
+          aria-label="Toggle gif mode"
           data-balloon-pos="left"
           :class="{ 'meme-board__toggle--active': useGiphy }"
           @click="useGiphy = !useGiphy"
@@ -334,13 +334,8 @@ function getUser(userId: number) {
 }
 
 function handleKeyup(ev: KeyboardEvent) {
-  if (ev.shiftKey && ev.code === 'Enter') {
-    sendMessage(true);
-    return;
-  }
-  if (ev.code === 'Enter') {
-    sendMessage();
-  }
+  if (ev.key !== 'Enter') return;
+  sendMessage();
 }
 
 async function postMessage(msg: { message?: string; image?: string }) {
@@ -368,9 +363,9 @@ function selectImage() {
   postMessage(newMessage);
 }
 
-async function sendMessage(override?: boolean) {
+async function sendMessage() {
   if (!q.value) return;
-  if (!useGiphy.value && !override) {
+  if (!useGiphy.value) {
     const newMessage = {
       image: undefined,
       message: q.value,
