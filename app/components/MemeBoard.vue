@@ -44,35 +44,33 @@
           </div>
           <div class="column">
             <div class="meme-board__username">
-              <span class="meme-board__author">
-                <strong>{{ getUser(msg.user_id).name }}</strong>
-                - {{ formatDate(msg.created_at) }}
-              </span>
-              <button
-                v-if="msg.user_id === userId"
-                class="meme-board__delete"
-                :disabled="deletingId === msg.id"
-                aria-label="Delete message"
-                @click="confirmDeleteMessage(msg)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path
-                    d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                  ></path>
-                </svg>
-              </button>
+              <strong>{{ getUser(msg.user_id).name }}</strong>
+              - {{ formatDate(msg.created_at) }}
             </div>
+            <button
+              v-if="msg.user_id === userId"
+              class="meme-board__delete"
+              :disabled="deletingId === msg.id"
+              aria-label="Delete message"
+              @click="confirmDeleteMessage(msg)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path
+                  d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                ></path>
+              </svg>
+            </button>
             <template v-if="msg.image_url">
               <img :src="msg.image_url" class="message__image" />
             </template>
@@ -522,6 +520,7 @@ async function sendMessage(override?: boolean) {
 }
 
 .meme-board__message {
+  position: relative;
   margin-bottom: 14px;
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -572,17 +571,6 @@ async function sendMessage(override?: boolean) {
   font-size: 13px;
   margin-bottom: 6px;
   color: var(--muted-strong);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.meme-board__author {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .meme-board__username :deep(strong) {
@@ -592,11 +580,13 @@ async function sendMessage(override?: boolean) {
 }
 
 .meme-board__delete {
+  position: absolute;
+  top: 0;
+  right: 0;
   background: transparent;
   border: 0;
   color: var(--muted);
   padding: 4px;
-  margin: -4px;
   cursor: pointer;
   border-radius: 2px;
   display: inline-flex;
