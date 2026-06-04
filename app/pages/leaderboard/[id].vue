@@ -128,7 +128,7 @@ function onTournamentChange(event: Event) {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--muted-strong);
+  background: var(--surface-overlay-06);
   border-left: 3px solid var(--yellow);
   padding: 12px 16px;
   margin-bottom: 28px;
