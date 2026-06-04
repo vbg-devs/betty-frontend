@@ -32,7 +32,12 @@
           <button class="button button--danger" @click="cancelImageSelection">Cancel</button>
         </div>
       </div>
-      <div v-for="msg in messages" :key="msg.id" class="meme-board__message">
+      <div
+        v-for="msg in messages"
+        :key="msg.id"
+        class="meme-board__message"
+        :class="{ 'meme-board__message--mine': msg.user_id === userId }"
+      >
         <div class="row">
           <div class="column column--wrap">
             <UserBadge :user="getUser(msg.user_id)" />
@@ -42,6 +47,30 @@
               <strong>{{ getUser(msg.user_id).nickname || getUser(msg.user_id).name }}</strong>
               - {{ formatDate(msg.created_at) }}
             </div>
+            <button
+              v-if="msg.user_id === userId"
+              class="meme-board__delete"
+              :disabled="deletingId === msg.id"
+              aria-label="Delete message"
+              @click="confirmDeleteMessage(msg)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path
+                  d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                ></path>
+              </svg>
+            </button>
             <template v-if="msg.image_url">
               <img :src="msg.image_url" class="message__image" />
             </template>
@@ -274,6 +303,7 @@ const { members = [] } = defineProps<{
 const route = useRoute();
 const userStore = useUserStore();
 const { authFetch } = useApi();
+const { alert: notify, confirm: confirmDialog } = useNotify();
 
 const gf = new GiphyFetch('EUSX9DmpuBQafmcrIeKL9jNl5ES91X9r');
 
@@ -283,9 +313,11 @@ const messages = ref<any[]>([]);
 const loading = ref(false);
 const images = ref<any[]>([]);
 const selectedImageIndex = ref(0);
+const deletingId = ref<number | null>(null);
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const user = computed(() => userStore.profile);
+const userId = computed(() => userStore.id);
 
 const selectedPreviewImage = computed(() => {
   return images.value[selectedImageIndex.value]?.images.original.url;
@@ -361,6 +393,38 @@ function selectImage() {
     image: selectedPreviewImage.value,
   };
   postMessage(newMessage);
+}
+
+function confirmDeleteMessage(msg: { id: number; user_id: number }) {
+  if (msg.user_id !== userId.value) return;
+  confirmDialog({
+    title: 'Delete message',
+    question: 'Delete this message? This cannot be undone.',
+    onConfirm: () => deleteMessage(msg.id),
+  });
+}
+
+async function deleteMessage(id: number) {
+  if (deletingId.value === id) return;
+  deletingId.value = id;
+  try {
+    await authFetch(`/messageboard/${id}`, { method: 'DELETE' });
+    messages.value = messages.value.filter((m) => m.id !== id);
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.status;
+    if (status === 404) {
+      // Already gone — just drop it locally and don't bother the user.
+      messages.value = messages.value.filter((m) => m.id !== id);
+      return;
+    }
+    notify({
+      title: 'Could not delete message',
+      message: String(err),
+      state: 'error',
+    });
+  } finally {
+    deletingId.value = null;
+  }
 }
 
 async function sendMessage() {
@@ -451,6 +515,7 @@ async function sendMessage() {
 }
 
 .meme-board__message {
+  position: relative;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-left: 2px solid var(--orange);
@@ -508,6 +573,47 @@ async function sendMessage() {
   color: var(--cream);
   font-weight: 800;
   margin-right: 4px;
+}
+
+.meme-board__delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.meme-board__message--mine:hover .meme-board__delete,
+.meme-board__delete:focus-visible {
+  opacity: 1;
+}
+
+.meme-board__delete:hover {
+  color: var(--orange);
+  background: rgba(255, 90, 58, 0.12);
+}
+
+.meme-board__delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (hover: none) {
+  .meme-board__delete {
+    opacity: 1;
+  }
 }
 
 .meme-board .column {
