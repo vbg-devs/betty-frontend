@@ -92,14 +92,6 @@ function onTournamentChange(event: Event) {
 
 <style scoped>
 .leaderboard-page {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -136,7 +128,7 @@ function onTournamentChange(event: Event) {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 250, 235, 0.06);
+  background: var(--muted-strong);
   border-left: 3px solid var(--yellow);
   padding: 12px 16px;
   margin-bottom: 28px;
@@ -228,9 +220,9 @@ function onTournamentChange(event: Event) {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--surface-overlay-10);
   border-radius: 2px;
   font-family: inherit;
   font-size: 14px;
@@ -245,7 +237,7 @@ function onTournamentChange(event: Event) {
 .picker__select:hover,
 .picker__select:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-overlay-08);
   outline: none;
 }
 
@@ -270,7 +262,7 @@ function onTournamentChange(event: Event) {
   align-items: baseline;
   gap: 12px;
   padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--surface-overlay-08);
   margin-top: 4px;
 }
 
@@ -287,7 +279,7 @@ function onTournamentChange(event: Event) {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.4px;
-  color: rgba(255, 250, 235, 0.7);
+  color: var(--muted-strong);
 }
 
 @media (max-width: 800px) {

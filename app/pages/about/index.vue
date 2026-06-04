@@ -128,14 +128,6 @@
 
 <style scoped>
 .about-page {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -359,7 +351,7 @@
   font-size: 56px;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: rgba(255, 250, 235, 0.12);
+  color: var(--muted-strong);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   margin: 6px 0 2px;

@@ -59,12 +59,6 @@ function kickerFor(n: { type?: string; state?: string }) {
 
 <style scoped>
 .notification-container {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   top: 120px;
@@ -99,7 +93,7 @@ function kickerFor(n: { type?: string; state?: string }) {
   padding: 16px 18px;
   box-shadow:
     0 20px 40px -16px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 0 0 1px var(--surface-overlay-04);
   position: relative;
   border-left: 3px solid var(--orange);
   animation: slide-in 0.25s ease-out;
@@ -191,7 +185,7 @@ function kickerFor(n: { type?: string; state?: string }) {
 }
 
 .notification__close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--cream);
 }
 
@@ -223,7 +217,7 @@ function kickerFor(n: { type?: string; state?: string }) {
 }
 
 .btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
 }
 </style>

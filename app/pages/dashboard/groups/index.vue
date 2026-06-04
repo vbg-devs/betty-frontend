@@ -151,17 +151,6 @@ function handleCloseCreateGroupModal() {
 
 <style scoped>
 .my-groups {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --indigo-deep: #141938;
-  --cream: #fffaeb;
-  --cream-soft: #fff5e4;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -198,7 +187,7 @@ function handleCloseCreateGroupModal() {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 250, 235, 0.06);
+  background: var(--muted-strong);
   border-left: 3px solid var(--yellow);
   padding: 12px 16px;
   margin-bottom: 28px;
@@ -394,7 +383,7 @@ function handleCloseCreateGroupModal() {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.4px;
-  color: var(--cream);
+  color: #fff;
   background: rgba(20, 25, 56, 0.78);
   padding: 5px 9px;
   border-radius: 2px;
@@ -403,7 +392,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .group-card__public-dot {
-  color: var(--green);
+  color: #9bff3d;
 }
 
 .group-card__body {
@@ -516,7 +505,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .kicker--muted-dim {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 .kicker--muted-light {

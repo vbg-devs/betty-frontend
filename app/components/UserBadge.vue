@@ -80,7 +80,7 @@ const badgeColor = computed(() => {
 .user-badge {
   height: 42px;
   width: 42px;
-  border: 5px solid rgba(0, 0, 0, 0.08);
+  border: 5px solid var(--surface-overlay-10);
   border-radius: 50%;
   transition: border-color ease 0.3s;
   display: inline-block;
@@ -90,7 +90,7 @@ const badgeColor = computed(() => {
     cursor: pointer;
 
     &:hover {
-      border-color: rgba(0, 0, 0, 0.2);
+      border-color: var(--muted);
     }
   }
 }

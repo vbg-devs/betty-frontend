@@ -124,11 +124,6 @@ async function save() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 999;
@@ -176,7 +171,7 @@ async function save() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -247,8 +242,8 @@ async function save() {
 
 .field__input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 15px;
@@ -266,7 +261,7 @@ async function save() {
 
 .field__input:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 /* ===== Form error ===== */

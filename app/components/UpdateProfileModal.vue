@@ -84,6 +84,32 @@
             </select>
           </label>
 
+          <div class="field">
+            <span class="field__label">Appearance</span>
+            <div class="theme-toggle" role="radiogroup" aria-label="Theme">
+              <button
+                type="button"
+                class="theme-toggle__btn"
+                :class="{ 'theme-toggle__btn--active': !isLight }"
+                role="radio"
+                :aria-checked="!isLight"
+                @click="setTheme(false)"
+              >
+                Dark
+              </button>
+              <button
+                type="button"
+                class="theme-toggle__btn"
+                :class="{ 'theme-toggle__btn--active': isLight }"
+                role="radio"
+                :aria-checked="isLight"
+                @click="setTheme(true)"
+              >
+                Light
+              </button>
+            </div>
+          </div>
+
           <button
             type="submit"
             :disabled="saving || !canSave"
@@ -115,6 +141,15 @@ const firebaseImageUrl = ref<string | null>(null);
 const country = ref<string | null>(null);
 const saving = ref(false);
 const id = ref<number | null>(null);
+const isLight = ref(false);
+
+const THEME_KEY = 'betty-theme';
+
+function setTheme(light: boolean) {
+  isLight.value = light;
+  document.documentElement.classList.toggle('theme-light', light);
+  window.localStorage.setItem(THEME_KEY, light ? 'light' : 'dark');
+}
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadingImage = ref(false);
@@ -143,6 +178,7 @@ const hasCustomImage = computed(() => {
 
 onMounted(async () => {
   document.body.classList.add('no-scroll');
+  isLight.value = document.documentElement.classList.contains('theme-light');
   loadCountries();
   try {
     const data = await authFetch<any>('/user/me');
@@ -292,13 +328,6 @@ async function save() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 999;
@@ -346,7 +375,7 @@ async function save() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -387,7 +416,7 @@ async function save() {
 }
 
 .modal__close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--cream);
 }
 
@@ -534,8 +563,8 @@ async function save() {
 
 .field__input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 15px;
@@ -553,7 +582,7 @@ async function save() {
 
 .field__input:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 .field__input--select {
@@ -568,6 +597,43 @@ async function save() {
 .field__input--select option {
   background: var(--indigo-dark);
   color: var(--cream);
+}
+
+/* ===== Theme toggle ===== */
+.theme-toggle {
+  display: inline-flex;
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
+  border-radius: 2px;
+  padding: 3px;
+  width: 100%;
+}
+
+.theme-toggle__btn {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+  padding: 10px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.theme-toggle__btn:hover {
+  color: var(--cream);
+}
+
+.theme-toggle__btn--active {
+  background: rgba(255, 90, 58, 0.18);
+  color: var(--orange);
 }
 
 /* ===== Button ===== */

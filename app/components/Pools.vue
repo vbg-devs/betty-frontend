@@ -222,11 +222,6 @@ function placedBetAwayTeam(game: any) {
 
 <style scoped>
 .pools {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 }
 
 .games {
@@ -287,7 +282,7 @@ function placedBetAwayTeam(game: any) {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--muted-strong);
   border-radius: 2px;
   font-size: 11px;

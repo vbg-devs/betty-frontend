@@ -578,20 +578,15 @@ async function sendMessage() {
 
 <style scoped>
 .meme-board {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 }
 
 .meme-board__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--surface-overlay-06);
 }
 
 .kicker {
@@ -636,15 +631,15 @@ async function sendMessage() {
 }
 
 .meme-board__footer {
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--surface-overlay-06);
+  margin-top: 4px;
 }
 
 .meme-board__message {
   position: relative;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--surface-overlay-04);
   border-left: 2px solid var(--orange);
   border-radius: 2px;
   padding: 16px 18px;
@@ -663,9 +658,9 @@ async function sendMessage() {
 
 .meme-board__input {
   width: 100%;
-  padding: 14px 48px 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 44px 12px 14px;
+  background: var(--surface-overlay-04);
+  border: 1px solid var(--surface-overlay-08);
   color: var(--cream);
   border-radius: 2px;
   outline: none;
@@ -682,7 +677,7 @@ async function sendMessage() {
 
 .meme-board__input:focus {
   border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
 }
 
 .meme-board .row {
@@ -786,8 +781,8 @@ async function sendMessage() {
 }
 
 .gif-selector {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-04);
+  border: 1px solid var(--surface-overlay-08);
   padding: 14px;
   border-radius: 2px;
   margin-bottom: 14px;
@@ -826,7 +821,7 @@ async function sendMessage() {
 }
 
 .gif-selector__buttons :deep(.button--action) {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
 }
 
