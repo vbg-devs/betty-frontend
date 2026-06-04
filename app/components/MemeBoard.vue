@@ -77,6 +77,57 @@
             <template v-else>
               <p>{{ msg.body }}</p>
             </template>
+            <div class="reactions">
+              <button
+                v-for="group in groupReactions(msg)"
+                :key="group.emoji_id"
+                type="button"
+                class="reactions__chip"
+                :class="{ 'reactions__chip--mine': group.reactedByMe }"
+                @click="toggleReaction(msg, group.emoji_id)"
+              >
+                <span class="reactions__emoji">{{ group.emoji_id }}</span>
+                <span class="reactions__count">{{ group.count }}</span>
+              </button>
+              <div class="reactions__add">
+                <button
+                  type="button"
+                  class="reactions__add-button"
+                  aria-label="Add reaction"
+                  @click.stop="togglePicker(msg.id)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                    <line x1="19" y1="3" x2="19" y2="7" />
+                    <line x1="17" y1="5" x2="21" y2="5" />
+                  </svg>
+                </button>
+                <div v-if="pickerOpenFor === msg.id" class="reactions__picker">
+                  <button
+                    v-for="emoji in REACTION_EMOJIS"
+                    :key="emoji"
+                    type="button"
+                    class="reactions__picker-item"
+                    @click.stop="toggleReaction(msg, emoji)"
+                  >
+                    {{ emoji }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -295,6 +346,7 @@
 <script setup lang="ts">
 import { formatDistance } from 'date-fns';
 import { GiphyFetch } from '@giphy/js-fetch-api';
+import type { GroupMessage } from '~/types';
 
 const { members = [] } = defineProps<{
   members?: any[];
@@ -307,13 +359,16 @@ const { alert: notify, confirm: confirmDialog } = useNotify();
 
 const gf = new GiphyFetch('EUSX9DmpuBQafmcrIeKL9jNl5ES91X9r');
 
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '🔥', '🎉', '😮', '😢', '👀'];
+
 const q = ref('');
 const useGiphy = ref(false);
-const messages = ref<any[]>([]);
+const messages = ref<GroupMessage[]>([]);
 const loading = ref(false);
 const images = ref<any[]>([]);
 const selectedImageIndex = ref(0);
 const deletingId = ref<number | null>(null);
+const pickerOpenFor = ref<number | null>(null);
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const user = computed(() => userStore.profile);
@@ -326,6 +381,7 @@ const selectedPreviewImage = computed(() => {
 onMounted(() => {
   timer = setInterval(loadMessages, 10000);
   loadMessages();
+  document.addEventListener('click', handleDocumentClick);
 });
 
 onBeforeUnmount(() => {
@@ -333,14 +389,85 @@ onBeforeUnmount(() => {
     clearInterval(timer);
     timer = null;
   }
+  document.removeEventListener('click', handleDocumentClick);
 });
 
 async function loadMessages() {
   try {
-    const data = await authFetch<any[]>(`/messageboard/${route.params.id}`);
-    messages.value = data;
+    const data = await authFetch<GroupMessage[]>(`/messageboard/${route.params.id}`);
+    messages.value = data.map((m) => ({ ...m, reactions: m.reactions ?? [] }));
   } catch (err) {
     console.error(err);
+  }
+}
+
+interface ReactionGroup {
+  emoji_id: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
+function groupReactions(message: GroupMessage): ReactionGroup[] {
+  const map = new Map<string, ReactionGroup>();
+  for (const r of message.reactions) {
+    const existing = map.get(r.emoji_id);
+    if (existing) {
+      existing.count += 1;
+      if (r.user_id === user.value?.id) existing.reactedByMe = true;
+    } else {
+      map.set(r.emoji_id, {
+        emoji_id: r.emoji_id,
+        count: 1,
+        reactedByMe: r.user_id === user.value?.id,
+      });
+    }
+  }
+  return Array.from(map.values());
+}
+
+function togglePicker(messageId: number) {
+  pickerOpenFor.value = pickerOpenFor.value === messageId ? null : messageId;
+}
+
+function handleDocumentClick(ev: MouseEvent) {
+  if (pickerOpenFor.value === null) return;
+  const target = ev.target as HTMLElement | null;
+  if (target?.closest('.reactions, .reactions__add')) return;
+  pickerOpenFor.value = null;
+}
+
+async function toggleReaction(message: GroupMessage, emoji: string) {
+  const userId = user.value?.id;
+  if (!userId) return;
+  const mine = message.reactions.find((r) => r.user_id === userId);
+  pickerOpenFor.value = null;
+
+  if (mine && mine.emoji_id === emoji) {
+    const prev = message.reactions;
+    message.reactions = prev.filter((r) => r.user_id !== userId);
+    try {
+      await authFetch(`/messageboard/${message.id}/reaction`, { method: 'DELETE' });
+    } catch (err) {
+      console.error(err);
+      message.reactions = prev;
+    }
+    return;
+  }
+
+  const prev = message.reactions;
+  const others = prev.filter((r) => r.user_id !== userId);
+  message.reactions = [
+    ...others,
+    { user_id: userId, emoji_id: emoji, created_at: new Date().toISOString() },
+  ];
+  try {
+    await authFetch(`/messageboard/${message.id}/reaction`, {
+      method: 'PUT',
+      body: { emoji_id: emoji },
+    });
+  } catch (err) {
+    console.error(err);
+    message.reactions = prev;
   }
 }
 
@@ -720,5 +847,112 @@ async function sendMessage() {
   max-width: 100%;
   border-radius: 2px;
   display: block;
+}
+
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.reactions__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.reactions__chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.reactions__chip--mine {
+  background: rgba(255, 90, 58, 0.16);
+  border-color: rgba(255, 90, 58, 0.5);
+  color: var(--orange);
+}
+
+.reactions__emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.reactions__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.reactions__add {
+  position: relative;
+  display: inline-flex;
+}
+
+.reactions__add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.reactions__add-button:hover {
+  color: var(--cream);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.reactions__picker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  background: var(--indigo-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.reactions__picker-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.reactions__picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 </style>
