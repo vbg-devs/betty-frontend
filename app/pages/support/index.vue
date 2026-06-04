@@ -223,8 +223,8 @@ async function submit() {
 
 .form__textarea {
   width: 100%;
-  background: var(--muted-strong);
-  border: 1px solid var(--muted-strong);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   border-radius: 2px;
   color: var(--cream);
   font-family: inherit;
@@ -233,6 +233,7 @@ async function submit() {
   padding: 14px 16px;
   resize: vertical;
   min-height: 120px;
+  outline: none;
   transition:
     border-color 0.15s ease,
     background 0.15s ease;
@@ -243,9 +244,8 @@ async function submit() {
 }
 
 .form__textarea:focus {
-  outline: none;
-  border-color: var(--green);
-  background: var(--muted-strong);
+  border-color: var(--orange);
+  background: var(--surface-overlay-08);
 }
 
 .form__textarea:disabled {
