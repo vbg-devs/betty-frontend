@@ -149,12 +149,6 @@ function clear() {
 
 <style scoped>
 .tester {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   bottom: 20px;
@@ -171,7 +165,7 @@ function clear() {
 .tester__toggle {
   background: var(--indigo-dark);
   color: var(--cream);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--surface-overlay-10);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -187,7 +181,7 @@ function clear() {
 
 .tester__toggle:hover {
   transform: translateY(-1px);
-  background: #262e5e;
+  background: color-mix(in srgb, var(--indigo-dark) 92%, var(--ink));
 }
 
 .tester__panel {
@@ -201,7 +195,7 @@ function clear() {
   width: 280px;
   box-shadow:
     0 24px 60px -20px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 0 0 1px var(--surface-overlay-04);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -233,8 +227,8 @@ function clear() {
 }
 
 .t-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 10px;
@@ -249,7 +243,7 @@ function clear() {
 }
 
 .t-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-10);
   border-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -273,7 +267,7 @@ function clear() {
 }
 
 .t-btn--clear:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   color: var(--cream);
 }
 </style>

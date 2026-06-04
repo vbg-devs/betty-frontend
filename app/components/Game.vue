@@ -161,15 +161,6 @@ const isLive = computed(() => {
 
 <style scoped>
 .game {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #262e5e;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
-
   position: relative;
   background: var(--indigo-dark);
   border: 1px solid transparent;
@@ -191,7 +182,7 @@ const isLive = computed(() => {
 }
 
 .game--clickable:hover {
-  background: var(--indigo-deeper);
+  background: color-mix(in srgb, var(--indigo-dark) 92%, var(--ink));
   transform: translateY(-1px);
 }
 
@@ -246,8 +237,8 @@ const isLive = computed(() => {
   height: 56px;
   border-radius: 50%;
   margin: 0 auto 8px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  background-color: rgba(255, 255, 255, 0.06);
+  border: 2px solid var(--surface-overlay-08);
+  background-color: var(--surface-overlay-06);
 }
 
 .team__name {
@@ -282,7 +273,7 @@ const isLive = computed(() => {
 .score__divider {
   font-weight: 400;
   font-size: 18px;
-  color: rgba(255, 250, 235, 0.35);
+  color: var(--muted-strong);
   line-height: 1;
 }
 

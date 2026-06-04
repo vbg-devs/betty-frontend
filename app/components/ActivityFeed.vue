@@ -226,13 +226,6 @@ function clearAll() {
 
 <style scoped>
 .feed {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   font-family:
     'Inter',
@@ -281,7 +274,7 @@ function clearAll() {
 }
 
 .clear-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
 }
 
@@ -319,7 +312,7 @@ function clearAll() {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--orange);
 }
 

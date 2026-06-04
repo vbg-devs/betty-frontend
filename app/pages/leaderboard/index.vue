@@ -44,7 +44,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 250, 235, 0.6);
+  color: var(--muted-strong);
 }
 
 .kicker {

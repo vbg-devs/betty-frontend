@@ -100,13 +100,6 @@ async function submit() {
 
 <style scoped>
 .support-page {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -230,8 +223,8 @@ async function submit() {
 
 .form__textarea {
   width: 100%;
-  background: rgba(255, 250, 235, 0.06);
-  border: 1px solid rgba(255, 250, 235, 0.12);
+  background: var(--muted-strong);
+  border: 1px solid var(--muted-strong);
   border-radius: 2px;
   color: var(--cream);
   font-family: inherit;
@@ -252,7 +245,7 @@ async function submit() {
 .form__textarea:focus {
   outline: none;
   border-color: var(--green);
-  background: rgba(255, 250, 235, 0.09);
+  background: var(--muted-strong);
 }
 
 .form__textarea:disabled {

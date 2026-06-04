@@ -678,16 +678,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .group-page {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --indigo-deep: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -734,8 +724,8 @@ onBeforeUnmount(() => {
 }
 
 .hero__upload-btn {
-  background: rgba(255, 250, 235, 0.08);
-  border: 1px solid rgba(255, 250, 235, 0.22);
+  background: var(--muted-strong);
+  border: 1px solid var(--muted-strong);
   color: var(--cream);
   font-family: inherit;
   font-size: 11px;
@@ -816,7 +806,7 @@ onBeforeUnmount(() => {
 }
 
 .stat--ghost {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
 }
 
@@ -856,7 +846,7 @@ onBeforeUnmount(() => {
 
 /* ProgressBar style override */
 .stat__progress :deep(.progress-bar) {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-overlay-10);
   height: 6px;
 }
 .stat__progress :deep(.progress-bar__progress) {
@@ -910,7 +900,7 @@ onBeforeUnmount(() => {
   margin: 28px auto 24px;
   display: flex;
   gap: 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--surface-overlay-08);
 }
 
 .tab {
@@ -922,7 +912,7 @@ onBeforeUnmount(() => {
   font-weight: 800;
   letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
   padding: 12px 4px;
   cursor: pointer;
   transition: color 0.18s ease;
@@ -970,7 +960,7 @@ onBeforeUnmount(() => {
 
 .welcome {
   position: relative;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   border-left: 3px solid var(--orange);
   padding: 18px 22px 20px;
   border-radius: 2px;
@@ -1029,7 +1019,7 @@ onBeforeUnmount(() => {
 .podium__slot {
   flex: 1 1 0;
   min-width: 0;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   border-radius: 2px;
   padding: 20px 14px 18px;
   display: flex;
@@ -1071,7 +1061,7 @@ onBeforeUnmount(() => {
 }
 
 .podium__slot--3 .podium__place {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 .podium__people {
@@ -1100,11 +1090,11 @@ onBeforeUnmount(() => {
 
 .podium__person:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
 }
 
 .podium__slot--1 .podium__person:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-overlay-10);
 }
 
 .podium__name {
@@ -1197,7 +1187,7 @@ onBeforeUnmount(() => {
 /* ===== Invite link ===== */
 .invite {
   display: flex;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -1275,13 +1265,13 @@ onBeforeUnmount(() => {
 }
 
 .roster__row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-overlay-04);
 }
 
 .roster__rank {
   font-size: 13px;
   font-weight: 900;
-  color: rgba(255, 250, 235, 0.55);
+  color: var(--muted-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1355,7 +1345,7 @@ onBeforeUnmount(() => {
 }
 
 .visibility__btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   border-color: var(--orange);
   color: var(--orange);
 }
@@ -1377,7 +1367,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--surface-overlay-06);
   font-size: 13px;
 }
 
@@ -1436,7 +1426,7 @@ onBeforeUnmount(() => {
 }
 
 .kicker--muted-light {
-  color: rgba(255, 250, 235, 0.7);
+  color: var(--muted-strong);
 }
 
 /* ===== Tab section wrappers ===== */

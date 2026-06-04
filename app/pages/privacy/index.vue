@@ -378,12 +378,6 @@
 
 <style scoped>
 .privacy-page {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:

@@ -338,17 +338,6 @@ function handleCloseCreateGroupModal() {
 
 <style scoped>
 .dashboard {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --indigo-deep: #141938;
-  --cream: #fffaeb;
-  --cream-soft: #fff5e4;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -469,7 +458,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .feedback-banner:hover {
-  background: #1a2046;
+  background: color-mix(in srgb, var(--indigo-deep) 88%, var(--ink));
 }
 
 .feedback-banner:hover .feedback-banner__arrow {
@@ -497,7 +486,7 @@ function handleCloseCreateGroupModal() {
 .feedback-banner__arrow {
   font-size: 16px;
   font-weight: 800;
-  color: rgba(255, 250, 235, 0.55);
+  color: var(--muted-strong);
   transition:
     transform 0.15s ease,
     color 0.15s ease;
@@ -526,7 +515,7 @@ function handleCloseCreateGroupModal() {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--surface-overlay-08);
   margin-bottom: 22px;
   flex-wrap: wrap;
 }
@@ -538,7 +527,7 @@ function handleCloseCreateGroupModal() {
 
 .grouping-toggle {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   border-radius: 2px;
   padding: 3px;
   margin-bottom: 6px;
@@ -552,7 +541,7 @@ function handleCloseCreateGroupModal() {
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.55);
+  color: var(--muted-strong);
   padding: 7px 12px;
   border-radius: 2px;
   cursor: pointer;
@@ -579,7 +568,7 @@ function handleCloseCreateGroupModal() {
   font-weight: 800;
   letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.55);
+  color: var(--muted-strong);
   padding: 12px 4px;
   cursor: pointer;
   display: inline-flex;
@@ -613,7 +602,7 @@ function handleCloseCreateGroupModal() {
   letter-spacing: 1.2px;
   padding: 2px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--muted-strong);
 }
 
@@ -803,7 +792,7 @@ function handleCloseCreateGroupModal() {
   padding: 14px 22px;
   text-decoration: none;
   color: var(--cream);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--surface-overlay-04);
   transition: background 0.15s ease;
 }
 
@@ -812,7 +801,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .group-stack__row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
 }
 
 .group-stack__row:hover .group-stack__arrow {
@@ -848,7 +837,7 @@ function handleCloseCreateGroupModal() {
 .group-stack__arrow {
   font-size: 16px;
   font-weight: 800;
-  color: rgba(255, 250, 235, 0.45);
+  color: var(--muted-strong);
   transition:
     transform 0.15s ease,
     color 0.15s ease;
@@ -949,7 +938,7 @@ function handleCloseCreateGroupModal() {
 }
 
 .kicker--muted-dim {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 .kicker--muted-light {

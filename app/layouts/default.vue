@@ -35,7 +35,7 @@
 .site-footer {
   margin-top: 56px;
   padding: 24px 0 12px;
-  border-top: 1px solid rgba(255, 250, 235, 0.08);
+  border-top: 1px solid var(--surface-overlay-08);
   font-family:
     'Inter',
     system-ui,
@@ -59,7 +59,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.6px;
-  color: rgba(255, 250, 235, 0.5);
+  color: var(--muted);
 }
 
 .site-footer__links {
@@ -73,17 +73,17 @@
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.7);
+  color: var(--muted-strong);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .site-footer__link:hover {
-  color: #fffaeb;
+  color: var(--cream);
 }
 
 .site-footer__dot {
-  color: rgba(255, 250, 235, 0.3);
+  color: var(--muted);
   font-weight: 700;
 }
 </style>
@@ -114,6 +114,9 @@ function setUser(u: UserProfile | null) {
 }
 
 onMounted(() => {
+  const storedTheme = window.localStorage.getItem('betty-theme');
+  document.documentElement.classList.toggle('theme-light', storedTheme === 'light');
+
   if (isOpenPage.value) {
     loading.value = false;
   }

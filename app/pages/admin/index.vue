@@ -273,16 +273,6 @@ function selectTournament(tournament: Tournament) {
 
 <style scoped>
 .admin {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --indigo-deep: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -593,7 +583,7 @@ function selectTournament(tournament: Tournament) {
 .score-col__divider {
   font-size: 32px;
   font-weight: 400;
-  color: rgba(255, 250, 235, 0.35);
+  color: var(--muted-strong);
   padding-bottom: 16px;
 }
 
@@ -604,7 +594,7 @@ function selectTournament(tournament: Tournament) {
   width: 100%;
   background: var(--indigo-deep);
   color: var(--cream);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--surface-overlay-08);
   border-radius: 2px;
   padding: 10px 8px;
   font-family: inherit;
@@ -642,7 +632,7 @@ input[type='number'] {
 }
 
 .kicker--muted-dim {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 /* ===== Buttons ===== */

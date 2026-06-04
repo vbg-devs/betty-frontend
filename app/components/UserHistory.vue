@@ -94,14 +94,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 997;
@@ -149,7 +141,7 @@ onBeforeUnmount(() => {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -181,7 +173,7 @@ onBeforeUnmount(() => {
 }
 
 .modal__close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--cream);
 }
 
@@ -234,7 +226,7 @@ onBeforeUnmount(() => {
 }
 
 .kicker--muted-light {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 .modal__body {

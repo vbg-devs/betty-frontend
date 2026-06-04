@@ -182,10 +182,6 @@ function placedBetAwayTeam(game: any) {
 
 <style scoped>
 .message {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --yellow: #ffd84a;
 
   background: var(--indigo-dark);
   border-left: 3px solid rgba(255, 255, 255, 0.15);
@@ -206,7 +202,7 @@ function placedBetAwayTeam(game: any) {
   font-weight: 800;
   letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.7);
+  color: var(--muted-strong);
   text-align: left;
 }
 
@@ -239,8 +235,8 @@ function placedBetAwayTeam(game: any) {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 250, 235, 0.7);
+  background: var(--surface-overlay-08);
+  color: var(--muted-strong);
   border-radius: 2px;
 }
 
