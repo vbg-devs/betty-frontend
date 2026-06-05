@@ -47,6 +47,7 @@
         <button class="t-btn" @click="fire('group_joined')">JOINED GROUP</button>
         <button class="t-btn" @click="fire('group_left')">LEFT GROUP</button>
         <button class="t-btn" @click="fire('group_created')">NEW GROUP</button>
+        <button class="t-btn" @click="fire('group_visibility_changed')">VISIBILITY</button>
         <button class="t-btn" @click="fire('user_register')">NEW USER</button>
         <button class="t-btn t-btn--all" @click="fireAll">FIRE ONE OF EACH ✨</button>
         <button class="t-btn t-btn--clear" @click="clear">CLEAR FEED</button>
@@ -63,6 +64,7 @@ const userStore = useUserStore();
 
 const open = ref(false);
 let nextId = 100000;
+let visibilityToggle = true;
 
 function pickGameId(): number | null {
   const g = (gameStore as any).all?.value ?? (gameStore as any).all;
@@ -108,6 +110,14 @@ function payloadFor(type: string): any {
       };
     case 'group_joined':
       return { group_id: groupId ?? 1, user_id: userId };
+    case 'group_visibility_changed': {
+      const isPublic = visibilityToggle;
+      visibilityToggle = !visibilityToggle;
+      return {
+        group_id: groupId ?? 1,
+        public_at: isPublic ? new Date().toISOString() : null,
+      };
+    }
     case 'user_register':
       return { name: 'Bjorn O.' };
     case 'group_left':
@@ -137,6 +147,7 @@ function fireAll() {
     'group_joined',
     'group_left',
     'group_created',
+    'group_visibility_changed',
     'user_register',
   ];
   types.forEach((t, i) => setTimeout(() => fire(t), i * 200));
