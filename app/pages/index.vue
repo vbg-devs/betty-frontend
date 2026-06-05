@@ -37,6 +37,36 @@
       </div>
     </section>
 
+    <!-- What is Betty -->
+    <section class="what">
+      <div class="what__grid">
+        <div class="what__lead">
+          <span class="kicker kicker--accent">★ WHAT IT IS</span>
+          <h2 class="what__title">
+            A SOCIAL<br />
+            <span class="t-orange">PREDICTIONS</span><br />
+            GAME.
+          </h2>
+        </div>
+        <div class="what__body">
+          <p class="what__copy">
+            Betty is a free game for tournament predictions. Pick a cup, gather your crew, and
+            bet on exact match results. Each group sets its own house rules, and points roll in
+            as games go final.
+          </p>
+          <p class="what__copy what__copy--muted">
+            No money. No spreadsheets. Just bragging rights, settled in public — and a
+            permanent record of who actually knew their football.
+          </p>
+          <ul class="what__points">
+            <li><strong>Free forever.</strong> No paywalls, no ads, no nonsense.</li>
+            <li><strong>Your house rules.</strong> Each group sets its own scoring.</li>
+            <li><strong>Receipts forever.</strong> Leaderboards remember every call.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- Steps: Set / Bet / Win -->
     <section id="how-it-works" class="steps">
       <article class="step">
@@ -730,6 +760,102 @@ async function submitEmailAuth() {
   }
   .hero__lede {
     font-size: 16px;
+  }
+}
+
+/* ===== What it is ===== */
+.what {
+  padding: 72px 56px 64px;
+  border-bottom: 1px solid rgba(255, 250, 235, 0.15);
+}
+
+.what__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.what__lead {
+  position: sticky;
+  top: 24px;
+}
+
+.what__title {
+  font-size: clamp(40px, 6.5vw, 84px);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin: 14px 0 0;
+  color: var(--cream);
+}
+
+.what__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.what__copy {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--cream);
+  margin: 0;
+  max-width: 560px;
+}
+
+.what__copy--muted {
+  color: var(--body-muted);
+  font-size: 17px;
+}
+
+.what__points {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 250, 235, 0.15);
+  padding-top: 20px;
+}
+
+.what__points li {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--body-muted);
+  padding-left: 22px;
+  position: relative;
+}
+
+.what__points li::before {
+  content: '★';
+  color: var(--orange);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 800;
+}
+
+.what__points strong {
+  color: var(--cream);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .what {
+    padding: 48px 20px 40px;
+  }
+  .what__grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .what__lead {
+    position: static;
+  }
+  .what__copy {
+    font-size: 17px;
   }
 }
 
