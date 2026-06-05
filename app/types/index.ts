@@ -71,6 +71,27 @@ export interface PublicGroupListResponse {
   next_cursor: string;
 }
 
+export interface GroupPlacement {
+  id: number;
+  name: string;
+  tournament_id: number;
+  tournament_name: string;
+  tournament_image_url: string | null;
+  header_image_url: string | null;
+  bet_mode: number;
+  public_at: string | null;
+  created_at: string;
+  score: number;
+  normalized_score: number;
+  placement: number;
+  member_count: number;
+}
+
+export interface UserGroupsResponse {
+  user: UserProfile;
+  groups: GroupPlacement[];
+}
+
 export interface GroupMember {
   user_id: number;
   name: string;

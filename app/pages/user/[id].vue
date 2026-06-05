@@ -18,8 +18,8 @@
                   <h1 class="hero__title">{{ profile.name?.toUpperCase() }}</h1>
                   <div class="hero__meta-line">
                     <span class="kicker kicker--muted-light">
-                      {{ sharedGroups.length }}
-                      {{ sharedGroups.length === 1 ? 'SHARED GROUP' : 'SHARED GROUPS' }}
+                      {{ groups.length }}
+                      {{ groups.length === 1 ? 'ACTIVE GROUP' : 'ACTIVE GROUPS' }}
                     </span>
                     <span class="dot">·</span>
                     <span class="kicker kicker--green">{{ totalPoints }} PTS TOTAL</span>
@@ -33,15 +33,21 @@
 
               <div class="hero__side">
                 <div class="stat">
-                  <span class="stat__kicker">BEST FINISH</span>
+                  <span class="stat__kicker">BEST PLACE</span>
                   <div class="stat__value">
-                    {{ bestPlace ? `#${bestPlace}` : '–' }}
+                    {{ bestEntry ? `#${bestEntry.placement}` : '–' }}
                   </div>
                   <div class="stat__sub">
-                    {{ bestPlaceGroup ? bestPlaceGroup.toUpperCase() : 'NO GROUPS YET' }}
+                    {{ bestEntry ? bestEntry.name.toUpperCase() : 'NO GROUPS YET' }}
                   </div>
                 </div>
               </div>
+            </div>
+          </template>
+
+          <template v-else-if="loading">
+            <div class="hero__grid hero__grid--missing">
+              <span class="kicker kicker--muted-light">LOADING PROFILE…</span>
             </div>
           </template>
 
@@ -51,8 +57,7 @@
                 PLAYER<br /><span class="hero__title--orange">NOT FOUND.</span>
               </h1>
               <p class="hero__lede">
-                Betty couldn't find this player in any of your groups. They might play elsewhere —
-                or the link is off.
+                Betty couldn't find this player. They might have left — or the link is off.
               </p>
             </div>
           </template>
@@ -64,69 +69,61 @@
       <div class="section-head">
         <span class="kicker kicker--accent">● GROUPS</span>
         <h2 class="section-head__title">
-          {{ isYou ? 'WHERE YOU BET.' : 'WHERE YOU OVERLAP.' }}
+          {{ isYou ? 'WHERE YOU BET.' : 'THEIR GROUPS.' }}
         </h2>
         <p class="section-head__copy">
           {{
             isYou
               ? 'Every group you’re part of.'
-              : `Groups you and ${profile.name?.split(' ')[0]} are both in.`
+              : `Every active group ${profile.name?.split(' ')[0]} is part of.`
           }}
         </p>
       </div>
 
-      <div v-if="sharedGroups.length > 0" class="groups">
+      <div v-if="groups.length > 0" class="groups">
         <NuxtLink
-          v-for="entry in sharedGroups"
-          :key="entry.group.id"
-          :to="`/dashboard/groups/${entry.group.id}`"
+          v-for="entry in groups"
+          :key="entry.id"
+          :to="`/dashboard/groups/${entry.id}`"
           class="group-card"
         >
           <div
             class="group-card__image"
-            :class="{ 'group-card__image--has-header': entry.group.header_image_url }"
+            :class="{ 'group-card__image--has-header': entry.header_image_url }"
             :style="
-              entry.group.header_image_url
-                ? { backgroundImage: `url(${entry.group.header_image_url})` }
-                : entry.tournament
-                  ? { backgroundImage: `url(${entry.tournament.image_url})` }
+              entry.header_image_url
+                ? { backgroundImage: `url(${entry.header_image_url})` }
+                : entry.tournament_image_url
+                  ? { backgroundImage: `url(${entry.tournament_image_url})` }
                   : undefined
             "
           >
             <span
-              v-if="entry.group.header_image_url && entry.tournament"
+              v-if="entry.header_image_url && entry.tournament_image_url"
               class="group-card__tournament-icon"
-              :style="{ backgroundImage: `url(${entry.tournament.image_url})` }"
-              :aria-label="entry.tournament.name"
+              :style="{ backgroundImage: `url(${entry.tournament_image_url})` }"
+              :aria-label="entry.tournament_name"
             ></span>
             <span class="group-card__rank">
-              <span class="group-card__rank-place">#{{ entry.place }}</span>
+              <span class="group-card__rank-place">#{{ entry.placement }}</span>
               <span class="group-card__rank-label">
-                OF {{ entry.group.members.length }}
+                OF {{ entry.member_count }}
               </span>
-            </span>
-            <span
-              class="kicker"
-              :class="entry.ended ? 'group-card__status group-card__status--ended' : 'group-card__status group-card__status--active'"
-            >
-              {{ entry.ended ? '○ ENDED' : '● ACTIVE' }}
             </span>
           </div>
           <div class="group-card__body">
             <span class="kicker kicker--accent"
-              >★ {{ (entry.tournament?.name ?? 'TOURNAMENT').toUpperCase() }}</span
+              >★ {{ entry.tournament_name.toUpperCase() }}</span
             >
-            <h3 class="group-card__title">{{ entry.group.name }}</h3>
+            <h3 class="group-card__title">{{ entry.name }}</h3>
             <div class="group-card__meta">
               <span class="kicker kicker--muted-dim">
-                {{ entry.member.score }} PTS
+                {{ entry.score }} PTS
               </span>
               <span class="dot">·</span>
               <span class="kicker kicker--muted-dim">
-                {{ entry.group.members.length }} MEMBERS
+                {{ entry.member_count }} MEMBERS
               </span>
-              <span v-if="entry.isAuthor" class="dot">·</span>
-              <span v-if="entry.isAuthor" class="kicker kicker--green">★ AUTHOR</span>
             </div>
             <div class="group-card__cta">OPEN GROUP →</div>
           </div>
@@ -134,9 +131,9 @@
       </div>
 
       <div v-else class="empty">
-        <span class="kicker kicker--muted-dim">○ NO SHARED GROUPS</span>
+        <span class="kicker kicker--muted-dim">○ NO ACTIVE GROUPS</span>
         <p class="empty__copy">
-          You don't share any groups with this player yet.
+          {{ isYou ? 'You aren’t in any active groups yet.' : 'This player isn’t in any active groups right now.' }}
         </p>
       </div>
     </section>
@@ -144,83 +141,37 @@
 </template>
 
 <script setup lang="ts">
-import type { Group, GroupMember, Tournament } from '~/types';
+import type { GroupPlacement, UserGroupsResponse, UserProfile } from '~/types';
 
 const route = useRoute();
 const userStore = useUserStore();
-const groupStore = useGroupStore();
-const tournamentStore = useTournamentStore();
+const { authFetch } = useApi();
 
 const profileId = computed(() => String(route.params.id));
 const isYou = computed(() => profileId.value === String(userStore.id));
 
-interface GroupEntry {
-  group: Group;
-  tournament: Tournament | undefined;
-  member: GroupMember;
-  place: number;
-  ended: boolean;
-  isAuthor: boolean;
-}
-
-const sharedGroups = computed<GroupEntry[]>(() => {
-  const now = Date.now();
-  return groupStore.all
-    .map((group) => {
-      const member = group.members.find((m) => String(m.user_id) === profileId.value);
-      if (!member) return null;
-
-      const sorted = [...group.members].sort((a, b) => b.score - a.score);
-      let currentPlace = 0;
-      let place = 0;
-      sorted.forEach((m, i) => {
-        const prev = sorted[i - 1];
-        if (!prev || m.score < prev.score) currentPlace += 1;
-        if (String(m.user_id) === String(member.user_id)) place = currentPlace;
-      });
-
-      const tournament = tournamentStore.byId(group.tournament_id);
-      const endTs = tournament?.end_date ? new Date(tournament.end_date).getTime() : NaN;
-      const ended = !tournament || (Number.isFinite(endTs) && endTs < now);
-
-      return {
-        group,
-        tournament,
-        member,
-        place,
-        ended,
-        isAuthor: member.access_level === 0,
-      } as GroupEntry;
-    })
-    .filter((x): x is GroupEntry => x !== null)
-    .sort((a, b) => {
-      if (a.ended !== b.ended) return a.ended ? 1 : -1;
-      return a.place - b.place;
-    });
-});
-
-const profile = computed(() => {
-  const first = sharedGroups.value[0];
-  if (!first) return null;
-  return {
-    user_id: first.member.user_id,
-    name: first.member.name,
-    image_url: first.member.image_url,
-  };
-});
+const profile = ref<UserProfile | null>(null);
+const groups = ref<GroupPlacement[]>([]);
+const loading = ref(true);
 
 const totalPoints = computed(() =>
-  sharedGroups.value.reduce((sum, entry) => sum + (entry.member.score || 0), 0),
+  groups.value.reduce((sum, g) => sum + (g.score || 0), 0),
 );
 
-const bestEntry = computed(() => {
-  const ended = sharedGroups.value.filter((e) => e.ended);
-  if (ended.length === 0) return null;
-  return ended.sort((a, b) => a.place - b.place)[0] ?? null;
-});
+const bestEntry = computed<GroupPlacement | null>(() => groups.value[0] ?? null);
 
-const bestPlace = computed(() => bestEntry.value?.place ?? null);
-const bestPlaceGroup = computed(() => bestEntry.value?.group.name ?? '');
+onMounted(async () => {
+  try {
+    const data = await authFetch<UserGroupsResponse>(`/user/${profileId.value}/groups`);
+    profile.value = data.user;
+    groups.value = (data.groups ?? []).slice().sort((a, b) => a.placement - b.placement);
+  } catch {
+    profile.value = null;
+    groups.value = [];
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <style scoped>
