@@ -152,7 +152,7 @@ const badgeColor = computed(() => {
   height: 100%;
   width: 100%;
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: cover;
 }
 
 .block {
