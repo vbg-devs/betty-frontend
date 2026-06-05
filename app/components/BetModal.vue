@@ -54,7 +54,7 @@
               'bet-row--full': bet.user_points === 3,
             }"
           >
-            <span class="bet-row__name">{{ bet.user.name }}</span>
+            <span class="bet-row__name">{{ bet.user.nickname || bet.user.name }}</span>
             <span class="bet-row__score">
               <template v-if="showScores">
                 <strong>{{ bet.home_team_score }} – {{ bet.away_team_score }}</strong>
@@ -266,14 +266,6 @@ async function placeBet() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 997;
@@ -331,7 +323,7 @@ async function placeBet() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -379,7 +371,7 @@ async function placeBet() {
 }
 
 .modal__close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--cream);
 }
 
@@ -401,7 +393,7 @@ async function placeBet() {
   display: flex;
   gap: 24px;
   padding: 0 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--surface-overlay-06);
 }
 
 .tab {
@@ -449,7 +441,7 @@ async function placeBet() {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--surface-overlay-06);
 }
 
 /* ===== Score input ===== */
@@ -481,8 +473,8 @@ async function placeBet() {
 
 .score-input__field {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 56px;
@@ -499,7 +491,7 @@ async function placeBet() {
 }
 
 .score-input__field::placeholder {
-  color: rgba(255, 250, 235, 0.18);
+  color: var(--muted-strong);
 }
 
 .score-input__field::-webkit-outer-spin-button,
@@ -510,7 +502,7 @@ async function placeBet() {
 
 .score-input__field:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 .score-input__field[readonly] {
@@ -544,7 +536,7 @@ async function placeBet() {
 }
 
 .bet-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
 }
 
 .bet-row__name {
@@ -609,7 +601,7 @@ async function placeBet() {
   width: 18px;
   height: 18px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -687,8 +679,8 @@ async function placeBet() {
 :deep(.bet-history .team-logo) {
   width: 56px;
   height: 56px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  background-color: rgba(255, 255, 255, 0.06);
+  border: 2px solid var(--surface-overlay-08);
+  background-color: var(--surface-overlay-06);
 }
 
 :deep(.bet-history .team-name) {
@@ -735,7 +727,7 @@ async function placeBet() {
 }
 
 :deep(.bet-history .progress-bar) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-10);
   height: 6px;
 }
 

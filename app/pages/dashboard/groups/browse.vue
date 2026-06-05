@@ -377,16 +377,6 @@ onMounted(() => {
 
 <style scoped>
 .browse {
-  --indigo: #434f8e;
-  --indigo-dark: #1f2752;
-  --indigo-deep: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --ink: #0d0e15;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   color: var(--cream);
   font-family:
@@ -489,7 +479,7 @@ onMounted(() => {
   gap: 16px;
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--surface-overlay-08);
 }
 
 @media (max-width: 700px) {
@@ -518,8 +508,8 @@ onMounted(() => {
 
 .field__input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 15px;
@@ -537,7 +527,7 @@ onMounted(() => {
 
 .field__input:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 .field__input--select {
@@ -576,7 +566,7 @@ onMounted(() => {
 
 .grouping-toggle {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   border-radius: 2px;
   padding: 3px;
   margin-bottom: 6px;
@@ -590,7 +580,7 @@ onMounted(() => {
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: rgba(255, 250, 235, 0.55);
+  color: var(--muted-strong);
   padding: 7px 12px;
   border-radius: 2px;
   cursor: pointer;
@@ -718,7 +708,7 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.4px;
-  color: var(--cream);
+  color: #fff;
   background: rgba(20, 25, 56, 0.78);
   padding: 4px 8px;
   border-radius: 2px;
@@ -735,7 +725,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 14px 22px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--surface-overlay-04);
   transition: background 0.15s ease;
 }
 
@@ -744,7 +734,7 @@ onMounted(() => {
 }
 
 .group-stack__row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
 }
 
 .group-stack__main {
@@ -889,7 +879,7 @@ onMounted(() => {
 }
 
 .kicker--muted-dim {
-  color: rgba(255, 250, 235, 0.65);
+  color: var(--muted-strong);
 }
 
 .kicker--muted-light {

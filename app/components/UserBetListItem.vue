@@ -68,7 +68,7 @@ const resultClass = computed(() => {
   align-items: center;
   gap: 14px;
   padding: 14px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--surface-overlay-06);
   color: #fffaeb;
 }
 
@@ -85,11 +85,11 @@ const resultClass = computed(() => {
 .bet-row__flag {
   width: 28px !important;
   height: 28px !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1.5px solid var(--surface-overlay-10) !important;
 }
 
 .bet-row__divider {
-  color: rgba(255, 250, 235, 0.35);
+  color: var(--muted-strong);
   font-size: 14px;
   font-weight: 400;
 }
@@ -112,7 +112,7 @@ const resultClass = computed(() => {
 
 .bet-row__score-sep {
   font-size: 14px;
-  color: rgba(255, 250, 235, 0.35);
+  color: var(--muted-strong);
   font-weight: 400;
 }
 
@@ -127,8 +127,8 @@ const resultClass = computed(() => {
   letter-spacing: 0.8px;
   padding: 4px 8px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 250, 235, 0.6);
+  background: var(--surface-overlay-06);
+  color: var(--muted-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -148,13 +148,13 @@ const resultClass = computed(() => {
 }
 
 .bet-row__pending {
-  color: rgba(255, 250, 235, 0.3);
+  color: var(--muted-strong);
   font-size: 18px;
   font-weight: 800;
 }
 
 /* HiddenScore icon: dark theme */
 .bet-row__score :deep(.hidden-score__icon) {
-  color: rgba(255, 250, 235, 0.4);
+  color: var(--muted-strong);
 }
 </style>

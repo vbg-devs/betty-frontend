@@ -20,6 +20,10 @@
             <input v-model="name" type="text" placeholder="Betty" class="field__input" />
           </label>
 
+          <p v-if="errorMessage" class="form-error" role="alert">
+            {{ errorMessage }}
+          </p>
+
           <button
             type="submit"
             :disabled="saving || !canSave"
@@ -50,6 +54,7 @@ const name = ref('');
 const imageUrl = ref('');
 const saving = ref(false);
 const show = ref(false);
+const errorMessage = ref('');
 
 const canSave = computed(() => {
   if (name.value.length === 0) return false;
@@ -84,20 +89,33 @@ onMounted(() => {
 
 async function save() {
   saving.value = true;
+  errorMessage.value = '';
   try {
     const data = await authFetch<any>('/user', {
       method: 'POST',
       body: {
         email: email.value,
-        name: name.value,
+        name: name.value.trim(),
         image_url: imageUrl.value,
       },
     });
     emit('set-user', data);
     userStore.set(data);
     show.value = false;
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
+    const status = err?.response?.status ?? err?.statusCode ?? err?.status;
+    const serverMessage =
+      err?.data?.message || err?.response?._data?.message || err?.message;
+    if (status === 401 || status === 403) {
+      errorMessage.value = 'Your session expired. Please sign in again.';
+    } else if (status && status >= 500) {
+      errorMessage.value = "Something went wrong on our end. We're looking into it — please try again in a moment.";
+    } else if (serverMessage) {
+      errorMessage.value = serverMessage;
+    } else {
+      errorMessage.value = "Couldn't save your profile. Please try again.";
+    }
   } finally {
     saving.value = false;
   }
@@ -106,11 +124,6 @@ async function save() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 999;
@@ -158,7 +171,7 @@ async function save() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -229,8 +242,8 @@ async function save() {
 
 .field__input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 15px;
@@ -248,7 +261,19 @@ async function save() {
 
 .field__input:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
+}
+
+/* ===== Form error ===== */
+.form-error {
+  margin: -6px 0 18px;
+  padding: 12px 14px;
+  background: rgba(255, 90, 58, 0.12);
+  border-left: 3px solid var(--orange);
+  color: var(--cream);
+  font-size: 13px;
+  line-height: 1.45;
+  border-radius: 2px;
 }
 
 /* ===== Button ===== */
