@@ -11,35 +11,60 @@
 
       <div class="hero__card">
         <div class="hero__card-inner">
-          <div class="hero__meta">
-            <span class="kicker kicker--accent">★ YOUR GROUPS</span>
-          </div>
-
           <div class="hero__grid">
-            <h1 class="hero__title">
-              <template v-if="visibleGroups.length > 0">
-                {{ visibleGroups.length }}
-                <span class="hero__title--green">{{
-                  visibleGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
-                }}</span
-                ><br />
-                <span class="hero__title--outline">ONE CHAMPION.</span>
-              </template>
-              <template v-else-if="allGroups.length > 0">
-                NO {{ selectedTab === 'running' ? 'RUNNING' : 'ENDED' }}<br />
-                <span class="hero__title--green">GROUPS.</span>
-              </template>
-              <template v-else>
-                NO GROUPS<br />
-                <span class="hero__title--green">YET.</span>
-              </template>
-            </h1>
+            <div class="hero__main">
+              <span class="kicker kicker--accent">★ YOUR GROUPS</span>
+              <h1 class="hero__title">
+                <template v-if="visibleGroups.length > 0">
+                  {{ visibleGroups.length }}
+                  <span class="hero__title--green">{{
+                    visibleGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
+                  }}</span
+                  ><br />
+                  <span class="hero__title--outline">ONE CHAMPION.</span>
+                </template>
+                <template v-else-if="allGroups.length > 0">
+                  NO {{ selectedTab === 'running' ? 'RUNNING' : 'ENDED' }}<br />
+                  <span class="hero__title--green">GROUPS.</span>
+                </template>
+                <template v-else>
+                  NO GROUPS<br />
+                  <span class="hero__title--green">YET.</span>
+                </template>
+              </h1>
+            </div>
             <div class="hero__side">
-              <div class="kicker kicker--muted-light">★ READY?</div>
+              <div v-if="nextKickoff" class="hero__countdown">
+                <span class="kicker kicker--green hero__countdown-kicker">● FIRST KICKOFF IN</span>
+                <div class="hero__countdown-time">
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.days) }}</span>
+                    <span class="hero__countdown-unit">DAYS</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.hours) }}</span>
+                    <span class="hero__countdown-unit">HRS</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.minutes) }}</span>
+                    <span class="hero__countdown-unit">MIN</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num hero__countdown-num--pulse">{{
+                      pad(countdown.seconds)
+                    }}</span>
+                    <span class="hero__countdown-unit">SEC</span>
+                  </div>
+                </div>
+                <span class="kicker kicker--accent hero__countdown-name"
+                  >★ {{ nextKickoff.tournament.name.toUpperCase() }}</span
+                >
+              </div>
+              <!-- <div class="kicker kicker--muted-light">★ READY?</div>
               <p class="hero__lede">
                 Pick a tournament, set the points, share one link.<br />Betty handles the math, you
                 handle the banter.
-              </p>
+              </p> -->
               <button class="btn btn--orange btn--block" @click="showModal = true">
                 + NEW GROUP
               </button>
@@ -258,6 +283,17 @@ const grouped = useGroupingPref();
 
 const FOUR_WEEKS_MS = 1000 * 60 * 60 * 24 * 28;
 
+const now = ref(Date.now());
+let nowTimer: ReturnType<typeof setInterval> | null = null;
+onMounted(() => {
+  nowTimer = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+});
+onUnmounted(() => {
+  if (nowTimer) clearInterval(nowTimer);
+});
+
 const groups = computed(() => groupStore.all);
 
 const allGroups = computed(() => {
@@ -278,6 +314,35 @@ const endedGroups = computed(() => allGroups.value.filter((g) => g.ended && !g.r
 const visibleGroups = computed(() =>
   selectedTab.value === 'running' ? runningGroups.value : endedGroups.value,
 );
+
+type Kickoff = { tournament: NonNullable<VisibleGroup['tournament']>; startTs: number };
+
+const nextKickoff = computed<Kickoff | null>(() => {
+  let best: Kickoff | null = null;
+  runningGroups.value.forEach((g) => {
+    if (!g.tournament?.start_date) return;
+    const startTs = new Date(g.tournament.start_date).getTime();
+    if (!Number.isFinite(startTs) || startTs <= now.value) return;
+    if (!best || startTs < best.startTs) best = { tournament: g.tournament, startTs };
+  });
+  return best;
+});
+
+const countdown = computed(() => {
+  if (!nextKickoff.value) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  const diff = Math.max(0, nextKickoff.value.startTs - now.value);
+  const totalSeconds = Math.floor(diff / 1000);
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+});
+
+function pad(n: number) {
+  return n.toString().padStart(2, '0');
+}
 
 type VisibleGroup = (typeof allGroups.value)[number];
 
@@ -338,7 +403,6 @@ function handleCloseCreateGroupModal() {
 
 <style scoped>
 .dashboard {
-
   color: var(--cream);
   font-family:
     'Inter',
@@ -370,15 +434,17 @@ function handleCloseCreateGroupModal() {
   max-width: 1100px;
 }
 
-.hero__meta {
-  margin-bottom: 18px;
+.hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .hero__grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 40px;
-  align-items: end;
+  align-items: start;
 }
 
 .hero__title {
@@ -402,7 +468,62 @@ function handleCloseCreateGroupModal() {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding-bottom: 8px;
+}
+
+.hero__countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  background: var(--indigo-deep);
+  border-left: 3px solid var(--green);
+  border-radius: 2px;
+  margin-bottom: 8px;
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.6);
+}
+
+.hero__countdown-kicker {
+  font-size: 12px;
+}
+
+.hero__countdown-time {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero__countdown-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+
+.hero__countdown-num {
+  font-size: clamp(34px, 4.2vw, 48px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--cream);
+}
+
+.hero__countdown-num--pulse {
+  color: var(--green);
+}
+
+.hero__countdown-unit {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  color: var(--muted-strong);
+}
+
+.hero__countdown-name {
+  font-size: 12px;
 }
 
 .hero__lede {
