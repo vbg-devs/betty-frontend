@@ -4,10 +4,6 @@ export default defineNuxtConfig({
 
   modules: ['@pinia/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
 
-  routeRules: {
-    '/world-cup-2026': { prerender: true },
-  },
-
   app: {
     head: {
       title: 'Betty.social \u2014 Creating frenemies since 2021',
