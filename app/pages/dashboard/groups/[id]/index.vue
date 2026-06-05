@@ -338,7 +338,16 @@
             </div>
 
             <div class="side-card" :style="{ order: manyMembers ? 3 : 4 }">
-              <span class="kicker kicker--accent">★ HOUSE RULES</span>
+              <div class="rules__head">
+                <span class="kicker kicker--accent">★ HOUSE RULES</span>
+                <button
+                  v-if="isAuthor"
+                  class="rules__edit"
+                  @click="settingsOpen = true"
+                >
+                  EDIT →
+                </button>
+              </div>
               <div class="rules">
                 <div class="rules__row">
                   <span class="rules__label">Winning team</span>
@@ -384,6 +393,11 @@
       @bet-placed="betPlaced"
       @close="gameBet = null"
     />
+    <GroupSettingsModal
+      v-if="settingsOpen && isAuthor"
+      :group="group"
+      @close="settingsOpen = false"
+    />
     <transition name="page">
       <UserHistory
         v-if="selectedUser && tournamentDetails"
@@ -415,6 +429,7 @@ const selectedTab = ref<number | null>(null);
 const selectedUser = ref<any>(null);
 const visibilityLoading = ref(false);
 const uploadingImage = ref(false);
+const settingsOpen = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const nicknameInput = ref('');
 const nicknameLoading = ref(false);
@@ -1512,6 +1527,31 @@ onBeforeUnmount(() => {
 }
 
 /* ===== House rules ===== */
+.rules__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rules__edit {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  cursor: pointer;
+  padding: 4px 0;
+  transition: filter 0.15s ease;
+}
+
+.rules__edit:hover {
+  filter: brightness(1.1);
+}
+
 .rules {
   display: flex;
   flex-direction: column;

@@ -58,6 +58,25 @@ export const useGroupStore = defineStore('group', () => {
     return data;
   }
 
+  async function updateSettings(
+    id: number,
+    payload: {
+      welcome_message?: string;
+      description?: string | null;
+      correct_team_points?: number;
+      exact_result_points?: number;
+      allow_sneak_peek?: boolean;
+    },
+  ) {
+    const { authFetch } = useApi();
+    const data = await authFetch<Group>(`/group/${id}/settings`, {
+      method: 'PUT',
+      body: payload,
+    });
+    await load();
+    return data;
+  }
+
   async function setHeaderImage(id: number, imageUrl: string | null) {
     const { authFetch } = useApi();
     const data = await authFetch<{ header_image_url: string | null }>(
@@ -120,6 +139,7 @@ export const useGroupStore = defineStore('group', () => {
     joinPublic,
     leave,
     setVisibility,
+    updateSettings,
     setHeaderImage,
     setNickname,
     uploadHeaderImage,
