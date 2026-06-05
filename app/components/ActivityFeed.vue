@@ -124,6 +124,22 @@
             <line x1="7" y1="13" x2="17" y2="13" />
             <line x1="7" y1="17" x2="13" y2="17" />
           </svg>
+          <!-- group_visibility_changed -->
+          <svg
+            v-else-if="message.type === 'group_visibility_changed'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
           <!-- user_exact_score -->
           <svg
             v-else-if="message.type === 'user_exact_score'"
@@ -164,6 +180,9 @@
             <template v-else-if="message.type === 'group_created'">
               New group on Betty
             </template>
+            <template v-else-if="message.type === 'group_visibility_changed'">
+              <GroupVisibilityChangedListItem :data="message.message" />
+            </template>
             <template v-else-if="message.type === 'user_register'">
               <strong>{{ message.message.name }}</strong> just joined Betty
             </template>
@@ -197,6 +216,7 @@ const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'y
   group_joined: { label: '● JOINED GROUP', accent: 'green' },
   group_left: { label: '● LEFT GROUP', accent: 'cream' },
   group_created: { label: '★ NEW GROUP', accent: 'orange' },
+  group_visibility_changed: { label: '● VISIBILITY', accent: 'yellow' },
   user_register: { label: '★ WELCOME', accent: 'green' },
 };
 
@@ -226,13 +246,6 @@ function clearAll() {
 
 <style scoped>
 .feed {
-  --indigo-dark: #1f2752;
-  --indigo-deeper: #141938;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --green: #9bff3d;
-  --yellow: #ffd84a;
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   font-family:
     'Inter',
@@ -281,7 +294,7 @@ function clearAll() {
 }
 
 .clear-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--cream);
 }
 
@@ -319,7 +332,7 @@ function clearAll() {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   color: var(--orange);
 }
 

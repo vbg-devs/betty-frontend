@@ -1,3 +1,44 @@
+:root {
+  --indigo: #434f8e;
+  --indigo-dark: #1f2752;
+  --indigo-deep: #141938;
+  --cream: #fffaeb;
+  --cream-soft: #fff5e4;
+  --orange: #ff5a3a;
+  --green: #9bff3d;
+  --yellow: #ffd84a;
+  --ink: #0d0e15;
+  --muted: rgba(255, 250, 235, 0.5);
+  --muted-strong: rgba(255, 250, 235, 0.78);
+  --body-muted: #cdd1e5;
+
+  --surface-overlay-04: rgba(255, 255, 255, 0.04);
+  --surface-overlay-06: rgba(255, 255, 255, 0.06);
+  --surface-overlay-08: rgba(255, 255, 255, 0.08);
+  --surface-overlay-10: rgba(255, 255, 255, 0.1);
+  --page-bg: #434f8e;
+  --page-text: #fffaeb;
+}
+
+:root.theme-light {
+  --indigo: #fffaeb !important;
+  --indigo-dark: #ffffff !important;
+  --indigo-deep: #f1ead4 !important;
+  --cream: #141938 !important;
+  --cream-soft: #1f2752 !important;
+  --green: #434f8e !important;
+  --muted: rgba(20, 25, 56, 0.55) !important;
+  --muted-strong: rgba(20, 25, 56, 0.82) !important;
+  --body-muted: #525874 !important;
+
+  --surface-overlay-04: rgba(20, 25, 56, 0.04) !important;
+  --surface-overlay-06: rgba(20, 25, 56, 0.06) !important;
+  --surface-overlay-08: rgba(20, 25, 56, 0.08) !important;
+  --surface-overlay-10: rgba(20, 25, 56, 0.1) !important;
+  --page-bg: #fffaeb !important;
+  --page-text: #141938 !important;
+}
+
 html {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
@@ -9,8 +50,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  background: #434f8e;
-  color: #fffaeb;
+  background: var(--page-bg);
+  color: var(--page-text);
   overflow-x: hidden;
 }
 
@@ -249,7 +290,7 @@ body {
 }
 
 a {
-  color: #fffaeb;
+  color: var(--page-text);
   text-decoration: none;
 }
 
@@ -262,7 +303,7 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #434f8e;
+  background: var(--page-bg);
   flex-direction: column;
 }
 
@@ -310,6 +351,16 @@ body.no-scroll {
 
 .pt-10 {
   padding-top: 10px;
+}
+
+/* In light mode, links inside dark-token surfaces (cards, hero) need to stay cream */
+:root.theme-light a {
+  color: var(--page-text);
+}
+
+/* Subtle scrollbar tweak for light mode */
+:root.theme-light body {
+  scrollbar-color: rgba(20, 25, 56, 0.25) transparent;
 }
 
 :root {

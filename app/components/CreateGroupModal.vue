@@ -275,11 +275,6 @@ async function create() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 997;
@@ -327,7 +322,7 @@ async function create() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -380,7 +375,7 @@ async function create() {
 }
 
 .modal__close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
   color: var(--cream);
 }
 
@@ -460,8 +455,8 @@ async function create() {
 
 .field__input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
   color: var(--cream);
   font-family: inherit;
   font-size: 15px;
@@ -479,7 +474,7 @@ async function create() {
 
 .field__input:focus {
   border-color: var(--orange);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 .field__input--select {
@@ -524,8 +519,8 @@ async function create() {
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-04);
+  border: 1px solid var(--surface-overlay-08);
   border-radius: 2px;
   cursor: pointer;
   margin-top: 4px;
@@ -541,7 +536,7 @@ async function create() {
   width: 20px;
   height: 20px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -579,7 +574,7 @@ async function create() {
 /* ===== Invite ===== */
 .invite {
   display: flex;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-overlay-06);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 8px;

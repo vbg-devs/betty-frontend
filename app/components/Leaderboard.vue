@@ -23,7 +23,7 @@
         </template>
         <template v-else>
           <a href="javascript:void(0);" class="lb-row__link" @click="emit('user-selected', user)">{{
-            user.name
+            user.nickname || user.name
           }}</a>
         </template>
         <span v-if="user.user_id === userId" class="lb-row__you">YOU</span>
@@ -84,11 +84,6 @@ const listWithPlacement = computed(() => {
 
 <style scoped>
 .leaderboard {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --yellow: #ffd84a;
-  --green: #9bff3d;
 
   display: flex;
   flex-direction: column;
@@ -109,14 +104,14 @@ const listWithPlacement = computed(() => {
 }
 
 .lb-row:hover {
-  background: #262e5e;
+  background: color-mix(in srgb, var(--indigo-dark) 92%, var(--ink));
 }
 
 .lb-row__place {
   font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: rgba(255, 250, 235, 0.45);
+  color: var(--muted-strong);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -178,7 +173,7 @@ const listWithPlacement = computed(() => {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
-  color: rgba(255, 250, 235, 0.5);
+  color: var(--muted-strong);
 }
 
 /* ===== Top 3 accents ===== */
@@ -195,7 +190,7 @@ const listWithPlacement = computed(() => {
 }
 
 .lb-row--third .lb-row__place {
-  color: rgba(255, 250, 235, 0.75);
+  color: var(--muted-strong);
 }
 
 /* ===== Highlight current user ===== */

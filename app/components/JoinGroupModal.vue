@@ -94,11 +94,6 @@ async function join() {
 
 <style scoped>
 .modal {
-  --indigo-dark: #1f2752;
-  --cream: #fffaeb;
-  --orange: #ff5a3a;
-  --muted: rgba(255, 250, 235, 0.5);
-  --muted-strong: rgba(255, 250, 235, 0.78);
 
   position: fixed;
   z-index: 997;
@@ -146,7 +141,7 @@ async function join() {
   z-index: 2;
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px var(--surface-overlay-06);
   animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   border-radius: 2px;
   display: flex;
@@ -164,10 +159,10 @@ async function join() {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--surface-overlay-04);
   background-size: cover;
   background-position: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--surface-overlay-06);
 }
 
 .modal__hero-icon {
@@ -192,11 +187,11 @@ async function join() {
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--surface-overlay-06);
   background-size: cover;
   background-position: center;
   margin: 0 0 18px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--surface-overlay-10);
 }
 
 .modal__title {
@@ -251,7 +246,7 @@ async function join() {
 .modal__actions {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--surface-overlay-06);
 }
 
 .btn {
@@ -273,11 +268,11 @@ async function join() {
 .btn--ghost {
   background: transparent;
   color: var(--muted-strong);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--surface-overlay-06);
 }
 
 .btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay-04);
   color: var(--cream);
 }
 

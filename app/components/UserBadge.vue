@@ -46,10 +46,12 @@ const hasImage = computed(() => {
   return user.image_url && user.image_url.length > 0;
 });
 
+const displayName = computed(() => user.nickname || user.name);
+
 const initial = computed(() => {
   if (hasImage.value) return '';
-  if (!user.name) return '';
-  const splitFullName = user.name.split(' ');
+  if (!displayName.value) return '';
+  const splitFullName = displayName.value.split(' ');
   if (splitFullName.length === 1) return splitFullName[0].substring(0, 1);
   return `${splitFullName[0].substring(0, 1)}${splitFullName[1].substring(0, 1)}`.toUpperCase();
 });
@@ -68,9 +70,9 @@ function stringToColour(str: string) {
 }
 
 const badgeColor = computed(() => {
-  if (!user.name) return '#efefef';
-  if (user.name.length < 5) return '#efefef';
-  return stringToColour(user.name.toLowerCase());
+  if (!displayName.value) return '#efefef';
+  if (displayName.value.length < 5) return '#efefef';
+  return stringToColour(displayName.value.toLowerCase());
 });
 </script>
 
@@ -78,7 +80,7 @@ const badgeColor = computed(() => {
 .user-badge {
   height: 42px;
   width: 42px;
-  border: 5px solid rgba(0, 0, 0, 0.08);
+  border: 5px solid var(--surface-overlay-10);
   border-radius: 50%;
   transition: border-color ease 0.3s;
   display: inline-block;
@@ -88,7 +90,7 @@ const badgeColor = computed(() => {
     cursor: pointer;
 
     &:hover {
-      border-color: rgba(0, 0, 0, 0.2);
+      border-color: var(--muted);
     }
   }
 }
@@ -150,7 +152,7 @@ const badgeColor = computed(() => {
   height: 100%;
   width: 100%;
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: cover;
 }
 
 .block {

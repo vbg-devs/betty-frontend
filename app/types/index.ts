@@ -3,6 +3,7 @@ export interface UserProfile {
   email: string;
   name: string;
   image_url: string | null;
+  firebase_image_url: string | null;
   country: string | null;
   is_admin: boolean;
   created_at: string;
@@ -73,6 +74,7 @@ export interface PublicGroupListResponse {
 export interface GroupMember {
   user_id: number;
   name: string;
+  nickname: string | null;
   image_url: string | null;
   score: number;
   normalized_score?: number;
@@ -114,4 +116,20 @@ export interface ActivityMessage {
   type: string;
   message: unknown;
   timeStamp: Date;
+}
+
+export interface MessageReaction {
+  user_id: number;
+  emoji_id: string;
+  created_at: string;
+}
+
+export interface GroupMessage {
+  id: number;
+  user_id: number;
+  group_id: number;
+  body: string | null;
+  image_url: string | null;
+  created_at: string;
+  reactions: MessageReaction[];
 }

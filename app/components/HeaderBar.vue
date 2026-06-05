@@ -14,7 +14,7 @@
 
       <div class="header-bar__item">
         <NuxtLink to="/dashboard" class="logo-link" @click="showMobileMenu = false">
-          <img src="~/assets/images/logo.svg" class="logo" alt="Betty" />
+          <Logo class="logo" />
         </NuxtLink>
       </div>
 
@@ -69,7 +69,7 @@
             viewBox="0 0 24 24"
             width="24"
             height="24"
-            color="#ffffff"
+            color="currentColor"
             fill="none"
           >
             <path
@@ -93,7 +93,7 @@
             viewBox="0 0 24 24"
             width="24"
             height="24"
-            color="#ffffff"
+            color="currentColor"
             fill="none"
           >
             <path
@@ -218,7 +218,7 @@ function handleCloseCreateGroupModal() {
   right: 0;
   padding: 25px 0;
   z-index: 5;
-  background: #434f8e;
+  background: var(--indigo);
 }
 
 .header-bar__inner {
@@ -248,14 +248,14 @@ function handleCloseCreateGroupModal() {
 }
 
 .header-bar__menu-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-overlay-08);
 }
 
 .header-bar__menu-bar {
   display: block;
   width: 22px;
   height: 2px;
-  background: #fffaeb;
+  background: var(--cream);
   border-radius: 1px;
   transition:
     transform 0.2s ease,
@@ -305,7 +305,7 @@ function handleCloseCreateGroupModal() {
 
 .nav-link {
   position: relative;
-  color: rgba(255, 250, 235, 0.78);
+  color: var(--muted-strong);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.6px;
@@ -316,11 +316,11 @@ function handleCloseCreateGroupModal() {
 }
 
 .nav-link:hover {
-  color: #fffaeb;
+  color: var(--cream);
 }
 
 .nav-link--active {
-  color: #fffaeb;
+  color: var(--cream);
 }
 
 .nav-link--active::after {
@@ -361,7 +361,7 @@ function handleCloseCreateGroupModal() {
     left: 0;
     right: 0;
     margin-top: 16px;
-    background: #1f2752;
+    background: var(--indigo-dark);
     flex-direction: column;
     gap: 0;
     padding: 8px 16px;
@@ -385,7 +385,7 @@ function handleCloseCreateGroupModal() {
     padding: 14px 4px;
     font-size: 13px;
     letter-spacing: 1.4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--surface-overlay-06);
   }
 
   .nav-link:last-child {
@@ -401,7 +401,7 @@ function handleCloseCreateGroupModal() {
 }
 
 a {
-  color: #fff;
+  color: var(--cream);
   font-weight: 600;
   text-decoration: none;
   font-size: 14px;
@@ -410,7 +410,7 @@ a {
 }
 
 a:hover {
-  color: #eee;
+  opacity: 0.85;
 }
 
 /* ===== Profile button ===== */
@@ -422,7 +422,7 @@ a:hover {
 
 .profile-button {
   background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid var(--muted);
   padding: 2px;
   border-radius: 50%;
   cursor: pointer;
@@ -433,7 +433,7 @@ a:hover {
 }
 
 .profile-button:hover {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--cream);
 }
 
 /* ===== New group button ===== */
@@ -553,7 +553,7 @@ a:hover {
 .header-bar__button {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--cream);
   position: relative;
   width: 36px;
   height: 36px;
@@ -565,7 +565,7 @@ a:hover {
   border-radius: 50%;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-overlay-10);
   }
 }
 
