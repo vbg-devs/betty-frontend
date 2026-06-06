@@ -192,12 +192,12 @@ const canSave = computed(() => {
 });
 
 const homeTeam = computed(() => {
-  if (!selectedGame.value) return null;
+  if (!selectedGame.value) return undefined;
   return teamStore.byId(selectedGame.value.home_team_id);
 });
 
 const awayTeam = computed(() => {
-  if (!selectedGame.value) return null;
+  if (!selectedGame.value) return undefined;
   return teamStore.byId(selectedGame.value.away_team_id);
 });
 

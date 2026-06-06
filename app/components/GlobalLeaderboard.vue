@@ -8,6 +8,8 @@
 </template>
 
 <script setup lang="ts">
+import type { GroupMember } from '~/types';
+
 const { id = -1 } = defineProps<{
   id?: number;
 }>();
@@ -18,11 +20,11 @@ const emit = defineEmits<{
 
 const { authFetch } = useApi();
 
-const users = ref<any[]>([]);
+const users = ref<GroupMember[]>([]);
 const loading = ref(true);
 
 onMounted(async () => {
-  const data = await authFetch<any[]>(`/tournament/${id}/leaderboard?limit=100`);
+  const data = await authFetch<GroupMember[]>(`/tournament/${id}/leaderboard?limit=100`);
   users.value = data;
   loading.value = false;
   emit('count', data?.length ?? 0);

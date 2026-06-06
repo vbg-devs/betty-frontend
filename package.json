@@ -29,11 +29,14 @@
   },
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.2",
+    "@pinia/testing": "^0.1.7",
+    "@vitest/coverage-v8": "^4.1.8",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.9.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^0.17.0",
     "typescript": "^5.7.0",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "vue-tsc": "^3.3.3"
   }
 }

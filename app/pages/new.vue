@@ -184,15 +184,17 @@ const auth = useFirebaseAuth();
 
 function isInAppBrowser() {
   const ua = navigator.userAgent;
-  return /FBAN|FBAV|Instagram|Line|MicroMessenger|TikTok|Twitter/i.test(ua)
-    || /; wv\)/i.test(ua)
-    || (/iPhone|iPad/.test(ua) && !/Safari/.test(ua));
+  return (
+    /FBAN|FBAV|Instagram|Line|MicroMessenger|TikTok|Twitter/i.test(ua) ||
+    /; wv\)/i.test(ua) ||
+    (/iPhone|iPad/.test(ua) && !/Safari/.test(ua))
+  );
 }
 
 async function handleSignInSuccess() {
   const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
   if (returnUrl) {
-    window.location.href = returnUrl;
+    window.location.href = safeReturnUrl(returnUrl, '/dashboard');
   } else {
     await router.push('/dashboard');
   }

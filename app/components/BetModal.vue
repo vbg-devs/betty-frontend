@@ -4,7 +4,10 @@
     <div v-if="gameBet !== null" class="modal__inner">
       <header class="modal__header">
         <span class="kicker kicker--accent">★ PLACE YOUR BET</span>
-        <h2 class="modal__title">{{ homeTeam?.name?.toUpperCase() }} <span class="vs">vs</span> {{ awayTeam?.name?.toUpperCase() }}</h2>
+        <h2 class="modal__title">
+          {{ homeTeam?.name?.toUpperCase() }} <span class="vs">vs</span>
+          {{ awayTeam?.name?.toUpperCase() }}
+        </h2>
         <BetHistory :bets="bets" :game-bet="gameBet" :home-team="homeTeam" :away-team="awayTeam" />
         <button class="modal__close" @click="emit('close')" aria-label="Close">
           <svg
@@ -33,11 +36,7 @@
         >
           Your bet
         </button>
-        <button
-          class="tab"
-          :class="{ 'tab--active': selectedTab === 2 }"
-          @click="selectedTab = 2"
-        >
+        <button class="tab" :class="{ 'tab--active': selectedTab === 2 }" @click="selectedTab = 2">
           Placed bets
         </button>
       </nav>
@@ -128,15 +127,7 @@
           :class="{ 'btn--disabled': !canSave || loading }"
           @click="placeBet"
         >
-          {{
-            loading
-              ? myBet
-                ? 'UPDATING…'
-                : 'PLACING…'
-              : myBet
-                ? 'UPDATE BET'
-                : 'PLACE BET'
-          }}
+          {{ loading ? (myBet ? 'UPDATING…' : 'PLACING…') : myBet ? 'UPDATE BET' : 'PLACE BET' }}
         </button>
       </footer>
     </div>
@@ -240,16 +231,27 @@ watch(
 );
 
 async function placeBet() {
-  const betPayload = {
-    game_id: gameBet!.id,
-    group_id: gameBet!.groupId,
-    home_team_score: parseFloat(homeScore.value),
-    away_team_score: parseFloat(awayScore.value),
-    is_universal: placeInAllGroups.value,
-  };
+  const existing = myBet.value;
   loading.value = true;
   try {
-    await betStore.place(betPayload);
+    // PUT /bet/:id only touches this one bet; a universal edit must re-POST so the
+    // backend upserts the new score across every group in the tournament. Routing
+    // checked edits through update() would silently leave the other groups divergent.
+    if (existing && !placeInAllGroups.value) {
+      await betStore.update({
+        id: existing.id,
+        home_team_score: parseFloat(homeScore.value),
+        away_team_score: parseFloat(awayScore.value),
+      });
+    } else {
+      await betStore.place({
+        game_id: gameBet!.id,
+        group_id: gameBet!.groupId,
+        home_team_score: parseFloat(homeScore.value),
+        away_team_score: parseFloat(awayScore.value),
+        is_universal: placeInAllGroups.value,
+      });
+    }
     emit('bet-placed');
   } catch (err) {
     alert({
@@ -266,7 +268,6 @@ async function placeBet() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 997;
   top: 0;

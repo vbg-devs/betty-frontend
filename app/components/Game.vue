@@ -130,8 +130,8 @@ const timeToBet = computed(() => {
   return differenceInHours(new Date(game.start_date), new Date());
 });
 
-const homeTeam = computed(() => teamStore.byId(game.home_team_id));
-const awayTeam = computed(() => teamStore.byId(game.away_team_id));
+const homeTeam = computed(() => teamStore.byId(game.home_team_id)!);
+const awayTeam = computed(() => teamStore.byId(game.away_team_id)!);
 
 const startDate = computed(() => {
   if (game.status === 1) return 'Finished';

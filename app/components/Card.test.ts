@@ -20,13 +20,18 @@ describe('Card', () => {
   });
 
   it('applies no-padding modifier when noPadding prop is true', () => {
-    const wrapper = mount(Card, { props: { noPadding: true } });
+    const wrapper = mount(Card, { props: { noPadding: true }, slots: { default: 'body' } });
     expect(wrapper.find('.card__body').classes()).toContain('card__body--no-padding');
   });
 
   it('does not apply no-padding modifier by default', () => {
-    const wrapper = mount(Card);
+    const wrapper = mount(Card, { slots: { default: 'body' } });
     expect(wrapper.find('.card__body').classes()).not.toContain('card__body--no-padding');
+  });
+
+  it('omits the body section when no default slot is given', () => {
+    const wrapper = mount(Card);
+    expect(wrapper.find('.card__body').exists()).toBe(false);
   });
 
   it('emits "clicked" when the card is clicked', async () => {

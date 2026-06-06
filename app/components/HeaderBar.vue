@@ -153,7 +153,7 @@
 import { signOut } from 'firebase/auth';
 
 const { user = {} as Record<string, any> } = defineProps<{
-  user?: Record<string, any>;
+  user?: Record<string, any> | null;
 }>();
 
 const emit = defineEmits<{

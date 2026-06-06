@@ -81,7 +81,7 @@ function pickGroupId(): number | null {
 function payloadFor(type: string): any {
   const gameId = pickGameId();
   const groupId = pickGroupId();
-  const userId = (userStore as any).id ?? 1;
+  const userId = (userStore as any).id ?? 'uid-1';
 
   switch (type) {
     case 'bet_placed':
@@ -160,7 +160,6 @@ function clear() {
 
 <style scoped>
 .tester {
-
   position: fixed;
   bottom: 20px;
   right: 20px;

@@ -50,13 +50,13 @@
         </div>
         <div class="what__body">
           <p class="what__copy">
-            Betty is a free game for tournament predictions. Pick a cup, gather your crew, and
-            bet on exact match results. Each group sets its own house rules, and points roll in
-            as games go final.
+            Betty is a free game for tournament predictions. Pick a cup, gather your crew, and bet
+            on exact match results. Each group sets its own house rules, and points roll in as games
+            go final.
           </p>
           <p class="what__copy what__copy--muted">
-            No money. No spreadsheets. Just bragging rights, settled in public — and a
-            permanent record of who actually knew their football.
+            No money. No spreadsheets. Just bragging rights, settled in public — and a permanent
+            record of who actually knew their football.
           </p>
           <ul class="what__points">
             <li><strong>Free forever.</strong> No paywalls, no ads, no nonsense.</li>
@@ -359,7 +359,7 @@ onMounted(() => {
   const unsubscribe = onAuthStateChanged(auth, (user) => {
     if (user) {
       const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
-      router.replace(returnUrl || '/dashboard');
+      router.replace(safeReturnUrl(returnUrl, '/dashboard'));
     }
   });
   onUnmounted(unsubscribe);
@@ -377,7 +377,7 @@ function isInAppBrowser() {
 async function handleSignInSuccess() {
   const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
   if (returnUrl) {
-    window.location.href = returnUrl;
+    window.location.href = safeReturnUrl(returnUrl, '/dashboard');
   } else {
     await router.push('/dashboard');
   }

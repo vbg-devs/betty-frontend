@@ -203,9 +203,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ActivityMessage } from '~/types';
+
+type FeedMessage = ActivityMessage & { message: Record<string, any> };
+
 const messageStore = useMessageStore();
 
-const list = computed(() => messageStore.all);
+const list = computed(() => messageStore.all as FeedMessage[]);
 
 const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }> = {
   bet_placed: { label: '● NEW BET', accent: 'orange' },

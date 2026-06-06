@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, type-check & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Generates .nuxt/ (incl. the tsconfig vue-tsc and vitest rely on).
+      # There is no postinstall hook, so this must run explicitly.
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
+
+      - name: Lint
+        run: npm run lint
+
+      # Run vue-tsc directly rather than `nuxt typecheck`: it is deterministic
+      # in CI. The "vue-router/volar/sfc-route-blocks" resolve line it prints is
+      # a non-fatal warning and does not affect the exit code.
+      - name: Type-check
+        run: npx vue-tsc --noEmit -p tsconfig.json
+
+      - name: Test
+        run: npx vitest run --coverage --coverage.include='app/**' --coverage.reporter=text --coverage.reporter=html
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-exist: ignore
