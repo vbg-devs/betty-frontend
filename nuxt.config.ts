@@ -59,8 +59,4 @@ export default defineNuxtConfig({
   gtag: {
     id: 'G-71Z91KX62G',
   },
-
-  sentry: {
-    dsn: 'https://b938ff1b3bb541738a2dea8180b92cad@o86153.ingest.sentry.io/5813126',
-  },
 });

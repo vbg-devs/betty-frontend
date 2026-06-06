@@ -11,7 +11,7 @@ let _app: FirebaseApp | undefined;
 export function useFirebaseApp(): FirebaseApp {
   if (!_app) {
     const apps = getApps();
-    _app = apps.length ? apps[0] : initializeApp(firebaseConfig);
+    _app = apps[0] ?? initializeApp(firebaseConfig);
   }
   return _app;
 }

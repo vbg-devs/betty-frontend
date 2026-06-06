@@ -1,7 +1,7 @@
 interface AlertOptions {
   title?: string;
   message: string;
-  state?: 'success' | 'error' | 'warning' | 'info';
+  state?: 'success' | 'error' | 'warning' | 'info' | 'critical';
 }
 
 interface ConfirmOptions {
