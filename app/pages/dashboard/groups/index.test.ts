@@ -24,7 +24,7 @@ const tournament: Tournament = {
 
 function makeMember(userId: number): GroupMember {
   return {
-    user_id: userId,
+    user_id: `uid-${userId}`,
     name: `User ${userId}`,
     nickname: null,
     image_url: null,

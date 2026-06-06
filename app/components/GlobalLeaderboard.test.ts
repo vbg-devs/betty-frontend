@@ -9,9 +9,9 @@ const { authFetch } = vi.hoisted(() => ({ authFetch: vi.fn() }));
 mockNuxtImport('useApi', () => () => ({ authFetch }));
 
 const entries = [
-  { user_id: 1, name: 'Alice', normalized_score: 50 },
-  { user_id: 2, name: 'Bob', normalized_score: 80 },
-  { user_id: 3, name: 'Cara', normalized_score: 20 },
+  { user_id: 'uid-1', name: 'Alice', normalized_score: 50 },
+  { user_id: 'uid-2', name: 'Bob', normalized_score: 80 },
+  { user_id: 'uid-3', name: 'Cara', normalized_score: 20 },
 ];
 
 describe('GlobalLeaderboard', () => {

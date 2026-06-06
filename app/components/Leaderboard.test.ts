@@ -4,7 +4,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime';
 import type { GroupMember, UserProfile } from '~/types';
 import Leaderboard from './Leaderboard.vue';
 
-function makeMember(overrides: Partial<GroupMember> & { user_id: number }): GroupMember {
+function makeMember(overrides: Partial<GroupMember> & { user_id: string }): GroupMember {
   return {
     name: `User ${overrides.user_id}`,
     nickname: null,
@@ -15,7 +15,7 @@ function makeMember(overrides: Partial<GroupMember> & { user_id: number }): Grou
   };
 }
 
-function makeProfile(id: number): UserProfile {
+function makeProfile(id: string): UserProfile {
   return {
     id,
     email: 'jane@example.com',
@@ -42,7 +42,10 @@ describe('Leaderboard', () => {
   it('renders one row per user', async () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
-        users: [makeMember({ user_id: 1, score: 5 }), makeMember({ user_id: 2, score: 3 })],
+        users: [
+          makeMember({ user_id: 'uid-1', score: 5 }),
+          makeMember({ user_id: 'uid-2', score: 3 }),
+        ],
       },
     });
     expect(wrapper.findAll('.lb-row')).toHaveLength(2);
@@ -52,9 +55,9 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, name: 'Low', score: 1 }),
-          makeMember({ user_id: 2, name: 'High', score: 9 }),
-          makeMember({ user_id: 3, name: 'Mid', score: 5 }),
+          makeMember({ user_id: 'uid-1', name: 'Low', score: 1 }),
+          makeMember({ user_id: 'uid-2', name: 'High', score: 9 }),
+          makeMember({ user_id: 'uid-3', name: 'Mid', score: 5 }),
         ],
       },
     });
@@ -69,8 +72,8 @@ describe('Leaderboard', () => {
       props: {
         global: true,
         users: [
-          makeMember({ user_id: 1, name: 'A', score: 99, normalized_score: 10 }),
-          makeMember({ user_id: 2, name: 'B', score: 1, normalized_score: 80 }),
+          makeMember({ user_id: 'uid-1', name: 'A', score: 99, normalized_score: 10 }),
+          makeMember({ user_id: 'uid-2', name: 'B', score: 1, normalized_score: 80 }),
         ],
       },
     });
@@ -81,15 +84,21 @@ describe('Leaderboard', () => {
   });
 
   it('does not mutate the users prop when sorting', async () => {
-    const users = [makeMember({ user_id: 1, score: 1 }), makeMember({ user_id: 2, score: 9 })];
+    const users = [
+      makeMember({ user_id: 'uid-1', score: 1 }),
+      makeMember({ user_id: 'uid-2', score: 9 }),
+    ];
     await mountSuspended(Leaderboard, { props: { users } });
-    expect(users.map((u) => u.user_id)).toEqual([1, 2]);
+    expect(users.map((u) => u.user_id)).toEqual(['uid-1', 'uid-2']);
   });
 
   it('zero-pads places to two digits', async () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
-        users: [makeMember({ user_id: 1, score: 9 }), makeMember({ user_id: 2, score: 5 })],
+        users: [
+          makeMember({ user_id: 'uid-1', score: 9 }),
+          makeMember({ user_id: 'uid-2', score: 5 }),
+        ],
       },
     });
     const places = wrapper.findAll('.lb-row__place').map((p) => p.text());
@@ -102,9 +111,9 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, score: 10 }),
-          makeMember({ user_id: 2, score: 10 }),
-          makeMember({ user_id: 3, score: 8 }),
+          makeMember({ user_id: 'uid-1', score: 10 }),
+          makeMember({ user_id: 'uid-2', score: 10 }),
+          makeMember({ user_id: 'uid-3', score: 8 }),
         ],
       },
     });
@@ -117,9 +126,9 @@ describe('Leaderboard', () => {
       props: {
         global: true,
         users: [
-          makeMember({ user_id: 1, score: 1, normalized_score: 50 }),
-          makeMember({ user_id: 2, score: 2, normalized_score: 50 }),
-          makeMember({ user_id: 3, score: 3, normalized_score: 20 }),
+          makeMember({ user_id: 'uid-1', score: 1, normalized_score: 50 }),
+          makeMember({ user_id: 'uid-2', score: 2, normalized_score: 50 }),
+          makeMember({ user_id: 'uid-3', score: 3, normalized_score: 20 }),
         ],
       },
     });
@@ -131,10 +140,10 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, score: 9 }),
-          makeMember({ user_id: 2, score: 7 }),
-          makeMember({ user_id: 3, score: 5 }),
-          makeMember({ user_id: 4, score: 3 }),
+          makeMember({ user_id: 'uid-1', score: 9 }),
+          makeMember({ user_id: 'uid-2', score: 7 }),
+          makeMember({ user_id: 'uid-3', score: 5 }),
+          makeMember({ user_id: 'uid-4', score: 3 }),
         ],
       },
     });
@@ -151,9 +160,9 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, score: 10 }),
-          makeMember({ user_id: 2, score: 10 }),
-          makeMember({ user_id: 3, score: 8 }),
+          makeMember({ user_id: 'uid-1', score: 10 }),
+          makeMember({ user_id: 'uid-2', score: 10 }),
+          makeMember({ user_id: 'uid-3', score: 8 }),
         ],
       },
     });
@@ -164,10 +173,13 @@ describe('Leaderboard', () => {
   });
 
   it('highlights the logged-in user with the you class and YOU badge', async () => {
-    useUserStore().set(makeProfile(2));
+    useUserStore().set(makeProfile('uid-2'));
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
-        users: [makeMember({ user_id: 1, score: 9 }), makeMember({ user_id: 2, score: 5 })],
+        users: [
+          makeMember({ user_id: 'uid-1', score: 9 }),
+          makeMember({ user_id: 'uid-2', score: 5 }),
+        ],
       },
     });
     const rows = wrapper.findAll('.lb-row');
@@ -179,7 +191,7 @@ describe('Leaderboard', () => {
 
   it('shows no YOU badge when logged out', async () => {
     const wrapper = await mountSuspended(Leaderboard, {
-      props: { users: [makeMember({ user_id: 1, score: 9 })] },
+      props: { users: [makeMember({ user_id: 'uid-1', score: 9 })] },
     });
     expect(wrapper.find('.lb-row__you').exists()).toBe(false);
     expect(wrapper.find('.lb-row--you').exists()).toBe(false);
@@ -189,8 +201,8 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, name: 'Jane Doe', nickname: 'JD', score: 9 }),
-          makeMember({ user_id: 2, name: 'John Roe', nickname: null, score: 5 }),
+          makeMember({ user_id: 'uid-1', name: 'Jane Doe', nickname: 'JD', score: 9 }),
+          makeMember({ user_id: 'uid-2', name: 'John Roe', nickname: null, score: 5 }),
         ],
       },
     });
@@ -206,7 +218,7 @@ describe('Leaderboard', () => {
         global: true,
         users: [
           makeMember({
-            user_id: 1,
+            user_id: 'uid-1',
             name: 'Jane Doe',
             nickname: 'JD',
             score: 9,
@@ -223,14 +235,14 @@ describe('Leaderboard', () => {
     const wrapper = await mountSuspended(Leaderboard, {
       props: {
         users: [
-          makeMember({ user_id: 1, name: 'Top', score: 9 }),
-          makeMember({ user_id: 2, name: 'Second', score: 5 }),
+          makeMember({ user_id: 'uid-1', name: 'Top', score: 9 }),
+          makeMember({ user_id: 'uid-2', name: 'Second', score: 5 }),
         ],
       },
     });
     await wrapper.findAll('.lb-row__link')[1]!.trigger('click');
     const emitted = wrapper.emitted('user-selected');
     expect(emitted).toHaveLength(1);
-    expect(emitted![0]![0]).toMatchObject({ user_id: 2, name: 'Second', place: 2 });
+    expect(emitted![0]![0]).toMatchObject({ user_id: 'uid-2', name: 'Second', place: 2 });
   });
 });

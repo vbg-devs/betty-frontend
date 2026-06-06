@@ -31,7 +31,7 @@ function makeTournament(id: number, overrides: Partial<Tournament> = {}): Tourna
 
 function makeMember(user_id: number): GroupMember {
   return {
-    user_id,
+    user_id: `uid-${user_id}`,
     name: `User ${user_id}`,
     nickname: null,
     image_url: null,
@@ -167,7 +167,10 @@ describe('pages/dashboard', () => {
         makeGroup(3, { tournament_id: 3 }),
       ];
       const wrapper = await mountPage();
-      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual(['2', '1']);
+      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual([
+        '2',
+        '1',
+      ]);
     });
 
     it('switches the section head and the visible cards between tabs', async () => {
@@ -284,7 +287,10 @@ describe('pages/dashboard', () => {
       ];
       useGroupStore().groups = [makeGroup(1)];
       const wrapper = await mountPage();
-      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual(['1', '0']);
+      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual([
+        '1',
+        '0',
+      ]);
       const card = wrapper.find('a.group-card');
       expect(card.find('.group-card__badge--ended').text()).toContain('JUST ENDED');
       const metaKickers = card.findAll('.group-card__meta .kicker');
@@ -296,7 +302,10 @@ describe('pages/dashboard', () => {
       useTournamentStore().tournaments = [makeTournament(1, { end_date: '' })];
       useGroupStore().groups = [makeGroup(1)];
       const wrapper = await mountPage();
-      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual(['1', '0']);
+      expect(wrapper.findAll('.tab__count').map((c: DOMWrapper<Element>) => c.text())).toEqual([
+        '1',
+        '0',
+      ]);
       expect(wrapper.find('.group-card__meta .kicker--green').text()).toBe('● ACTIVE');
     });
   });
@@ -314,12 +323,9 @@ describe('pages/dashboard', () => {
       useGroupStore().groups = [makeGroup(1)];
       const wrapper = await mountPage();
       expect(countdownNums(wrapper)).toEqual(['10', '03', '04', '05']);
-      expect(wrapper.findAll('.hero__countdown-unit').map((u: DOMWrapper<Element>) => u.text())).toEqual([
-        'DAYS',
-        'HRS',
-        'MIN',
-        'SEC',
-      ]);
+      expect(
+        wrapper.findAll('.hero__countdown-unit').map((u: DOMWrapper<Element>) => u.text()),
+      ).toEqual(['DAYS', 'HRS', 'MIN', 'SEC']);
       expect(wrapper.find('.hero__countdown-kicker').text()).toBe('● FIRST KICKOFF IN');
       expect(wrapper.find('.hero__countdown-name').text()).toBe('★ WORLD CUP 2026');
     });
@@ -457,7 +463,10 @@ describe('pages/dashboard', () => {
         '/dashboard/groups/1',
         '/dashboard/groups/2',
       ]);
-      expect(rows.map((r: DOMWrapper<Element>) => r.find('.group-stack__name').text())).toEqual(['Alpha', 'Beta']);
+      expect(rows.map((r: DOMWrapper<Element>) => r.find('.group-stack__name').text())).toEqual([
+        'Alpha',
+        'Beta',
+      ]);
       expect(rows[1]!.find('.group-stack__meta .kicker--muted-dim').text()).toBe('2 MEMBERS');
       expect(rows[0]!.find('.group-stack__meta .kicker--green').text()).toBe('● ACTIVE');
 

@@ -10,7 +10,7 @@ mockNuxtImport('useApi', () => () => ({ authFetch }));
 function makeBet(overrides: Partial<Bet> = {}): Bet {
   return {
     id: 1,
-    user_id: 10,
+    user_id: 'uid-10',
     game_id: 20,
     group_id: 30,
     home_team_score: 2,

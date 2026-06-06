@@ -49,7 +49,7 @@ const NotificationTesterStub = {
 
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    id: 1,
+    id: 'uid-1',
     email: 'jane@example.com',
     name: 'Jane Doe',
     image_url: null,

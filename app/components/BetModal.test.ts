@@ -31,7 +31,7 @@ function makeGameBet(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeMember(userId: number, overrides: Partial<GroupMember> = {}): GroupMember {
+function makeMember(userId: string, overrides: Partial<GroupMember> = {}): GroupMember {
   return {
     user_id: userId,
     name: `User ${userId}`,
@@ -46,7 +46,7 @@ function makeMember(userId: number, overrides: Partial<GroupMember> = {}): Group
 let betId = 0;
 function makeBet(overrides: Partial<Bet> = {}): Bet {
   betId += 1;
-  const userId = overrides.user_id ?? betId;
+  const userId = overrides.user_id ?? `uid-${betId}`;
   return {
     id: betId,
     user_id: userId,
@@ -67,7 +67,7 @@ function isShown(wrapper: { attributes: (key: string) => string | undefined }) {
   return !(wrapper.attributes('style') ?? '').includes('display: none');
 }
 
-function makeUser(id: number): UserProfile {
+function makeUser(id: string): UserProfile {
   return {
     id,
     email: 'me@example.com',
@@ -253,9 +253,9 @@ describe('BetModal', () => {
 
     it('orders bets by points descending', async () => {
       const bets = [
-        makeBet({ user_points: 0, user: makeMember(1, { name: 'Zero' }) }),
-        makeBet({ user_points: 3, user: makeMember(2, { name: 'Three' }) }),
-        makeBet({ user_points: 1, user: makeMember(3, { name: 'One' }) }),
+        makeBet({ user_points: 0, user: makeMember('uid-1', { name: 'Zero' }) }),
+        makeBet({ user_points: 3, user: makeMember('uid-2', { name: 'Three' }) }),
+        makeBet({ user_points: 1, user: makeMember('uid-3', { name: 'One' }) }),
       ];
       const wrapper = await mountSuspended(BetModal, {
         props: { gameBet: makeGameBet({ start_date: PAST }), bets },
@@ -265,11 +265,11 @@ describe('BetModal', () => {
     });
 
     it('marks your row and colors semi and full hits', async () => {
-      useUserStore().user = makeUser(42);
+      useUserStore().user = makeUser('uid-42');
       const bets = [
-        makeBet({ user_id: 42, user_points: 3 }),
-        makeBet({ user_id: 5, user_points: 1 }),
-        makeBet({ user_id: 6, user_points: 0 }),
+        makeBet({ user_id: 'uid-42', user_points: 3 }),
+        makeBet({ user_id: 'uid-5', user_points: 1 }),
+        makeBet({ user_id: 'uid-6', user_points: 0 }),
       ];
       const wrapper = await mountSuspended(BetModal, {
         props: { gameBet: makeGameBet({ start_date: PAST }), bets },
@@ -300,7 +300,7 @@ describe('BetModal', () => {
     });
 
     it('prefers the nickname over the name', async () => {
-      const bets = [makeBet({ user: makeMember(1, { name: 'Jane Doe', nickname: 'JD' }) })];
+      const bets = [makeBet({ user: makeMember('uid-1', { name: 'Jane Doe', nickname: 'JD' }) })];
       const wrapper = await mountSuspended(BetModal, {
         props: { gameBet: makeGameBet(), bets },
       });
@@ -445,12 +445,12 @@ describe('BetModal', () => {
       const wrapper = await mountSuspended(BetModal, {
         props: {
           gameBet: makeGameBet(),
-          bets: [makeBet({ user_id: 42, home_team_score: 3, away_team_score: 2 })],
+          bets: [makeBet({ user_id: 'uid-42', home_team_score: 3, away_team_score: 2 })],
         },
       });
       expect(wrapper.find('.btn--orange').text()).toBe('PLACE BET');
 
-      useUserStore().user = makeUser(42);
+      useUserStore().user = makeUser('uid-42');
       await wrapper.vm.$nextTick();
 
       const inputs = wrapper.findAll('.score-input__field');
@@ -462,11 +462,11 @@ describe('BetModal', () => {
     // NOTE: pins current behavior — the myBet watcher is not immediate, so a bet
     // of yours that is already present on first render never prefills the inputs.
     it('does not prefill when your bet is present from the very first render', async () => {
-      useUserStore().user = makeUser(42);
+      useUserStore().user = makeUser('uid-42');
       const wrapper = await mountSuspended(BetModal, {
         props: {
           gameBet: makeGameBet(),
-          bets: [makeBet({ user_id: 42, home_team_score: 3, away_team_score: 2 })],
+          bets: [makeBet({ user_id: 'uid-42', home_team_score: 3, away_team_score: 2 })],
         },
       });
       const inputs = wrapper.findAll('.score-input__field');
@@ -474,34 +474,68 @@ describe('BetModal', () => {
       expect(wrapper.find('.btn--orange').text()).toBe('UPDATE BET');
     });
 
-    // NOTE: pins current behavior — updating an existing bet still POSTs /bet via
-    // betStore.place; betStore.update (PUT /bet/:id) is never used by this modal.
-    it('shows UPDATING… while pending and still POSTs to /bet', async () => {
-      let resolvePlace!: (value: unknown) => void;
-      authFetch.mockImplementation(() => new Promise((resolve) => (resolvePlace = resolve)));
+    it('shows UPDATING… while pending and PUTs to /bet/:id when the all-groups box is unchecked', async () => {
+      let resolveUpdate!: (value: unknown) => void;
+      authFetch.mockImplementation(() => new Promise((resolve) => (resolveUpdate = resolve)));
       const wrapper = await mountSuspended(BetModal, {
         props: {
           gameBet: makeGameBet(),
-          bets: [makeBet({ user_id: 42, home_team_score: 3, away_team_score: 2 })],
+          bets: [makeBet({ id: 99, user_id: 'uid-42', home_team_score: 3, away_team_score: 2 })],
         },
       });
-      useUserStore().user = makeUser(42);
+      useUserStore().user = makeUser('uid-42');
       await wrapper.vm.$nextTick();
+      // Unchecking scopes the edit to this group only, so it takes the single-bet PUT path.
+      await wrapper.find('.check__input').setValue(false);
 
       const button = wrapper.find('.btn--orange');
       await button.trigger('click');
       expect(button.text()).toBe('UPDATING…');
 
-      resolvePlace(makeBet());
+      resolveUpdate(makeBet({ id: 99 }));
       await flushPromises();
       expect(button.text()).toBe('UPDATE BET');
-      expect(authFetch).toHaveBeenCalledWith(
-        '/bet',
-        expect.objectContaining({
-          method: 'POST',
-          body: expect.objectContaining({ home_team_score: 3, away_team_score: 2 }),
-        }),
-      );
+      expect(authFetch).toHaveBeenCalledWith('/bet/99', {
+        method: 'PUT',
+        body: { id: 99, home_team_score: 3, away_team_score: 2 },
+      });
+      expect(wrapper.emitted('bet-placed')).toHaveLength(1);
+    });
+
+    // Regression: editing a universal bet must keep propagating across every group.
+    // The PUT /bet/:id path only updates the one bet, so a checked ("all my groups")
+    // edit has to re-POST with is_universal=true and let the backend fan out the new
+    // score — otherwise the other groups silently retain the stale prediction.
+    it('re-POSTs with is_universal true when editing with the all-groups box checked', async () => {
+      authFetch.mockResolvedValue(makeBet({ id: 99 }));
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          bets: [makeBet({ id: 99, user_id: 'uid-42', home_team_score: 3, away_team_score: 2 })],
+        },
+      });
+      useUserStore().user = makeUser('uid-42');
+      await wrapper.vm.$nextTick();
+
+      // The checkbox defaults to checked, which is the standard edit flow.
+      expect((wrapper.find('.check__input').element as HTMLInputElement).checked).toBe(true);
+      expect(wrapper.find('.btn--orange').text()).toBe('UPDATE BET');
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith('/bet', {
+        method: 'POST',
+        body: {
+          game_id: 7,
+          group_id: 3,
+          home_team_score: 3,
+          away_team_score: 2,
+          is_universal: true,
+        },
+      });
+      // Must not silently fall back to the single-group PUT that drops cross-group sync.
+      expect(authFetch).not.toHaveBeenCalledWith('/bet/99', expect.anything());
       expect(wrapper.emitted('bet-placed')).toHaveLength(1);
     });
   });

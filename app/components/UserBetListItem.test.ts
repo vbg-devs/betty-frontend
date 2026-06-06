@@ -26,7 +26,7 @@ const futureGame: Game = {
 const startedGame: Game = { ...futureGame, start_date: '2000-01-01T00:00:00Z' };
 
 const me: UserProfile = {
-  id: 5,
+  id: 'uid-5',
   email: 'me@example.com',
   name: 'Me',
   image_url: null,
@@ -42,7 +42,7 @@ type BetWithGame = Bet & { game: Game };
 function makeBet(overrides: Partial<BetWithGame> = {}): BetWithGame {
   return {
     id: 1,
-    user_id: 5,
+    user_id: 'uid-5',
     game_id: 7,
     group_id: 1,
     home_team_score: 2,
@@ -62,7 +62,7 @@ describe('UserBetListItem', () => {
   });
 
   it('hides the score of an unprocessed future-game bet from another user', async () => {
-    useUserStore().user = { ...me, id: 99 };
+    useUserStore().user = { ...me, id: 'uid-99' };
     const wrapper = await mountSuspended(UserBetListItem, {
       props: { bet: makeBet() },
     });
@@ -74,7 +74,7 @@ describe('UserBetListItem', () => {
 
   it('reveals the score when peek=true but keeps points pending while unprocessed', async () => {
     const wrapper = await mountSuspended(UserBetListItem, {
-      props: { bet: makeBet({ user_id: 42 }), peek: true },
+      props: { bet: makeBet({ user_id: 'uid-42' }), peek: true },
     });
     const scores = wrapper.findAll('.bet-row__score-value');
     expect(scores.map((s) => s.text())).toEqual(['2', '1']);
@@ -86,7 +86,7 @@ describe('UserBetListItem', () => {
 
   it('reveals the score once the game has started, points still pending', async () => {
     const wrapper = await mountSuspended(UserBetListItem, {
-      props: { bet: makeBet({ user_id: 42, game: startedGame }) },
+      props: { bet: makeBet({ user_id: 'uid-42', game: startedGame }) },
     });
     expect(wrapper.findComponent(HiddenScore).exists()).toBe(false);
     expect(wrapper.findAll('.bet-row__score-value')).toHaveLength(2);
@@ -97,7 +97,7 @@ describe('UserBetListItem', () => {
   it('reveals my own score even when the game is hidden for others', async () => {
     useUserStore().user = me;
     const wrapper = await mountSuspended(UserBetListItem, {
-      props: { bet: makeBet({ user_id: 5 }) },
+      props: { bet: makeBet({ user_id: 'uid-5' }) },
     });
     expect(wrapper.findComponent(HiddenScore).exists()).toBe(false);
     expect(wrapper.findAll('.bet-row__score-value')).toHaveLength(2);
@@ -154,7 +154,7 @@ describe('UserBetListItem', () => {
   it('reveals the score of a processed bet even before the game starts', async () => {
     const wrapper = await mountSuspended(UserBetListItem, {
       props: {
-        bet: makeBet({ user_id: 42, processed_at: '2026-06-01T00:00:00Z' }),
+        bet: makeBet({ user_id: 'uid-42', processed_at: '2026-06-01T00:00:00Z' }),
       },
     });
     expect(wrapper.findComponent(HiddenScore).exists()).toBe(false);
@@ -187,7 +187,7 @@ describe('UserBetListItem', () => {
   // NOTE: pins current behavior — a missing processed_at (undefined) passes the
   // `processed_at !== null` checks, so the bet renders as processed with points.
   it('treats an undefined processed_at as processed', async () => {
-    const bet = makeBet({ user_id: 42, user_points: 1 });
+    const bet = makeBet({ user_id: 'uid-42', user_points: 1 });
     delete (bet as Partial<BetWithGame>).processed_at;
     const wrapper = await mountSuspended(UserBetListItem, {
       props: { bet },

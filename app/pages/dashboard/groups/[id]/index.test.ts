@@ -67,7 +67,7 @@ const UserHistoryStub = defineComponent({
 
 function makeMember(overrides: Partial<GroupMember> = {}): GroupMember {
   return {
-    user_id: 100,
+    user_id: 'uid-100',
     name: 'Alice Smith',
     nickname: null,
     image_url: null,
@@ -79,9 +79,9 @@ function makeMember(overrides: Partial<GroupMember> = {}): GroupMember {
 
 function defaultMembers(): GroupMember[] {
   return [
-    makeMember({ user_id: 100, name: 'Alice Smith', score: 10, access_level: 0 }),
-    makeMember({ user_id: 101, name: 'Bob Jones', score: 5 }),
-    makeMember({ user_id: 102, name: 'Cara Lane', score: 2 }),
+    makeMember({ user_id: 'uid-100', name: 'Alice Smith', score: 10, access_level: 0 }),
+    makeMember({ user_id: 'uid-101', name: 'Bob Jones', score: 5 }),
+    makeMember({ user_id: 'uid-102', name: 'Cara Lane', score: 2 }),
   ];
 }
 
@@ -146,7 +146,7 @@ function makeDetails(overrides: Partial<Tournament> = {}): Tournament {
 
 function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    id: 100,
+    id: 'uid-100',
     email: 'alice@example.com',
     name: 'Alice Smith',
     image_url: null,
@@ -162,7 +162,7 @@ function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
 function makeBet(overrides: Partial<Bet> = {}): Bet {
   return {
     id: 1,
-    user_id: 101,
+    user_id: 'uid-101',
     game_id: 1,
     group_id: 1,
     home_team_score: 2,
@@ -266,7 +266,7 @@ describe('pages/dashboard/groups/[id]', () => {
     // NOTE: pins current behavior — String('–').padStart(2, '0') renders '0–' for
     // non-members instead of a plain dash. Looks like a cosmetic source bug.
     it('renders "0–" as the rank when the current user is not a member', async () => {
-      useUserStore().user = makeUser({ id: 999 });
+      useUserStore().user = makeUser({ id: 'uid-999' });
       const w = await mountPage();
       expect(w.find('.stat--orange .stat__value').text()).toBe('0–');
     });
@@ -277,7 +277,10 @@ describe('pages/dashboard/groups/[id]', () => {
       const w = await mountPage();
       expect(w.find('.kicker--accent').text()).toBe('★ YOUR GROUP');
       expect(w.find('.hero__meta').text()).toContain('○ FINAL');
-      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual(['Group', 'Leaderboard']);
+      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual([
+        'Group',
+        'Leaderboard',
+      ]);
     });
 
     it('treats an empty end_date as a running tournament', async () => {
@@ -300,7 +303,7 @@ describe('pages/dashboard/groups/[id]', () => {
 
     it('shows "CHAMPION" and the losing placement for a non-winner on an ended tournament', async () => {
       useTournamentStore().tournaments = [makeTournament({ end_date: PAST })];
-      useUserStore().user = makeUser({ id: 102, name: 'Cara Lane' });
+      useUserStore().user = makeUser({ id: 'uid-102', name: 'Cara Lane' });
       const w = await mountPage();
       expect(w.find('.stat--champion .stat__kicker').text()).toBe('CHAMPION');
       expect(w.find('.stat--ghost .stat__value').text()).toBe('03');
@@ -320,7 +323,7 @@ describe('pages/dashboard/groups/[id]', () => {
     });
 
     it('hides the upload button from non-author members', async () => {
-      useUserStore().user = makeUser({ id: 101 });
+      useUserStore().user = makeUser({ id: 'uid-101' });
       const w = await mountPage();
       expect(w.find('.hero__upload-btn').exists()).toBe(false);
       expect(w.find('input[type="file"]').exists()).toBe(false);
@@ -412,7 +415,11 @@ describe('pages/dashboard/groups/[id]', () => {
     it('shows the group tab by default and switches to games and leaderboard', async () => {
       const w = await mountPage();
       expect(w.find('.group-tab').exists()).toBe(true);
-      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual(['Group', 'Games', 'Leaderboard']);
+      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual([
+        'Group',
+        'Games',
+        'Leaderboard',
+      ]);
 
       await w.findAll('.tab')[1]!.trigger('click');
       await flushPromises();
@@ -428,7 +435,9 @@ describe('pages/dashboard/groups/[id]', () => {
       const leaderboard = w.findComponent(LeaderboardStub);
       expect(leaderboard.exists()).toBe(true);
       expect((leaderboard.props('users') as GroupMember[]).map((m) => m.user_id)).toEqual([
-        100, 101, 102,
+        'uid-100',
+        'uid-101',
+        'uid-102',
       ]);
     });
 
@@ -436,11 +445,14 @@ describe('pages/dashboard/groups/[id]', () => {
       const w = await mountPage();
       await w.findAll('.tab')[2]!.trigger('click');
       await flushPromises();
-      w.findComponent(LeaderboardStub).vm.$emit('user-selected', makeMember({ user_id: 101 }));
+      w.findComponent(LeaderboardStub).vm.$emit(
+        'user-selected',
+        makeMember({ user_id: 'uid-101' }),
+      );
       await nextTick();
       const history = w.findComponent(UserHistoryStub);
       expect(history.exists()).toBe(true);
-      expect((history.props('user') as GroupMember).user_id).toBe(101);
+      expect((history.props('user') as GroupMember).user_id).toBe('uid-101');
 
       history.vm.$emit('close');
       await nextTick();
@@ -480,10 +492,10 @@ describe('pages/dashboard/groups/[id]', () => {
       useGroupStore().groups = [
         makeGroup({
           members: [
-            makeMember({ user_id: 100, name: 'Alice Smith', score: 10, access_level: 0 }),
-            makeMember({ user_id: 101, name: 'Bob Jones', score: 10 }),
-            makeMember({ user_id: 102, name: 'Cara Lane', score: 5 }),
-            makeMember({ user_id: 103, name: 'Dan Poe', score: 1 }),
+            makeMember({ user_id: 'uid-100', name: 'Alice Smith', score: 10, access_level: 0 }),
+            makeMember({ user_id: 'uid-101', name: 'Bob Jones', score: 10 }),
+            makeMember({ user_id: 'uid-102', name: 'Cara Lane', score: 5 }),
+            makeMember({ user_id: 'uid-103', name: 'Dan Poe', score: 1 }),
           ],
         }),
       ];
@@ -507,7 +519,10 @@ describe('pages/dashboard/groups/[id]', () => {
     it('hides the games tab, invite, nickname, and visibility cards when ended', async () => {
       useTournamentStore().tournaments = [makeTournament({ end_date: PAST })];
       const w = await mountPage();
-      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual(['Group', 'Leaderboard']);
+      expect(w.findAll('.tab').map((t: DOMWrapper<Element>) => t.text())).toEqual([
+        'Group',
+        'Leaderboard',
+      ]);
       expect(w.find('.invite').exists()).toBe(false);
       expect(w.find('.nickname').exists()).toBe(false);
       expect(w.find('.visibility__btn').exists()).toBe(false);
@@ -520,15 +535,19 @@ describe('pages/dashboard/groups/[id]', () => {
       useGroupStore().groups = [
         makeGroup({
           members: [
-            makeMember({ user_id: 102, name: 'Cara Lane', score: 5 }),
-            makeMember({ user_id: 100, name: 'Alice Smith', score: 10, access_level: 0 }),
-            makeMember({ user_id: 101, name: 'Bob Jones', score: 10 }),
+            makeMember({ user_id: 'uid-102', name: 'Cara Lane', score: 5 }),
+            makeMember({ user_id: 'uid-100', name: 'Alice Smith', score: 10, access_level: 0 }),
+            makeMember({ user_id: 'uid-101', name: 'Bob Jones', score: 10 }),
           ],
         }),
       ];
       const w = await mountPage();
       const rows = w.findAll('.roster__row');
-      expect(rows.map((r: DOMWrapper<Element>) => r.find('.roster__rank').text())).toEqual(['#1', '#1', '#2']);
+      expect(rows.map((r: DOMWrapper<Element>) => r.find('.roster__rank').text())).toEqual([
+        '#1',
+        '#1',
+        '#2',
+      ]);
       expect(rows.map((r: DOMWrapper<Element>) => r.find('.roster__name').text())).toEqual([
         'Alice Smith',
         'Bob Jones',
@@ -540,7 +559,7 @@ describe('pages/dashboard/groups/[id]', () => {
     it('prefers nicknames over real names in the roster', async () => {
       useGroupStore().groups = [
         makeGroup({
-          members: [makeMember({ user_id: 100, name: 'Alice Smith', nickname: 'The GOAT' })],
+          members: [makeMember({ user_id: 'uid-100', name: 'Alice Smith', nickname: 'The GOAT' })],
         }),
       ];
       const w = await mountPage();
@@ -550,7 +569,7 @@ describe('pages/dashboard/groups/[id]', () => {
 
     it('caps the roster at six rows and offers a see-all shortcut to the leaderboard', async () => {
       const members = Array.from({ length: 8 }, (_, i) =>
-        makeMember({ user_id: 200 + i, name: `Member ${i}`, score: 8 - i }),
+        makeMember({ user_id: `uid-${200 + i}`, name: `Member ${i}`, score: 8 - i }),
       );
       useGroupStore().groups = [makeGroup({ members })];
       const w = await mountPage();
@@ -569,7 +588,7 @@ describe('pages/dashboard/groups/[id]', () => {
       await w.find('.roster__row').trigger('click');
       const history = w.findComponent(UserHistoryStub);
       expect(history.exists()).toBe(true);
-      expect((history.props('user') as GroupMember).user_id).toBe(100);
+      expect((history.props('user') as GroupMember).user_id).toBe('uid-100');
       expect((history.props('games') as Game[]).map((g) => g.id)).toEqual([1, 2, 3, 4]);
     });
   });
@@ -622,7 +641,7 @@ describe('pages/dashboard/groups/[id]', () => {
 
     it('prefills the existing nickname and clears it with a null payload', async () => {
       useGroupStore().groups = [
-        makeGroup({ members: [makeMember({ user_id: 100, nickname: 'Old' })] }),
+        makeGroup({ members: [makeMember({ user_id: 'uid-100', nickname: 'Old' })] }),
       ];
       const setNickname = vi
         .spyOn(useGroupStore(), 'setNickname')
@@ -654,7 +673,7 @@ describe('pages/dashboard/groups/[id]', () => {
     });
 
     it('hides the nickname card when the current user is not a member', async () => {
-      useUserStore().user = makeUser({ id: 999 });
+      useUserStore().user = makeUser({ id: 'uid-999' });
       const w = await mountPage();
       expect(w.find('.nickname').exists()).toBe(false);
     });
@@ -747,7 +766,7 @@ describe('pages/dashboard/groups/[id]', () => {
     });
 
     it('hides the edit button from non-authors', async () => {
-      useUserStore().user = makeUser({ id: 101 });
+      useUserStore().user = makeUser({ id: 'uid-101' });
       const w = await mountPage();
       expect(w.find('.rules__edit').exists()).toBe(false);
     });
@@ -788,8 +807,8 @@ describe('pages/dashboard/groups/[id]', () => {
 
     it('opens the bet modal with the group id and the bets for that game joined to members', async () => {
       const bets = [
-        makeBet({ id: 1, user_id: 101, game_id: 1 }),
-        makeBet({ id: 2, user_id: 102, game_id: 3 }),
+        makeBet({ id: 1, user_id: 'uid-101', game_id: 1 }),
+        makeBet({ id: 2, user_id: 'uid-102', game_id: 3 }),
       ];
       authFetch.mockImplementation((url: string) =>
         url === '/bets/bygroup/1' ? Promise.resolve(bets) : Promise.resolve([]),
@@ -840,7 +859,7 @@ describe('pages/dashboard/groups/[id]', () => {
       expect(modal.props('bets')).toEqual([]);
 
       authFetch.mockClear();
-      authFetch.mockResolvedValue([makeBet({ id: 7, user_id: 101, game_id: 1 })]);
+      authFetch.mockResolvedValue([makeBet({ id: 7, user_id: 'uid-101', game_id: 1 })]);
       await vi.advanceTimersByTimeAsync(9_999);
       expect(authFetch).not.toHaveBeenCalled();
 

@@ -5,7 +5,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime';
 import type { UserProfile } from '~/types';
 import ExactScoreListItem from './ExactScoreListItem.vue';
 
-function makeUser(id: number): UserProfile {
+function makeUser(id: string): UserProfile {
   return {
     id,
     email: 'jane@example.com',
@@ -25,34 +25,34 @@ describe('ExactScoreListItem', () => {
   });
 
   it('shows total winner count when current user is not among the winners', async () => {
-    useUserStore().set(makeUser(99));
+    useUserStore().set(makeUser('uid-99'));
     const wrapper = await mountSuspended(ExactScoreListItem, {
-      props: { message: { user_ids: [1, 2, 3] } },
+      props: { message: { user_ids: ['uid-1', 'uid-2', 'uid-3'] } },
     });
     expect(wrapper.text()).toBe('3 players had the exact score!');
     expect(wrapper.find('strong').text()).toBe('3');
   });
 
   it('shows "You and N other(s)" when current user is among the winners', async () => {
-    useUserStore().set(makeUser(2));
+    useUserStore().set(makeUser('uid-2'));
     const wrapper = await mountSuspended(ExactScoreListItem, {
-      props: { message: { user_ids: [1, 2, 3] } },
+      props: { message: { user_ids: ['uid-1', 'uid-2', 'uid-3'] } },
     });
     expect(wrapper.text()).toBe('You and 2 other(s) had the exact score');
     expect(wrapper.find('strong').text()).toBe('2');
   });
 
   it('shows zero others when current user is the only winner', async () => {
-    useUserStore().set(makeUser(7));
+    useUserStore().set(makeUser('uid-7'));
     const wrapper = await mountSuspended(ExactScoreListItem, {
-      props: { message: { user_ids: [7] } },
+      props: { message: { user_ids: ['uid-7'] } },
     });
     expect(wrapper.text()).toBe('You and 0 other(s) had the exact score');
   });
 
   it('treats a logged-out user as not among the winners', async () => {
     const wrapper = await mountSuspended(ExactScoreListItem, {
-      props: { message: { user_ids: [1, 2] } },
+      props: { message: { user_ids: ['uid-1', 'uid-2'] } },
     });
     expect(wrapper.text()).toBe('2 players had the exact score!');
   });
@@ -65,9 +65,9 @@ describe('ExactScoreListItem', () => {
   });
 
   it('renders the count inside a <strong> tag via v-html', async () => {
-    useUserStore().set(makeUser(1));
+    useUserStore().set(makeUser('uid-1'));
     const wrapper = await mountSuspended(ExactScoreListItem, {
-      props: { message: { user_ids: [1, 2] } },
+      props: { message: { user_ids: ['uid-1', 'uid-2'] } },
     });
     expect(wrapper.html()).toContain('<strong>1</strong>');
   });

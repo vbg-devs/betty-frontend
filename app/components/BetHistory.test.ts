@@ -14,7 +14,7 @@ function makeBet(homeScore: number, awayScore: number): Bet {
   betId += 1;
   return {
     id: betId,
-    user_id: betId,
+    user_id: `uid-${betId}`,
     game_id: 7,
     group_id: 1,
     home_team_score: homeScore,

@@ -194,7 +194,7 @@ describe('ActivityFeed', () => {
     });
 
     it('user_exact_score renders ExactScoreListItem with the payload as message', async () => {
-      const payload = { user_ids: [1, 2, 3] };
+      const payload = { user_ids: ['uid-1', 'uid-2', 'uid-3'] };
       store.add(makeMsg('user_exact_score', payload));
       const wrapper = await mountFeed();
       expect(wrapper.findComponent(ExactScoreListItemStub).props('message')).toEqual(payload);

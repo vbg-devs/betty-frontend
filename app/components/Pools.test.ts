@@ -34,7 +34,7 @@ function makePool(id: number, name: string, games: Game[]): Pool {
   return { id, name, games };
 }
 
-function makeBet(overrides: Partial<Bet> & { user_id: number; game_id: number }): Bet {
+function makeBet(overrides: Partial<Bet> & { user_id: string; game_id: number }): Bet {
   return {
     id: 1,
     group_id: 1,
@@ -46,7 +46,7 @@ function makeBet(overrides: Partial<Bet> & { user_id: number; game_id: number })
   };
 }
 
-function makeProfile(id: number): UserProfile {
+function makeProfile(id: string): UserProfile {
   return {
     id,
     email: 'jane@example.com',
@@ -220,13 +220,13 @@ describe('Pools', () => {
       ]),
     ];
     const bets = [
-      makeBet({ id: 1, user_id: 7, game_id: 1, home_team_score: 2, away_team_score: 1 }),
-      makeBet({ id: 2, user_id: 8, game_id: 1, home_team_score: 0, away_team_score: 3 }),
-      makeBet({ id: 3, user_id: 8, game_id: 2, home_team_score: 1, away_team_score: 1 }),
+      makeBet({ id: 1, user_id: 'uid-7', game_id: 1, home_team_score: 2, away_team_score: 1 }),
+      makeBet({ id: 2, user_id: 'uid-8', game_id: 1, home_team_score: 0, away_team_score: 3 }),
+      makeBet({ id: 3, user_id: 'uid-8', game_id: 2, home_team_score: 1, away_team_score: 1 }),
     ];
 
     it('flags games the logged-in user has bet on and passes the bet scores', async () => {
-      useUserStore().set(makeProfile(7));
+      useUserStore().set(makeProfile('uid-7'));
       const wrapper = await mountPools({ pools, bets });
       const games = wrapper.findAllComponents(GameStub);
       expect(games[0]!.props('betted')).toBe(true);
@@ -338,7 +338,9 @@ describe('Pools', () => {
       const handler = scrollCalls.at(-1)![1];
 
       wrapper.unmount();
-      expect(removeSpy.mock.calls.some((c) => (c[0] as string) === 'scroll' && c[1] === handler)).toBe(true);
+      expect(
+        removeSpy.mock.calls.some((c) => (c[0] as string) === 'scroll' && c[1] === handler),
+      ).toBe(true);
     });
   });
 });

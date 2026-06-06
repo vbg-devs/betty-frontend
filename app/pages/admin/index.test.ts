@@ -27,7 +27,7 @@ const teams: Team[] = [
 
 function makeUser(isAdmin: boolean): UserProfile {
   return {
-    id: 1,
+    id: 'uid-1',
     email: 'me@example.com',
     name: 'Me',
     image_url: null,

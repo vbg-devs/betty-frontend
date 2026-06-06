@@ -24,13 +24,13 @@ mockNuxtImport('useNotify', () => () => ({ alert: notifyAlert, confirm: notifyCo
 mockNuxtImport('useRoute', () => () => ({ params: { id: '7' } }));
 
 const members = [
-  { user_id: 1, name: 'Jane Doe', nickname: 'janie', image_url: null },
-  { user_id: 2, name: 'Bob Smith', nickname: null, image_url: null },
+  { user_id: 'uid-1', name: 'Jane Doe', nickname: 'janie', image_url: null },
+  { user_id: 'uid-2', name: 'Bob Smith', nickname: null, image_url: null },
 ];
 
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    id: 1,
+    id: 'uid-1',
     email: 'jane@example.com',
     name: 'Jane Doe',
     image_url: null,
@@ -46,7 +46,7 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
 function makeMessage(overrides: Partial<GroupMessage> = {}): GroupMessage {
   return {
     id: 10,
-    user_id: 1,
+    user_id: 'uid-1',
     group_id: 7,
     body: 'hello world',
     image_url: null,
@@ -136,8 +136,8 @@ describe('MemeBoard', () => {
   describe('message rendering', () => {
     it('marks my messages and only they get a delete button', async () => {
       const wrapper = await mountBoard([
-        makeMessage({ id: 1, user_id: 1 }),
-        makeMessage({ id: 2, user_id: 2 }),
+        makeMessage({ id: 1, user_id: 'uid-1' }),
+        makeMessage({ id: 2, user_id: 'uid-2' }),
       ]);
       const rows = wrapper.findAll('.meme-board__message');
       expect(rows[0]!.classes()).toContain('meme-board__message--mine');
@@ -148,7 +148,7 @@ describe('MemeBoard', () => {
 
     it('shows no mine styling or delete buttons when nobody is logged in', async () => {
       useUserStore().set(null);
-      const wrapper = await mountBoard([makeMessage({ user_id: 1 })]);
+      const wrapper = await mountBoard([makeMessage({ user_id: 'uid-1' })]);
       expect(wrapper.find('.meme-board__message--mine').exists()).toBe(false);
       expect(wrapper.find('.meme-board__delete').exists()).toBe(false);
     });
@@ -167,8 +167,8 @@ describe('MemeBoard', () => {
 
     it('shows the nickname when set and falls back to the name', async () => {
       const wrapper = await mountBoard([
-        makeMessage({ id: 1, user_id: 1 }),
-        makeMessage({ id: 2, user_id: 2 }),
+        makeMessage({ id: 1, user_id: 'uid-1' }),
+        makeMessage({ id: 2, user_id: 'uid-2' }),
       ]);
       const names = wrapper.findAll('.meme-board__username strong');
       expect(names[0]!.text()).toBe('janie');
@@ -187,7 +187,7 @@ describe('MemeBoard', () => {
     // whole board fails to render (e.g. after a member leaves the group).
     it('crashes rendering a message whose author is not in members', async () => {
       const errorHandler = vi.fn();
-      authFetch.mockResolvedValueOnce([makeMessage({ user_id: 99 })]);
+      authFetch.mockResolvedValueOnce([makeMessage({ user_id: 'uid-99' })]);
       await mountSuspended(MemeBoard, {
         props: { members },
         global: { config: { errorHandler } },
@@ -202,9 +202,9 @@ describe('MemeBoard', () => {
     const reacted = () =>
       makeMessage({
         reactions: [
-          { user_id: 1, emoji_id: '👍', created_at: '2026-06-01T00:00:00Z' },
-          { user_id: 2, emoji_id: '👍', created_at: '2026-06-01T00:00:00Z' },
-          { user_id: 2, emoji_id: '❤️', created_at: '2026-06-01T00:00:00Z' },
+          { user_id: 'uid-1', emoji_id: '👍', created_at: '2026-06-01T00:00:00Z' },
+          { user_id: 'uid-2', emoji_id: '👍', created_at: '2026-06-01T00:00:00Z' },
+          { user_id: 'uid-2', emoji_id: '❤️', created_at: '2026-06-01T00:00:00Z' },
         ],
       });
 
@@ -331,8 +331,8 @@ describe('MemeBoard', () => {
 
     it('asks for confirmation and deletes on confirm', async () => {
       const wrapper = await mountBoard([
-        makeMessage({ id: 5, user_id: 1 }),
-        makeMessage({ id: 6, user_id: 2 }),
+        makeMessage({ id: 5, user_id: 'uid-1' }),
+        makeMessage({ id: 6, user_id: 'uid-2' }),
       ]);
       const onConfirm = await startDelete(wrapper);
       expect(notifyConfirm).toHaveBeenCalledWith({
@@ -351,7 +351,7 @@ describe('MemeBoard', () => {
     });
 
     it('disables the delete button while the request is pending and guards re-entry', async () => {
-      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 1 })]);
+      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 'uid-1' })]);
       const onConfirm = await startDelete(wrapper);
 
       let resolveDelete!: () => void;
@@ -368,7 +368,7 @@ describe('MemeBoard', () => {
     });
 
     it('drops the message locally without an alert when the server says 404', async () => {
-      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 1 })]);
+      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 'uid-1' })]);
       const onConfirm = await startDelete(wrapper);
 
       authFetch.mockRejectedValueOnce({ response: { status: 404 } });
@@ -379,7 +379,7 @@ describe('MemeBoard', () => {
     });
 
     it('treats a bare err.status 404 the same way', async () => {
-      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 1 })]);
+      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 'uid-1' })]);
       const onConfirm = await startDelete(wrapper);
 
       authFetch.mockRejectedValueOnce({ status: 404 });
@@ -390,7 +390,7 @@ describe('MemeBoard', () => {
     });
 
     it('keeps the message and alerts on other delete failures', async () => {
-      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 1 })]);
+      const wrapper = await mountBoard([makeMessage({ id: 5, user_id: 'uid-1' })]);
       const onConfirm = await startDelete(wrapper);
 
       authFetch.mockRejectedValueOnce(new Error('boom'));

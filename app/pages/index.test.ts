@@ -429,6 +429,13 @@ describe('landing page', () => {
       expect(routerReplace).toHaveBeenCalledWith('/dashboard/groups/7');
     });
 
+    it('ignores an external returnUrl and replaces with the dashboard', async () => {
+      await mountPage();
+      window.history.replaceState(null, '', '/?returnUrl=https://evil.example.com/phish');
+      fireAuthState({ uid: 'u1' });
+      expect(routerReplace).toHaveBeenCalledWith('/dashboard');
+    });
+
     it('stays put when auth reports no user', async () => {
       await mountPage();
       routerReplace.mockClear();
@@ -463,9 +470,7 @@ describe('landing page', () => {
       }
     });
 
-    it('currently follows an absolute external returnUrl (open redirect)', async () => {
-      // NOTE: pins current behavior — returnUrl is assigned to window.location.href
-      // without validation, so ?returnUrl=https://evil.example.com is an open redirect.
+    it('falls back to the dashboard for an absolute external returnUrl (open-redirect guard)', async () => {
       const wrapper = await mountPage();
       window.history.replaceState(null, '', '/?returnUrl=https://evil.example.com/phish');
       const { assignments, spy } = captureLocationAssignments();
@@ -475,7 +480,7 @@ describe('landing page', () => {
         await flushPromises();
 
         expect(routerPush).not.toHaveBeenCalled();
-        expect(assignments).toEqual(['https://evil.example.com/phish']);
+        expect(assignments).toEqual(['/dashboard']);
       } finally {
         spy.mockRestore();
       }

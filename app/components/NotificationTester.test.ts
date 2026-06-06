@@ -42,7 +42,7 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
 
 function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    id: 33,
+    id: 'uid-33',
     email: 'jane@example.com',
     name: 'Jane Doe',
     image_url: null,
@@ -109,7 +109,7 @@ describe('NotificationTester', () => {
     it('BET PLACED adds a bet_placed message using ids from the stores', async () => {
       useGameStore().games = [makeGame({ id: 11 })];
       useGroupStore().groups = [makeGroup({ id: 22 })];
-      useUserStore().set(makeUser({ id: 33 }));
+      useUserStore().set(makeUser({ id: 'uid-33' }));
       const wrapper = await mountOpen();
 
       await findButton(wrapper, 'BET PLACED').trigger('click');
@@ -122,7 +122,7 @@ describe('NotificationTester', () => {
         message: {
           game_id: 11,
           group_id: 22,
-          user_id: 33,
+          user_id: 'uid-33',
           home_team_score: 2,
           away_team_score: 1,
         },
@@ -140,7 +140,7 @@ describe('NotificationTester', () => {
         message: {
           game_id: 1,
           group_id: 1,
-          user_id: 1,
+          user_id: 'uid-1',
           home_team_score: 2,
           away_team_score: 1,
         },
@@ -183,27 +183,27 @@ describe('NotificationTester', () => {
 
     it('EXACT SCORE fires user_exact_score with user and game ids', async () => {
       useGameStore().games = [makeGame({ id: 77 })];
-      useUserStore().set(makeUser({ id: 33 }));
+      useUserStore().set(makeUser({ id: 'uid-33' }));
       const wrapper = await mountOpen();
 
       await findButton(wrapper, 'EXACT SCORE').trigger('click');
 
       expect(useMessageStore().messages[0]).toMatchObject({
         type: 'user_exact_score',
-        message: { user_id: 33, game_id: 77, home_team_score: 2, away_team_score: 1 },
+        message: { user_id: 'uid-33', game_id: 77, home_team_score: 2, away_team_score: 1 },
       });
     });
 
     it('JOINED GROUP fires group_joined with group and user ids', async () => {
       useGroupStore().groups = [makeGroup({ id: 22 })];
-      useUserStore().set(makeUser({ id: 33 }));
+      useUserStore().set(makeUser({ id: 'uid-33' }));
       const wrapper = await mountOpen();
 
       await findButton(wrapper, 'JOINED GROUP').trigger('click');
 
       expect(useMessageStore().messages[0]).toMatchObject({
         type: 'group_joined',
-        message: { group_id: 22, user_id: 33 },
+        message: { group_id: 22, user_id: 'uid-33' },
       });
     });
 

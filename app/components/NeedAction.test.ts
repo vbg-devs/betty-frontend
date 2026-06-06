@@ -32,9 +32,11 @@ function makePool(id: number, name: string, games?: GameType[]): Pool {
   return { id, name, games };
 }
 
-function makeBet(userId: number, gameId: number, overrides: Partial<Bet> = {}): Bet {
+let betSeq = 0;
+function makeBet(userId: string, gameId: number, overrides: Partial<Bet> = {}): Bet {
+  betSeq += 1;
   return {
-    id: gameId * 100 + userId,
+    id: gameId * 100 + betSeq,
     user_id: userId,
     game_id: gameId,
     group_id: 1,
@@ -47,7 +49,7 @@ function makeBet(userId: number, gameId: number, overrides: Partial<Bet> = {}): 
 }
 
 const me: UserProfile = {
-  id: 7,
+  id: 'uid-7',
   email: 'me@example.com',
   name: 'Me',
   image_url: null,
@@ -174,7 +176,7 @@ describe('NeedAction', () => {
   it('ignores other users bets when deciding urgency', async () => {
     const game = makeGame(1, 2);
     const wrapper = await mountSuspended(NeedAction, {
-      props: { pools: [makePool(1, 'Group A', [game])], bets: [makeBet(99, 1)] },
+      props: { pools: [makePool(1, 'Group A', [game])], bets: [makeBet('uid-99', 1)] },
     });
 
     expect(wrapper.find('.message').classes()).toContain('message--warning');
@@ -185,7 +187,7 @@ describe('NeedAction', () => {
     useUserStore().set(null);
     const game = makeGame(1, 2);
     const wrapper = await mountSuspended(NeedAction, {
-      props: { pools: [makePool(1, 'Group A', [game])], bets: [makeBet(7, 1)] },
+      props: { pools: [makePool(1, 'Group A', [game])], bets: [makeBet('uid-7', 1)] },
     });
 
     expect(wrapper.find('.message').classes()).toContain('message--warning');
@@ -242,7 +244,7 @@ describe('NeedAction', () => {
 
   it('shows the bet count per game when showBets is true', async () => {
     const pools = [makePool(1, 'Group A', [makeGame(1, 2), makeGame(2, 3)])];
-    const bets = [makeBet(98, 1), makeBet(99, 1)];
+    const bets = [makeBet('uid-98', 1), makeBet('uid-99', 1)];
     const wrapper = await mountSuspended(NeedAction, { props: { pools, bets, showBets: true } });
 
     const labels = wrapper.findAll('.game__bets-info__label');

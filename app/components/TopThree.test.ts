@@ -13,7 +13,7 @@ type Entry = GroupMember & { id: number };
 function makeMember(id: number, score: number, normalizedScore?: number): Entry {
   return {
     id,
-    user_id: id,
+    user_id: `uid-${id}`,
     name: `User ${id}`,
     nickname: null,
     image_url: null,

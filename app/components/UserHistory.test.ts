@@ -11,7 +11,7 @@ mockNuxtImport('useApi', () => () => ({ authFetch }));
 
 function makeMember(overrides: Partial<GroupMember> = {}): GroupMember {
   return {
-    user_id: 5,
+    user_id: 'uid-5',
     name: 'Jane Doe',
     nickname: null,
     image_url: null,
@@ -39,7 +39,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
   betId += 1;
   return {
     id: betId,
-    user_id: 5,
+    user_id: 'uid-5',
     game_id: 1,
     group_id: 1,
     home_team_score: 2,
@@ -65,8 +65,8 @@ describe('UserHistory', () => {
 
   describe('userBets', () => {
     it('renders only the given user bets, each joined with its game', async () => {
-      const mine = makeBet({ user_id: 5, game_id: 1 });
-      const theirs = makeBet({ user_id: 99, game_id: 2 });
+      const mine = makeBet({ user_id: 'uid-5', game_id: 1 });
+      const theirs = makeBet({ user_id: 'uid-99', game_id: 2 });
       const wrapper = await mountSuspended(UserHistory, {
         props: { user: makeMember(), bets: [mine, theirs], games: allGames },
       });
@@ -163,7 +163,7 @@ describe('UserHistory', () => {
 
   describe('empty state', () => {
     it('shows NO BETS YET with zeroed stats when the user has no bets', async () => {
-      const theirs = makeBet({ user_id: 99, game_id: 1 });
+      const theirs = makeBet({ user_id: 'uid-99', game_id: 1 });
       const wrapper = await mountSuspended(UserHistory, {
         props: { user: makeMember(), bets: [theirs], games: allGames },
       });

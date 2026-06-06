@@ -347,5 +347,16 @@ describe('pages/new', () => {
       expect(routerPush).not.toHaveBeenCalled();
       expect(window.location.pathname).toBe('/groups/join/abc');
     });
+
+    it('falls back to the dashboard when returnUrl points off-site (open-redirect guard)', async () => {
+      window.history.replaceState(null, '', '/new?returnUrl=https://evil.example.com/phish');
+      const wrapper = await openModal();
+      signInWithPopup.mockResolvedValueOnce({});
+      await click(authButton(wrapper, 'Google'));
+
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(window.location.pathname).toBe('/dashboard');
+      expect(window.location.hostname).not.toBe('evil.example.com');
+    });
   });
 });

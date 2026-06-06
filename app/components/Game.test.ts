@@ -30,9 +30,11 @@ function finishedGame(overrides: Partial<GameType> = {}): GameType {
   return makeGame(-26, { status: 1, home_team_score: 3, away_team_score: 1, ...overrides });
 }
 
-function makeBet(userId: number, gameId: number, overrides: Partial<Bet> = {}): Bet {
+let betSeq = 0;
+function makeBet(userId: string, gameId: number, overrides: Partial<Bet> = {}): Bet {
+  betSeq += 1;
   return {
-    id: gameId * 100 + userId,
+    id: gameId * 100 + betSeq,
     user_id: userId,
     game_id: gameId,
     group_id: 1,
@@ -45,7 +47,7 @@ function makeBet(userId: number, gameId: number, overrides: Partial<Bet> = {}): 
 }
 
 const me: UserProfile = {
-  id: 7,
+  id: 'uid-7',
   email: 'me@example.com',
   name: 'Me',
   image_url: null,
@@ -153,7 +155,7 @@ describe('Game', () => {
 
     it('ignores other users bets', async () => {
       const wrapper = await mountSuspended(Game, {
-        props: { game: finishedGame(), bets: [makeBet(99, 10, { user_points: 5 })] },
+        props: { game: finishedGame(), bets: [makeBet('uid-99', 10, { user_points: 5 })] },
       });
       expect(wrapper.find('.awarded-points').exists()).toBe(false);
     });

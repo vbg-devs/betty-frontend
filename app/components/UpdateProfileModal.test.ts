@@ -24,7 +24,7 @@ const uploadFetch = vi.fn();
 
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    id: 7,
+    id: 'uid-7',
     email: 'jane@example.com',
     name: 'Jane Doe',
     image_url: 'https://cdn.example/jane.png',

@@ -1,5 +1,5 @@
 export interface UserProfile {
-  id: number;
+  id: string;
   email: string;
   name: string;
   image_url: string | null;
@@ -72,7 +72,7 @@ export interface PublicGroupListResponse {
 }
 
 export interface GroupMember {
-  user_id: number;
+  user_id: string;
   name: string;
   nickname: string | null;
   image_url: string | null;
@@ -95,7 +95,7 @@ export interface Game {
 
 export interface Bet {
   id: number;
-  user_id: number;
+  user_id: string;
   game_id: number;
   group_id: number;
   home_team_score: number;
@@ -119,14 +119,14 @@ export interface ActivityMessage {
 }
 
 export interface MessageReaction {
-  user_id: number;
+  user_id: string;
   emoji_id: string;
   created_at: string;
 }
 
 export interface GroupMessage {
   id: number;
-  user_id: number;
+  user_id: string;
   group_id: number;
   body: string | null;
   image_url: string | null;

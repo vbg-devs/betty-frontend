@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import type { UserProfile } from '~/types';
 
 const makeProfile = (overrides: Partial<UserProfile> = {}): UserProfile => ({
-  id: 42,
+  id: 'uid-42',
   email: 'jane@example.com',
   name: 'Jane Doe',
   image_url: null,
@@ -38,7 +38,7 @@ describe('useUserStore', () => {
 
     expect(store.user).toEqual(profile);
     expect(store.profile).toEqual(profile);
-    expect(store.id).toBe(42);
+    expect(store.id).toBe('uid-42');
     expect(store.email).toBe('jane@example.com');
     expect(store.isAdmin).toBe(false);
   });
@@ -66,9 +66,9 @@ describe('useUserStore', () => {
     const store = useUserStore();
     store.set(makeProfile());
 
-    store.set(makeProfile({ id: 7, email: 'bob@example.com' }));
+    store.set(makeProfile({ id: 'uid-7', email: 'bob@example.com' }));
 
-    expect(store.id).toBe(7);
+    expect(store.id).toBe('uid-7');
     expect(store.email).toBe('bob@example.com');
   });
 });

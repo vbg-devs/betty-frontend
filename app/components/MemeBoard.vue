@@ -488,7 +488,7 @@ function formatDate(date: string) {
   return formatDistance(new Date(date), new Date(), { addSuffix: true });
 }
 
-function getUser(userId: number) {
+function getUser(userId: string) {
   return members.find((member) => member.user_id === userId);
 }
 
@@ -522,7 +522,7 @@ function selectImage() {
   postMessage(newMessage);
 }
 
-function confirmDeleteMessage(msg: { id: number; user_id: number }) {
+function confirmDeleteMessage(msg: { id: number; user_id: string }) {
   if (msg.user_id !== userId.value) return;
   confirmDialog({
     title: 'Delete message',
