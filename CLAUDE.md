@@ -42,7 +42,14 @@ iOS (`ios/`): `xcodegen generate`, then
 - `xcodebuild -project Betty.xcodeproj -scheme Betty -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath .derived build`
 - Unit: `… test -only-testing:BettyTests` (Swift Testing)
 - E2E: `… test -only-testing:BettyUITests` (XCUITest against the in-process
-  mock backend — hermetic, no network; see `ios/BettyUITests/Mock/`)
+  mock backend — hermetic, no network; see `ios/BettyUITests/Mock/`). Locally,
+  add `-parallel-testing-enabled YES -parallel-testing-worker-count 8` to run the
+  full suite in ~8 min. In CI it runs as a **7-shard matrix** (`ios-e2e`) over one
+  prebuilt bundle — Xcode parallelizes per test CLASS, so suites are split into
+  ≤~12-test classes via shared `*E2EBase`/`*TestCase` bases to keep shards balanced.
+  ⚠️ A new UITest class MUST be added to a shard's `classes:` list in
+  `.github/workflows/ci.yml` — the `Verify e2e shard coverage` step fails CI if a
+  test class isn't assigned to any shard (otherwise it would silently never run).
 - `Betty.xcodeproj` and `.derived*` are generated/gitignored — never edit or
   commit them; all project config lives in `ios/project.yml`.
 - ⚠️ `xcodegen generate` REWRITES `Betty/Betty.entitlements` from the

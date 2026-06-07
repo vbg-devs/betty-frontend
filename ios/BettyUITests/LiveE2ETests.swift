@@ -7,12 +7,12 @@ import XCTest
 /// the test points `BETTY_WS_URL` at) so the mock OBSERVES handshakes, disconnects and
 /// the app's `{"type":"ping"}` keepalives. Event-driven UI tests use the harness
 /// backend's WS server via `pushWS`.
-final class LiveE2ETests: BettyUITestCase {
+class LiveE2EBase: BettyUITestCase {
 
     // MARK: - Helpers
 
     /// Boots to Home (seeded auth) and pushes into a group's detail screen.
-    private func openGroup(_ name: String) {
+    func openGroup(_ name: String) {
         let home = HomeScreen(app: app)
         waitFor(TabBarScreen(app: app).home, timeout: 30)
         waitFor(home.navigationBar, timeout: 15)
@@ -22,7 +22,7 @@ final class LiveE2ETests: BettyUITestCase {
 
     /// Opens the Activity tab and returns its page object.
     @discardableResult
-    private func openActivityTab() -> ActivityScreen {
+    func openActivityTab() -> ActivityScreen {
         let tabs = TabBarScreen(app: app)
         waitFor(tabs.activity, timeout: 20)
         tabs.activity.tap()
@@ -30,6 +30,9 @@ final class LiveE2ETests: BettyUITestCase {
         waitFor(activity.navigationBar, timeout: 10)
         return activity
     }
+}
+
+final class LiveConnectionE2ETests: LiveE2EBase {
 
     /// Starts an instrumented WS server and points the app's launch environment at it.
     private func makeProbe() throws -> LiveSocketProbe {
@@ -121,6 +124,9 @@ final class LiveE2ETests: BettyUITestCase {
         probe.pushEvent(type: "group_left")
         waitFor(activity.row(containing: "Someone just left a group"), timeout: 15)
     }
+}
+
+final class LiveE2ETests: LiveE2EBase {
 
     // MARK: - evaluate_game → live score refresh (the wire's ONLY store mutation)
 

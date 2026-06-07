@@ -302,7 +302,11 @@ final class ProfileE2ETests: ProfileAreaTestCase {
         light.tap()
         waitUntil("Light segment becomes selected") { light.isSelected }
     }
+}
 
+// MARK: - Profile tab: account actions, links, support, about, privacy
+
+final class ProfileAccountE2ETests: ProfileAreaTestCase {
     /// SIGN OUT clears the session and lands on the auth landing screen.
     func testSignOutReturnsToAuthLanding() {
         launchApp()
