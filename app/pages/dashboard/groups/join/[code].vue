@@ -7,7 +7,16 @@
       </div>
     </transition>
     <transition name="page">
-      <join-group-modal v-if="!loading" :group="group"></join-group-modal>
+      <join-group-modal v-if="!loading && group" :group="group"></join-group-modal>
+    </transition>
+    <transition name="page">
+      <div v-if="!loading && !group" class="join-error">
+        <h1 class="page-title">Could not load this invite</h1>
+        <p class="join-error__message">
+          The invite link may be invalid or expired. Please check the link and try again.
+        </p>
+        <NuxtLink to="/dashboard" class="button button--action">Go to dashboard</NuxtLink>
+      </div>
     </transition>
   </div>
 </template>
@@ -23,10 +32,22 @@ onMounted(async () => {
   try {
     const data = await authFetch<any>(`/group/${route.params.code}`);
     group.value = data;
+  } catch (err) {
+    console.error(err);
   } finally {
     loading.value = false;
   }
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.join-error {
+  max-width: 480px;
+  margin: 60px auto;
+  text-align: center;
+}
+
+.join-error__message {
+  margin-bottom: 24px;
+}
+</style>

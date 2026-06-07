@@ -147,16 +147,20 @@ const gameGroups = computed(() => {
         date,
         title,
         name: game.poolName,
+        poolNames: [game.poolName],
         games: [],
       };
       groups.push(group);
-
-      if (!nextUpcomingGroup && date >= now) {
-        nextUpcomingGroup = group;
-      }
+    } else if (!group.poolNames.includes(game.poolName)) {
+      group.poolNames.push(game.poolName);
+      group.name = group.poolNames.join(' & ');
     }
 
     group.games.push(game);
+
+    if (!nextUpcomingGroup && date >= now) {
+      nextUpcomingGroup = group;
+    }
   });
 
   if (nextUpcomingGroup) {
@@ -272,7 +276,6 @@ function placedBetAwayTeam(game: any) {
 .day-group.is-next-upcoming .pool__title::before {
   content: '● ';
 }
-
 
 .game__bets-info {
   position: absolute;

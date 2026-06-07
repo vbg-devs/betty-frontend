@@ -29,24 +29,33 @@ const FALLBACK_COUNTRIES: Country[] = [
 const countries = ref<Country[]>([]);
 const loaded = ref(false);
 const loading = ref(false);
+let inFlight: Promise<Country[]> | null = null;
 
 export function useCountries() {
   const { authFetch } = useApi();
 
-  async function load() {
-    if (loaded.value || loading.value) return countries.value;
-    loading.value = true;
+  async function fetchCountries(): Promise<Country[]> {
     try {
       const data = await authFetch<Country[]>('/countries');
       countries.value = (data ?? []).slice().sort((a, b) => a.name.localeCompare(b.name));
       if (countries.value.length === 0) countries.value = FALLBACK_COUNTRIES;
+      loaded.value = true;
     } catch {
       countries.value = FALLBACK_COUNTRIES;
-    } finally {
-      loaded.value = true;
-      loading.value = false;
     }
     return countries.value;
+  }
+
+  function load(): Promise<Country[]> {
+    if (loaded.value) return Promise.resolve(countries.value);
+    if (!inFlight) {
+      loading.value = true;
+      inFlight = fetchCountries().finally(() => {
+        loading.value = false;
+        inFlight = null;
+      });
+    }
+    return inFlight;
   }
 
   return { countries, load, loading, loaded };

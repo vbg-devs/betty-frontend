@@ -59,8 +59,8 @@ describe('pages/dashboard/tournaments', () => {
     expect(links[1]!.attributes('href')).toBe('/dashboard/tournaments/42');
   });
 
-  it('renders a clickable card with a full-width flag image per tournament', async () => {
-    useTournamentStore().tournaments = [makeTournament(1)];
+  it('renders a clickable card falling back to the euroflag image when image_url is empty', async () => {
+    useTournamentStore().tournaments = [makeTournament(1, { image_url: '' })];
     const wrapper = await mountSuspended(TournamentsPage);
 
     const card = wrapper.find('.tournament .card');
@@ -72,7 +72,16 @@ describe('pages/dashboard/tournaments', () => {
     expect(img.attributes('src')).toContain('euroflag');
   });
 
-  it('shows ended tournaments too (uses all, not running)', async () => {
+  it('uses the tournament image_url when one is set', async () => {
+    useTournamentStore().tournaments = [
+      makeTournament(1, { image_url: 'https://example.com/cup.png' }),
+    ];
+    const wrapper = await mountSuspended(TournamentsPage);
+
+    expect(wrapper.find('.tournament img').attributes('src')).toBe('https://example.com/cup.png');
+  });
+
+  it('hides ended tournaments (uses running, not all)', async () => {
     useTournamentStore().tournaments = [
       makeTournament(1, { name: 'Ended Cup', end_date: '2000-01-01T00:00:00Z' }),
       makeTournament(2, { name: 'Running Cup' }),
@@ -80,8 +89,9 @@ describe('pages/dashboard/tournaments', () => {
     const wrapper = await mountSuspended(TournamentsPage);
 
     const sections = wrapper.findAll('.tournament');
-    expect(sections).toHaveLength(2);
-    expect(wrapper.text()).toContain('Ended Cup');
+    expect(sections).toHaveLength(1);
+    expect(wrapper.text()).toContain('Running Cup');
+    expect(wrapper.text()).not.toContain('Ended Cup');
   });
 
   it('updates reactively when tournaments are added after mount', async () => {

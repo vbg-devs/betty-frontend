@@ -14,7 +14,12 @@ export const useBetStore = defineStore('bet', () => {
 
   async function update(payload: { id: number } & Record<string, unknown>) {
     const { authFetch } = useApi();
-    return authFetch<Bet>(`/bet/${payload.id}`, { method: 'PUT', body: payload });
+    const data = await authFetch<Bet>(`/bet/${payload.id}`, { method: 'PUT', body: payload });
+    const index = bets.value.findIndex((x) => x.id === payload.id);
+    if (index > -1) {
+      bets.value[index] = Object.freeze(data) as Bet;
+    }
+    return data;
   }
 
   return { bets, all, place, update };

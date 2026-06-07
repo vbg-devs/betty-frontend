@@ -22,15 +22,23 @@ Find every pin:
 grep -rn "// NOTE" app
 ```
 
-### Being fixed in this PR
+### Status (2026-06-06)
 
-The following are addressed in **this PR** (their pins are being flipped here):
+- **Fixed in PR #25** (with the test suite): **#29, #47, #48**, plus the string user-ID
+  type mismatch from the backend contract audit.
+- **Fixed in the triage-sweep PR**: every remaining bug **except** the two below, plus
+  five pinned bugs that were missing from this catalog (four in `app/components/Game.vue`
+  — broken LIVE-badge window, urgency borders on past games, away `TeamLogo` bound via
+  `:class` instead of `:team`, unguarded `homeTeam.name` — and the `layouts/default.vue`
+  loader stuck on a failed initial load).
+- **Deliberately left pinned** (product decisions, not defects):
+  - **#22** — dense vs competition tie-ranking in `Leaderboard.vue`; the backend sends no
+    rank field, so there is no evidence which ranking was intended.
+  - **#38** — unknown websocket event types render via the raw-type fallback; that is
+    forward-compat by design until someone decides otherwise.
 
-- **#29** — BetModal "UPDATE BET" POSTed to `/bet` instead of `PUT /bet/:id`.
-- **#47** — open redirect via unvalidated `returnUrl` in `app/pages/index.vue`.
-- **#48** — open redirect via unvalidated `returnUrl` in `app/pages/new.vue`.
-- **Audit finding (not one of the 62):** the **string user-ID type mismatch** is also
-  fixed in this PR.
+The severity/fix columns below are kept for history; see git blame on this file for the
+pre-sweep state.
 
 ### Severity legend
 

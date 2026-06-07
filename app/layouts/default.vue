@@ -98,6 +98,7 @@ const userStore = useUserStore();
 const teamStore = useTeamStore();
 const tournamentStore = useTournamentStore();
 const groupStore = useGroupStore();
+const { alert } = useNotify();
 
 const user = ref<UserProfile | null>(null);
 const showNotifications = ref(false);
@@ -124,11 +125,21 @@ onMounted(() => {
   const auth = useFirebaseAuth();
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      await Promise.all([teamStore.load(), tournamentStore.load(), groupStore.load()]);
-      if (route.path === '/') {
-        router.replace('/dashboard');
+      try {
+        await Promise.all([teamStore.load(), tournamentStore.load(), groupStore.load()]);
+        if (route.path === '/') {
+          router.replace('/dashboard');
+        }
+      } catch (err) {
+        alert({
+          title: 'Could not load your data',
+          message: 'Something went wrong while loading. Please refresh to try again.',
+          state: 'critical',
+        });
+        console.error(err);
+      } finally {
+        loading.value = false;
       }
-      loading.value = false;
     } else {
       userStore.set(null);
       setUser(null);

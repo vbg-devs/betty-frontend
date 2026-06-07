@@ -99,10 +99,20 @@ describe('pages/new', () => {
   describe('landing page', () => {
     it('renders the marketing sections with the modal hidden', async () => {
       const wrapper = await mountPage();
-      expect(wrapper.find('h1').text()).toContain('Betty is your');
+      expect(wrapper.find('h1').text()).toBe('Betty is your personal friendly bets assistant.');
       expect(wrapper.findAll('.login-page > section')).toHaveLength(4);
       expect(wrapper.find('.login-button').text()).toBe('Log in');
       expect(wrapper.find('.modal').classes()).not.toContain('modal--show');
+    });
+
+    it('renders the marketing copy without typos', async () => {
+      const wrapper = await mountPage();
+      const text = wrapper.text().replace(/\s+/g, ' ');
+      expect(text).not.toContain('your your');
+      expect(text).toContain('lets you relax');
+      expect(text).not.toContain('wether');
+      expect(text).toContain('whether to allow sneak peeking');
+      expect(text).not.toContain('sneek');
     });
   });
 
@@ -329,9 +339,10 @@ describe('pages/new', () => {
       expect(routerPush).not.toHaveBeenCalled();
     });
 
-    it('shows the redirect error message', async () => {
+    it('opens the modal and shows the redirect error message', async () => {
       getRedirectResult.mockRejectedValueOnce(new Error('redirect failed'));
-      const wrapper = await openModal();
+      const wrapper = await mountPage();
+      expect(wrapper.find('.modal').classes()).toContain('modal--show');
       expect(wrapper.find('.auth-error').text()).toBe('redirect failed');
       expect(routerPush).not.toHaveBeenCalled();
     });

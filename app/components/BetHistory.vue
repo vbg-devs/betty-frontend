@@ -57,23 +57,32 @@ const {
 
 const isFinished = computed(() => gameBet?.status === 1);
 
-const homeWinPercentage = computed(() => {
-  const filtered = bets.filter((x) => x.home_team_score > x.away_team_score);
-  if (filtered.length === 0) return 0;
-  return Math.round((filtered.length / bets.length) * 100);
+// Largest-remainder rounding so the three segments always sum to exactly 100.
+const percentages = computed(() => {
+  const total = bets.length;
+  if (total === 0) return { home: 0, away: 0, tie: 0 };
+  const counts = [
+    bets.filter((x) => x.home_team_score > x.away_team_score).length,
+    bets.filter((x) => x.away_team_score > x.home_team_score).length,
+    bets.filter((x) => x.away_team_score === x.home_team_score).length,
+  ];
+  const exact = counts.map((count) => (count * 100) / total);
+  const rounded = exact.map(Math.floor);
+  let remaining = 100 - rounded.reduce((sum, value) => sum + value, 0);
+  const byRemainder = exact
+    .map((value, index) => ({ index, remainder: value - Math.floor(value) }))
+    .sort((a, b) => b.remainder - a.remainder);
+  for (const { index } of byRemainder) {
+    if (remaining <= 0) break;
+    rounded[index]! += 1;
+    remaining -= 1;
+  }
+  return { home: rounded[0]!, away: rounded[1]!, tie: rounded[2]! };
 });
 
-const awayWinPercentage = computed(() => {
-  const filtered = bets.filter((x) => x.away_team_score > x.home_team_score);
-  if (filtered.length === 0) return 0;
-  return Math.round((filtered.length / bets.length) * 100);
-});
-
-const tiePercentage = computed(() => {
-  const filtered = bets.filter((x) => x.away_team_score === x.home_team_score);
-  if (filtered.length === 0) return 0;
-  return Math.round((filtered.length / bets.length) * 100);
-});
+const homeWinPercentage = computed(() => percentages.value.home);
+const awayWinPercentage = computed(() => percentages.value.away);
+const tiePercentage = computed(() => percentages.value.tie);
 </script>
 
 <style scoped>

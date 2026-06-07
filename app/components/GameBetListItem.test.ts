@@ -110,24 +110,19 @@ describe('GameBetListItem', () => {
     expect(useGameStore().byId(7)).toEqual(game);
   });
 
-  // NOTE: pins current behavior — with the default empty bet the component
-  // still fires a load for an undefined game_id, requesting /game/undefined.
-  it('fetches /game/undefined when bet has no game_id', async () => {
+  it('skips the load when bet has no game_id', async () => {
     const wrapper = await mountSuspended(GameBetListItem);
-    expect(authFetch).toHaveBeenCalledWith('/game/undefined');
+    expect(authFetch).not.toHaveBeenCalled();
     expect(wrapper.find('.game-bet-list-item').exists()).toBe(false);
   });
 
-  // NOTE: pins current behavior — load() runs on every mount even when the
-  // game is already cached, so the store accumulates duplicates.
-  it('re-fetches the game on mount even when it is already in the store', async () => {
+  it('skips the fetch on mount when the game is already in the store', async () => {
     useGameStore().games = [game];
-    authFetch.mockResolvedValue(game);
     await mountSuspended(GameBetListItem, {
       props: { bet: { game_id: 7 } },
     });
     await flushPromises();
-    expect(authFetch).toHaveBeenCalledWith('/game/7');
-    expect(useGameStore().games).toHaveLength(2);
+    expect(authFetch).not.toHaveBeenCalled();
+    expect(useGameStore().games).toHaveLength(1);
   });
 });

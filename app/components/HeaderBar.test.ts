@@ -65,12 +65,9 @@ describe('HeaderBar rendering', () => {
     expect(wrapper.find('header').exists()).toBe(false);
   });
 
-  // NOTE: pins current behavior — the destructured prop default ({}) only kicks
-  // in for undefined, so omitting the prop renders the header for an absent
-  // user; only an explicit null hides it.
-  it('renders the header when the user prop is omitted', async () => {
+  it('renders nothing when the user prop is omitted', async () => {
     const wrapper = await mountSuspended(HeaderBar, { route: '/dashboard' });
-    expect(wrapper.find('header').exists()).toBe(true);
+    expect(wrapper.find('header').exists()).toBe(false);
   });
 
   it('renders a small non-clickable UserBadge with the user', async () => {

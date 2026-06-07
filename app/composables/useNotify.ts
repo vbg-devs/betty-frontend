@@ -17,7 +17,6 @@ interface Notification {
   message: string;
   state?: string;
   onConfirm?: () => void | Promise<void>;
-  visible: boolean;
 }
 
 const notifications = ref<Notification[]>([]);
@@ -32,7 +31,6 @@ export function useNotify() {
       title: options.title,
       message: options.message,
       state: options.state ?? 'info',
-      visible: true,
     });
     setTimeout(() => dismiss(id), 4000);
   }
@@ -45,7 +43,6 @@ export function useNotify() {
       title: options.title,
       message: options.question,
       onConfirm: options.onConfirm,
-      visible: true,
     });
   }
 

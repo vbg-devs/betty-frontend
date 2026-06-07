@@ -20,11 +20,14 @@ export function useFirebaseAuth(): Auth {
   return getAuth(useFirebaseApp());
 }
 
+let _subscribed = false;
+
 export function useCurrentUser() {
   const user = useState<User | null>('firebase-user', () => null);
   const isReady = useState('firebase-auth-ready', () => false);
 
-  if (import.meta.client && !isReady.value) {
+  if (import.meta.client && !_subscribed) {
+    _subscribed = true;
     const auth = useFirebaseAuth();
     onAuthStateChanged(auth, (firebaseUser) => {
       user.value = firebaseUser;
@@ -35,10 +38,19 @@ export function useCurrentUser() {
   return { user, isReady };
 }
 
+// onAuthStateChanged fires once auth restoration settles, even if signed out.
+function waitForAuthState(auth: Auth): Promise<User | null> {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    });
+  });
+}
+
 export async function useAuthToken(): Promise<string> {
   const auth = useFirebaseAuth();
-  const user = auth.currentUser;
+  const user = auth.currentUser ?? (await waitForAuthState(auth));
   if (!user) throw new Error('Not authenticated');
   return user.getIdToken();
 }
-

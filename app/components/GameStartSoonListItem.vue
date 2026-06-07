@@ -15,7 +15,7 @@ const { match = {} as Record<string, any> } = defineProps<{
 const gameStore = useGameStore();
 const teamStore = useTeamStore();
 
-const game = computed(() => gameStore.byId(match.Games[0].id));
+const game = computed(() => gameStore.byId(match?.Games?.[0]?.id));
 
 const homeTeam = computed(() => {
   if (!game.value) return null;
@@ -28,7 +28,9 @@ const awayTeam = computed(() => {
 });
 
 onMounted(() => {
-  gameStore.load(match.Games[0].id);
+  const gameId = match?.Games?.[0]?.id;
+  if (!gameId || gameStore.byId(gameId)) return;
+  gameStore.load(gameId);
 });
 </script>
 

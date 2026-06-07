@@ -94,12 +94,11 @@ describe('GroupListItem', () => {
     expect(wrapper.find('.card__body').text()).toBe('0 members');
   });
 
-  // NOTE: pins current behavior — the label is never singularized.
-  it('shows "1 members" for a single member', async () => {
+  it('singularizes the label for a single member', async () => {
     const wrapper = await mountSuspended(GroupListItem, {
       props: { group: makeGroup({ members: [makeMember(1)] }) },
     });
-    expect(wrapper.find('.card__body').text()).toBe('1 members');
+    expect(wrapper.find('.card__body').text()).toBe('1 member');
   });
 
   it('renders nothing when the group has no tournament', async () => {
@@ -116,16 +115,13 @@ describe('GroupListItem', () => {
     expect(wrapper.text()).toBe('');
   });
 
-  // NOTE: pins current behavior — `group.members.length` is unguarded, so a group
-  // with a tournament but no members array throws during render.
-  it('throws when the group has a tournament but no members array', () => {
+  it('shows 0 members when the group has a tournament but no members array', () => {
     const group = makeGroup();
     delete (group as Partial<GroupWithTournament>).members;
-    expect(() =>
-      mount(GroupListItem, {
-        props: { group },
-        global: { stubs: { NuxtLink: { template: '<a><slot /></a>' } } },
-      }),
-    ).toThrow(TypeError);
+    const wrapper = mount(GroupListItem, {
+      props: { group },
+      global: { stubs: { NuxtLink: { template: '<a><slot /></a>' } } },
+    });
+    expect(wrapper.text()).toContain('0 members');
   });
 });

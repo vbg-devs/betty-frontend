@@ -71,7 +71,7 @@ describe('NotificationProvider', () => {
   it('falls back to the info class when state is missing', async () => {
     const wrapper = mountProvider();
     const { notifications } = useNotify();
-    notifications.value.push({ id: 9001, type: 'alert', message: 'raw', visible: true });
+    notifications.value.push({ id: 9001, type: 'alert', message: 'raw' });
     await nextTick();
 
     expect(wrapper.find('.notification').classes()).toContain('notification--info');
@@ -128,7 +128,6 @@ describe('NotificationProvider', () => {
       message: 'sure?',
       state: 'success',
       onConfirm: vi.fn(),
-      visible: true,
     });
     await nextTick();
 
@@ -189,7 +188,7 @@ describe('NotificationProvider', () => {
   it('handles a confirm notification without onConfirm by just dismissing', async () => {
     const wrapper = mountProvider();
     const { notifications } = useNotify();
-    notifications.value.push({ id: 9003, type: 'confirm', message: 'orphan', visible: true });
+    notifications.value.push({ id: 9003, type: 'confirm', message: 'orphan' });
     await nextTick();
 
     await wrapper.find('.btn--orange').trigger('click');

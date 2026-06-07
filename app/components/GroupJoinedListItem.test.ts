@@ -36,15 +36,15 @@ describe('GroupJoinedListItem', () => {
     expect(wrapper.text()).toBe('Bob just joined');
   });
 
-  // NOTE: pins current behavior — the default `data = {}` has no `group`, so the
-  // template's unguarded `data.group.name` access throws during render.
-  it('throws when data prop is omitted because data.group is undefined', () => {
-    expect(() => mount(GroupJoinedListItem)).toThrow(TypeError);
+  it('renders without a group name when the data prop is omitted', () => {
+    const wrapper = mount(GroupJoinedListItem);
+    expect(wrapper.text()).toBe('Someone just joined');
+    expect(wrapper.findAll('strong')[1]!.text()).toBe('');
   });
 
-  it('throws when data has no group', () => {
-    expect(() => mount(GroupJoinedListItem, { props: { data: { who: 'Eve' } } })).toThrow(
-      TypeError,
-    );
+  it('renders without a group name when data has no group', () => {
+    const wrapper = mount(GroupJoinedListItem, { props: { data: { who: 'Eve' } } });
+    expect(wrapper.text()).toBe('Eve just joined');
+    expect(wrapper.findAll('strong')[1]!.text()).toBe('');
   });
 });

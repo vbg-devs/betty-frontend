@@ -1,7 +1,7 @@
 // @vitest-environment nuxt
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
-import type { Bet, Game, Team, UserProfile } from '~/types';
+import type { Bet, Game, Group, Team, UserProfile } from '~/types';
 import UserBetListItem from './UserBetListItem.vue';
 import TeamLogo from './TeamLogo.vue';
 import HiddenScore from './HiddenScore.vue';
@@ -39,6 +39,24 @@ const me: UserProfile = {
 
 type BetWithGame = Bet & { game: Game };
 
+function makeGroup(overrides: Partial<Group> = {}): Group {
+  return {
+    id: 1,
+    name: 'Group 1',
+    tournament_id: 1,
+    invite_code: 'code-1',
+    welcome_message: 'Welcome',
+    description: null,
+    header_image_url: null,
+    allow_sneak_peek: false,
+    correct_team_points: 1,
+    exact_result_points: 3,
+    public_at: null,
+    members: [],
+    ...overrides,
+  };
+}
+
 function makeBet(overrides: Partial<BetWithGame> = {}): BetWithGame {
   return {
     id: 1,
@@ -59,6 +77,7 @@ describe('UserBetListItem', () => {
     authFetch.mockReset();
     useUserStore().user = null;
     useTeamStore().teams = [];
+    useGroupStore().groups = [];
   });
 
   it('hides the score of an unprocessed future-game bet from another user', async () => {
@@ -127,7 +146,7 @@ describe('UserBetListItem', () => {
     expect(wrapper.classes()).toContain('bet-row--miss');
   });
 
-  it('applies exact styling for 3 and 4 points', async () => {
+  it('falls back to exact styling for 3 and 4 points when the group config is unknown', async () => {
     for (const points of [3, 4]) {
       const wrapper = await mountSuspended(UserBetListItem, {
         props: {
@@ -139,12 +158,22 @@ describe('UserBetListItem', () => {
     }
   });
 
-  // NOTE: pins current behavior — "exact" is hardcoded to 3 or 4 points, so a
-  // group with custom scoring awarding 5 points renders as a plain win.
-  it('applies win styling, not exact, for 5 points', async () => {
+  it('applies exact styling when points match the group-configured exact points', async () => {
+    useGroupStore().groups = [makeGroup({ correct_team_points: 2, exact_result_points: 5 })];
     const wrapper = await mountSuspended(UserBetListItem, {
       props: {
         bet: makeBet({ user_points: 5, processed_at: '2026-06-01T00:00:00Z' }),
+      },
+    });
+    expect(wrapper.classes()).toContain('bet-row--exact');
+    expect(wrapper.classes()).not.toContain('bet-row--win');
+  });
+
+  it('applies win styling, not exact, when points match the group correct-team points', async () => {
+    useGroupStore().groups = [makeGroup({ correct_team_points: 3, exact_result_points: 5 })];
+    const wrapper = await mountSuspended(UserBetListItem, {
+      props: {
+        bet: makeBet({ user_points: 3, processed_at: '2026-06-01T00:00:00Z' }),
       },
     });
     expect(wrapper.classes()).toContain('bet-row--win');
@@ -184,28 +213,41 @@ describe('UserBetListItem', () => {
     expect(logos[1]!.props('team')).toEqual({});
   });
 
-  // NOTE: pins current behavior — a missing processed_at (undefined) passes the
-  // `processed_at !== null` checks, so the bet renders as processed with points.
-  it('treats an undefined processed_at as processed', async () => {
+  it('treats a missing processed_at as unprocessed and keeps the bet hidden', async () => {
     const bet = makeBet({ user_id: 'uid-42', user_points: 1 });
     delete (bet as Partial<BetWithGame>).processed_at;
     const wrapper = await mountSuspended(UserBetListItem, {
       props: { bet },
     });
-    expect(wrapper.findComponent(HiddenScore).exists()).toBe(false);
-    expect(wrapper.find('.bet-row__pts').text()).toBe('+1P');
-    expect(wrapper.classes()).toContain('bet-row--win');
+    expect(wrapper.findComponent(HiddenScore).exists()).toBe(true);
+    expect(wrapper.find('.bet-row__pts').exists()).toBe(false);
+    expect(wrapper.classes()).toContain('bet-row--pending');
   });
 
-  // NOTE: pins current behavior — with no logged-in user and a bet lacking
-  // user_id, both ids are undefined, so isMyScore is true and the score leaks.
-  it('reveals the score when both the bet user_id and the session user are missing', async () => {
+  it('hides the score when both the bet user_id and the session user are missing', async () => {
     const bet = makeBet();
     delete (bet as Partial<BetWithGame>).user_id;
     const wrapper = await mountSuspended(UserBetListItem, {
       props: { bet },
     });
-    expect(wrapper.findComponent(HiddenScore).exists()).toBe(false);
-    expect(wrapper.findAll('.bet-row__score-value')).toHaveLength(2);
+    expect(wrapper.findComponent(HiddenScore).exists()).toBe(true);
+    expect(wrapper.find('.bet-row__score-value').exists()).toBe(false);
+  });
+
+  it('renders as pending without crashing when the bet prop is omitted', async () => {
+    const wrapper = await mountSuspended(UserBetListItem);
+    expect(wrapper.findComponent(HiddenScore).exists()).toBe(true);
+    expect(wrapper.classes()).toContain('bet-row--pending');
+    expect(wrapper.findAllComponents(TeamLogo)).toHaveLength(2);
+  });
+
+  it('renders as pending without crashing when the bet has no game attached', async () => {
+    const bet = makeBet();
+    delete (bet as Partial<BetWithGame>).game;
+    const wrapper = await mountSuspended(UserBetListItem, {
+      props: { bet },
+    });
+    expect(wrapper.findComponent(HiddenScore).exists()).toBe(true);
+    expect(wrapper.classes()).toContain('bet-row--pending');
   });
 });

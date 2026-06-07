@@ -93,10 +93,16 @@ describe('GlobalLeaderboard', () => {
     expect(wrapper.findAll('.lb-row')).toHaveLength(0);
   });
 
-  // NOTE: pins current behavior — there is no error handling around the fetch,
-  // so a failed request escapes to the app error handler, leaves the spinner
-  // up forever and never emits count.
-  it('stays in the loading state when the fetch rejects', async () => {
+  it('emits count 0 and renders an empty leaderboard when the response is null', async () => {
+    authFetch.mockResolvedValue(null);
+    const wrapper = await mountSuspended(GlobalLeaderboard, { props: { id: 1 } });
+    await flushPromises();
+    expect(wrapper.emitted('count')).toEqual([[0]]);
+    expect(wrapper.find('.l-loader').exists()).toBe(false);
+    expect(wrapper.findAll('.lb-row')).toHaveLength(0);
+  });
+
+  it('shows the error state and emits count 0 when the fetch rejects', async () => {
     const error = new Error('boom');
     const errorHandler = vi.fn();
     authFetch.mockRejectedValue(error);
@@ -105,9 +111,10 @@ describe('GlobalLeaderboard', () => {
       global: { config: { errorHandler } },
     });
     await flushPromises();
-    expect(errorHandler).toHaveBeenCalledWith(error, expect.anything(), expect.anything());
-    expect(wrapper.find('.l-loader').exists()).toBe(true);
+    expect(errorHandler).not.toHaveBeenCalled();
+    expect(wrapper.find('.l-loader').exists()).toBe(false);
+    expect(wrapper.find('.l-error').exists()).toBe(true);
     expect(wrapper.findComponent(Leaderboard).exists()).toBe(false);
-    expect(wrapper.emitted('count')).toBeUndefined();
+    expect(wrapper.emitted('count')).toEqual([[0]]);
   });
 });

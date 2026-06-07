@@ -182,6 +182,7 @@ onMounted(async () => {
   loadCountries();
   try {
     const data = await authFetch<any>('/user/me');
+    email.value = data.email ?? '';
     name.value = data.name;
     imageUrl.value = data.image_url;
     firebaseImageUrl.value = data.firebase_image_url ?? null;
@@ -298,10 +299,10 @@ onBeforeUnmount(() => {
 async function save() {
   saving.value = true;
   try {
+    // The backend PUT /user/me only applies name and country — never send email.
     await authFetch<any>('/user/me', {
       method: 'PUT',
       body: {
-        email: email.value,
         name: name.value,
         image_url: imageUrl.value,
         country: country.value,
@@ -328,7 +329,6 @@ async function save() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 999;
   top: 0;

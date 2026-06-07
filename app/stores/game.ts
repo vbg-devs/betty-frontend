@@ -9,7 +9,14 @@ export const useGameStore = defineStore('game', () => {
   async function load(gameId: number) {
     const { authFetch } = useApi();
     const data = await authFetch<Game>(`/game/${gameId}`);
-    games.value.push(Object.freeze(data) as Game);
+    if (!data) return data;
+    const frozen = Object.freeze(data) as Game;
+    const index = games.value.findIndex((x) => x.id === frozen.id);
+    if (index === -1) {
+      games.value.push(frozen);
+    } else {
+      games.value[index] = frozen;
+    }
     return data;
   }
 

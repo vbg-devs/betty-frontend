@@ -143,6 +143,13 @@ describe('BetModal', () => {
       expect(wrapper.emitted('close')).toHaveLength(1);
     });
 
+    it('adds the body no-scroll class when mounted with a non-null gameBet', async () => {
+      await mountSuspended(BetModal, {
+        props: { gameBet: makeGameBet() },
+      });
+      expect(document.body.classList.contains('no-scroll')).toBe(true);
+    });
+
     it('toggles the body no-scroll class as the modal opens and closes', async () => {
       const wrapper = await mountSuspended(BetModal);
       expect(document.body.classList.contains('no-scroll')).toBe(false);
@@ -459,9 +466,7 @@ describe('BetModal', () => {
       expect(wrapper.find('.btn--orange').text()).toBe('UPDATE BET');
     });
 
-    // NOTE: pins current behavior — the myBet watcher is not immediate, so a bet
-    // of yours that is already present on first render never prefills the inputs.
-    it('does not prefill when your bet is present from the very first render', async () => {
+    it('prefills when your bet is present from the very first render', async () => {
       useUserStore().user = makeUser('uid-42');
       const wrapper = await mountSuspended(BetModal, {
         props: {
@@ -470,7 +475,8 @@ describe('BetModal', () => {
         },
       });
       const inputs = wrapper.findAll('.score-input__field');
-      expect((inputs[0]!.element as HTMLInputElement).value).toBe('');
+      expect((inputs[0]!.element as HTMLInputElement).value).toBe('3');
+      expect((inputs[1]!.element as HTMLInputElement).value).toBe('2');
       expect(wrapper.find('.btn--orange').text()).toBe('UPDATE BET');
     });
 

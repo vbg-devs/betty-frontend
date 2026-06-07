@@ -2,7 +2,7 @@
   <div class="top-three">
     <UserBadge
       v-for="user in topThreeUsers"
-      :key="user.id"
+      :key="user.user_id"
       :user="user"
       medium
       :block="false"

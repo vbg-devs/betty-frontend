@@ -177,9 +177,7 @@
             <template v-else-if="message.type === 'group_left'">
               Someone just left a group
             </template>
-            <template v-else-if="message.type === 'group_created'">
-              New group on Betty
-            </template>
+            <template v-else-if="message.type === 'group_created'"> New group on Betty </template>
             <template v-else-if="message.type === 'group_visibility_changed'">
               <GroupVisibilityChangedListItem :data="message.message" />
             </template>
@@ -211,7 +209,10 @@ const messageStore = useMessageStore();
 
 const list = computed(() => messageStore.all as FeedMessage[]);
 
-const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }> = {
+const TYPE_META: Record<
+  string,
+  { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }
+> = {
   bet_placed: { label: '● NEW BET', accent: 'orange' },
   bet_updated: { label: '● BET UPDATED', accent: 'orange' },
   game_starting_soon: { label: '● KICKING OFF', accent: 'yellow' },
@@ -229,8 +230,9 @@ function meta(type: string) {
 }
 
 let msgIndex = 0;
+let connection: WebSocket | null = null;
 onMounted(() => {
-  const connection = new WebSocket('wss://api.betty.social/ws');
+  connection = new WebSocket('wss://api.betty.social/ws');
   connection.onmessage = (event) => {
     const evt = JSON.parse(event.data);
     if (evt.type === 'ping') return;
@@ -243,6 +245,14 @@ onMounted(() => {
   };
 });
 
+onUnmounted(() => {
+  if (connection) {
+    connection.onmessage = null;
+    connection.close();
+    connection = null;
+  }
+});
+
 function clearAll() {
   messageStore.clearAll();
 }
@@ -250,7 +260,6 @@ function clearAll() {
 
 <style scoped>
 .feed {
-
   font-family:
     'Inter',
     system-ui,

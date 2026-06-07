@@ -1,6 +1,5 @@
 // @vitest-environment nuxt
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount } from '@vue/test-utils';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import Game from './Game.vue';
 import TeamLogo from './TeamLogo.vue';
@@ -100,18 +99,21 @@ describe('Game', () => {
       expect(wrapper.find('.game__date').text()).toBe('Mon 08 Jun 12:00');
     });
 
-    it('shows a relative past time for a game that started earlier today', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-0.5) } });
-      expect(wrapper.find('.game__date').text()).toBe('30 minutes ago, 11:30');
+    it('shows a relative past time for a game that started earlier today (past the live window)', async () => {
+      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-3) } });
+      expect(wrapper.find('.game__date').text()).toBe('3 hours ago, 09:00');
     });
   });
 
   describe('live badge', () => {
-    // NOTE: isLive adds the 150-minute window to *now* instead of to the start
-    // date, so the first guard always trips and the LIVE badge can never
-    // render — pins current (buggy) behavior.
-    it('never shows LIVE for an in-progress game within 150 minutes of kickoff', async () => {
+    it('shows LIVE for an in-progress game within 150 minutes of kickoff', async () => {
       const wrapper = await mountSuspended(Game, { props: { game: makeGame(-0.5) } });
+      expect(wrapper.find('.live-badge').exists()).toBe(true);
+      expect(wrapper.find('.game__date').exists()).toBe(false);
+    });
+
+    it('does not show LIVE once the 150-minute window has passed', async () => {
+      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-3) } });
       expect(wrapper.find('.live-badge').exists()).toBe(false);
       expect(wrapper.find('.game__date').exists()).toBe(true);
     });
@@ -210,19 +212,17 @@ describe('Game', () => {
       expect(wrapper.classes()).toContain('game--bet-danger');
     });
 
-    // NOTE: timeToBet <= 24 matches every past kickoff, so long-finished and
-    // abandoned games keep the urgent/danger borders — pins current behavior.
-    it('marks past unfinished games as urgent and danger', async () => {
+    it('does not mark past unfinished games as urgent or danger', async () => {
       const wrapper = await mountSuspended(Game, { props: { game: makeGame(-72) } });
-      expect(wrapper.classes()).toContain('game--bet-urgent');
-      expect(wrapper.classes()).toContain('game--bet-danger');
+      expect(wrapper.classes()).not.toContain('game--bet-urgent');
+      expect(wrapper.classes()).not.toContain('game--bet-danger');
     });
 
-    it('marks finished games as over and still urgent and danger', async () => {
+    it('marks finished games as over without urgency borders', async () => {
       const wrapper = await mountSuspended(Game, { props: { game: finishedGame() } });
       expect(wrapper.classes()).toContain('game--over');
-      expect(wrapper.classes()).toContain('game--bet-urgent');
-      expect(wrapper.classes()).toContain('game--bet-danger');
+      expect(wrapper.classes()).not.toContain('game--bet-urgent');
+      expect(wrapper.classes()).not.toContain('game--bet-danger');
     });
   });
 
@@ -315,31 +315,23 @@ describe('Game', () => {
       expect(wrapper.find('.game__information').exists()).toBe(false);
     });
 
-    // NOTE: line 17 binds the team object as :class instead of :team, so the
-    // home logo renders without a team (its keys leak in as CSS classes) and
-    // the away logo is a hardcoded via.placeholder.com img — pins the bug.
-    it('renders a team-less home logo and a placeholder away image', async () => {
+    it('renders both team logos with their real teams', async () => {
       const wrapper = await mountSuspended(Game, {
         props: { game: finishedGame(), alternative: true },
       });
 
       const logos = wrapper.findAllComponents(TeamLogo);
-      expect(logos).toHaveLength(1);
-      expect(logos[0]!.props('team')).toEqual({});
-      expect(logos[0]!.classes()).toEqual(expect.arrayContaining(['id', 'name', 'image_url']));
+      expect(logos).toHaveLength(2);
+      expect(logos[0]!.props('team')).toEqual(home);
+      expect(logos[1]!.props('team')).toEqual(away);
 
-      const img = wrapper.find('img.team__logo');
-      expect(img.attributes('src')).toBe('https://via.placeholder.com/100x100');
+      expect(wrapper.find('img').exists()).toBe(false);
     });
   });
 
-  // NOTE: homeTeam.name is read unguarded, so a team id missing from the
-  // team store makes rendering throw instead of falling back to blank.
-  it('throws when the home team is not in the team store', async () => {
+  it('renders blank team names when the teams are not in the team store', async () => {
     useTeamStore().teams.splice(0, 2);
-    expect(() => mount(Game, { props: { game: makeGame(2) } })).toThrow(TypeError);
-    // The aborted mount leaves a queued re-render that rejects on the next
-    // scheduler flush; absorb it so it does not surface as an unhandled error.
-    await nextTick().catch(() => {});
+    const wrapper = await mountSuspended(Game, { props: { game: makeGame(2) } });
+    expect(wrapper.findAll('.team__name').map((n) => n.text())).toEqual(['', '']);
   });
 });

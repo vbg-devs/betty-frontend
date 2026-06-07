@@ -50,6 +50,11 @@ describe('dashboard/tournaments/[id] page', () => {
   beforeEach(() => {
     authFetch.mockReset();
     authFetch.mockResolvedValue(makeTournament());
+    // Pools now renders real Game components, which deref the teams by id.
+    useTeamStore().teams = [
+      { id: 1, name: 'Home FC', image_url: 'flag:h' },
+      { id: 2, name: 'Away FC', image_url: 'flag:a' },
+    ];
   });
 
   it('fetches the tournament for the route id param', async () => {
@@ -98,13 +103,13 @@ describe('dashboard/tournaments/[id] page', () => {
     expect(wrapper.find('.card__header__sub-title').text()).toBe('Jun 11 18:30 - Jul 19 21:00');
   });
 
-  describe('pools computed', () => {
+  describe('poolsWithGames computed', () => {
     it('is empty before the tournament loads', async () => {
       authFetch.mockReturnValue(new Promise(() => {}));
 
       const wrapper = await mountPage();
 
-      expect(wrapper.setupState.pools.value).toEqual([]);
+      expect(wrapper.setupState.poolsWithGames.value).toEqual([]);
     });
 
     it('attaches each game to its pool, preserving pool order', async () => {
@@ -119,7 +124,7 @@ describe('dashboard/tournaments/[id] page', () => {
 
       const wrapper = await mountPage();
 
-      expect(wrapper.setupState.pools.value).toEqual([
+      expect(wrapper.setupState.poolsWithGames.value).toEqual([
         { ...poolA, games: [gameA1, gameA2] },
         { ...poolB, games: [gameB1] },
       ]);
@@ -132,16 +137,20 @@ describe('dashboard/tournaments/[id] page', () => {
 
       const wrapper = await mountPage();
 
-      expect(wrapper.setupState.pools.value).toEqual([{ ...pool, games: [] }]);
+      expect(wrapper.setupState.poolsWithGames.value).toEqual([{ ...pool, games: [] }]);
+    });
+
+    it('returns an empty list without throwing when pools and games are missing', async () => {
+      authFetch.mockResolvedValue(makeTournament({ pools: undefined, games: undefined }));
+
+      const wrapper = await mountPage();
+
+      expect(wrapper.setupState.poolsWithGames.value).toEqual([]);
+      expect(wrapper.find('h1.card__header__title').text()).toBe('World Cup 2026');
     });
   });
 
-  // NOTE: the computed named `pools` shadows the auto-imported <pools> component in the
-  // script-setup template, so Vue tries to render the pools ARRAY as a component
-  // ("Component is missing template or render function" warning) and the pools section
-  // never renders. These tests pin that broken behavior; renaming the computed (or using
-  // <Pools>) would fix it.
-  it('does not render the Pools component because the pools computed shadows it', async () => {
+  it('renders the Pools component with the tournament games', async () => {
     authFetch.mockResolvedValue(
       makeTournament({
         pools: [makePool(1, 'Group A')],
@@ -154,13 +163,14 @@ describe('dashboard/tournaments/[id] page', () => {
 
     const poolsContainer = wrapper.find('div.pools');
     expect(poolsContainer.exists()).toBe(true);
-    expect(poolsContainer.text()).toBe('');
-    expect(wrapper.find('.day-group').exists()).toBe(false);
+    expect(wrapper.find('.day-group').exists()).toBe(true);
+    expect(wrapper.findAll('.game-box')).toHaveLength(1);
+    expect(poolsContainer.text()).toContain('Home FC');
     expect(
       warn.mock.calls.some((args) =>
         String(args[0]).includes('Component is missing template or render function'),
       ),
-    ).toBe(true);
+    ).toBe(false);
     warn.mockRestore();
   });
 });

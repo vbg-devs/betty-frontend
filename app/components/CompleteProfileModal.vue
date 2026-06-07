@@ -57,7 +57,7 @@ const show = ref(false);
 const errorMessage = ref('');
 
 const canSave = computed(() => {
-  if (name.value.length === 0) return false;
+  if (name.value.trim().length === 0) return false;
   return true;
 });
 
@@ -105,12 +105,12 @@ async function save() {
   } catch (err: any) {
     console.error(err);
     const status = err?.response?.status ?? err?.statusCode ?? err?.status;
-    const serverMessage =
-      err?.data?.message || err?.response?._data?.message || err?.message;
+    const serverMessage = err?.data?.message || err?.response?._data?.message || err?.message;
     if (status === 401 || status === 403) {
       errorMessage.value = 'Your session expired. Please sign in again.';
     } else if (status && status >= 500) {
-      errorMessage.value = "Something went wrong on our end. We're looking into it — please try again in a moment.";
+      errorMessage.value =
+        "Something went wrong on our end. We're looking into it — please try again in a moment.";
     } else if (serverMessage) {
       errorMessage.value = serverMessage;
     } else {
@@ -124,7 +124,6 @@ async function save() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 999;
   top: 0;
