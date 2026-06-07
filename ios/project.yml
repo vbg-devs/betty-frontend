@@ -39,7 +39,10 @@ targets:
         PRODUCT_NAME: Betty
         MARKETING_VERSION: "1.0.3"
         CURRENT_PROJECT_VERSION: "1"
-        TARGETED_DEVICE_FAMILY: "1"
+        # "1,2" (iPhone + iPad) is mandatory: the previous App Store version
+        # supported iPad and Apple rejects updates that drop device support
+        # (ITMS-90101). iPad runs the iPhone layouts full-screen in portrait.
+        TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     info:
@@ -52,6 +55,11 @@ targets:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        # Portrait-only on iPad requires opting out of multitasking.
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
         CFBundleURLTypes:
           - CFBundleURLName: social.betty.app
             CFBundleURLSchemes:
