@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      run_ios_e2e:
+        description: "Run the full iOS e2e suite"
+        type: boolean
+        default: true
 
 # Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
 concurrency:
@@ -125,8 +131,11 @@ jobs:
             test-without-building -only-testing:BettyTests
 
       # Full e2e against the in-process mock backend (hermetic, no network).
+      # Runs on main pushes (TestFlight deploy gate) and on-demand dispatch —
+      # PRs get build + unit only to keep macOS minutes and feedback time sane.
       # Time allowances turn a hung test into one failure instead of a wedged job.
       - name: UI tests (mock e2e)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e)
         run: |
           set -o pipefail
           xcodebuild -project Betty.xcodeproj -scheme Betty \
