@@ -131,11 +131,11 @@ jobs:
             test-without-building -only-testing:BettyTests
 
       # Full e2e against the in-process mock backend (hermetic, no network).
-      # Runs on main pushes (TestFlight deploy gate) and on-demand dispatch —
-      # PRs get build + unit only to keep macOS minutes and feedback time sane.
+      # Dispatch-only: the ~60-min suite is too slow for CI until it is
+      # parallelized — run it locally or via workflow_dispatch before releases.
       # Time allowances turn a hung test into one failure instead of a wedged job.
       - name: UI tests (mock e2e)
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e
         run: |
           set -o pipefail
           xcodebuild -project Betty.xcodeproj -scheme Betty \
