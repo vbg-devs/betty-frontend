@@ -1,6 +1,5 @@
 // @vitest-environment nuxt
 import { describe, it, expect, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import type { UserProfile } from '~/types';
 import ExactScoreListItem from './ExactScoreListItem.vue';
@@ -72,9 +71,15 @@ describe('ExactScoreListItem', () => {
     expect(wrapper.html()).toContain('<strong>1</strong>');
   });
 
-  // NOTE: pins current behavior — the default prop value {} has no user_ids,
-  // so mounting without a message throws instead of rendering a fallback.
-  it('throws when mounted without a message prop', () => {
-    expect(() => mount(ExactScoreListItem)).toThrow(TypeError);
+  it('renders the zero-players fallback when mounted without a message prop', async () => {
+    const wrapper = await mountSuspended(ExactScoreListItem);
+    expect(wrapper.text()).toBe('0 players had the exact score!');
+  });
+
+  it('renders the zero-players fallback when the message has no user_ids', async () => {
+    const wrapper = await mountSuspended(ExactScoreListItem, {
+      props: { message: {} },
+    });
+    expect(wrapper.text()).toBe('0 players had the exact score!');
   });
 });

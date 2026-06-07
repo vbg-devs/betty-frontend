@@ -222,7 +222,7 @@ const selectedTournament = computed(() => {
 });
 
 const canSave = computed(() => {
-  if (tournamentId.value === null) return false;
+  if (!selectedTournament.value) return false;
   if (name.value.length === 0) return false;
   if (winPoints.value.length === 0) return false;
   if (exactScorePoints.value.length === 0) return false;
@@ -268,6 +268,7 @@ async function create() {
     group.value = groupStore.byId(res.group_id) ?? null;
   } catch (err) {
     console.error(err);
+  } finally {
     loading.value = false;
   }
 }
@@ -275,7 +276,6 @@ async function create() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 997;
   top: 0;

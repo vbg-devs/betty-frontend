@@ -207,37 +207,39 @@ describe('default layout', () => {
       expect(replace).not.toHaveBeenCalled();
     });
 
-    // NOTE: pins a suspected source bug — the onAuthStateChanged callback in
-    // default.vue awaits Promise.all(store loads) with no try/catch, so a single
-    // failed load rejects unhandled, `loading` never becomes false, and the user
-    // is stuck on the loader forever. A fix (try/finally setting loading = false)
-    // should flip these assertions.
-    it('stays stuck on the loader when a store load fails', async () => {
+    it('clears the loader and surfaces an error alert when a store load fails', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { notifications } = useNotify();
+      notifications.value.splice(0, notifications.value.length);
+
       const wrapper = await mountLayout('/dashboard');
       authFetch.mockRejectedValueOnce(new Error('api down'));
-
-      const callback = onAuthStateChanged.mock.calls.at(-1)![1] as (u: unknown) => Promise<void>;
-      await expect(callback(firebaseUser)).rejects.toThrow('api down');
-      await flushPromises();
-      await nextTick();
+      await triggerAuth(firebaseUser);
 
       const endpoints = authFetch.mock.calls.map((call) => call[0]);
       expect(endpoints).toEqual(expect.arrayContaining(['/teams', '/tournaments', '/groups']));
-      expect(wrapper.find('.loader').exists()).toBe(true);
-      expect(wrapper.find('[data-testid="page-content"]').exists()).toBe(false);
-      expect(wrapper.find('.site-footer').exists()).toBe(false);
+      expect(wrapper.find('.loader').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="page-content"]').exists()).toBe(true);
+      expect(notifications.value).toEqual([
+        expect.objectContaining({
+          type: 'alert',
+          title: 'Could not load your data',
+          state: 'critical',
+        }),
+      ]);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
     });
 
-    it('never redirects the landing page to the dashboard when a store load fails', async () => {
+    it('does not redirect the landing page to the dashboard when a store load fails', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       await mountLayout('/');
       const replace = spyOnRouterReplace();
       authFetch.mockRejectedValueOnce(new Error('api down'));
-
-      const callback = onAuthStateChanged.mock.calls.at(-1)![1] as (u: unknown) => Promise<void>;
-      await expect(callback(firebaseUser)).rejects.toThrow('api down');
-      await flushPromises();
+      await triggerAuth(firebaseUser);
 
       expect(replace).not.toHaveBeenCalled();
+      consoleError.mockRestore();
     });
   });
 

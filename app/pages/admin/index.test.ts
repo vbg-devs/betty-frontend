@@ -312,6 +312,7 @@ describe('pages/admin', () => {
     it('POSTs the numeric score and notifies success when confirmed', async () => {
       await fillAndEvaluate();
       authFetch.mockResolvedValueOnce({});
+      authFetch.mockResolvedValueOnce({ ...makeTournament(1, { name: 'Euro 2026' }), games: [] });
 
       lastConfirm().onConfirm();
       await flushPromises();
@@ -323,6 +324,23 @@ describe('pages/admin', () => {
       expect(notifyAlert).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Game evaluated!', state: 'success' }),
       );
+    });
+
+    it('closes the modal and refreshes the games list on success', async () => {
+      const wrapper = await fillAndEvaluate();
+      authFetch.mockResolvedValueOnce({});
+      authFetch.mockResolvedValueOnce({
+        ...makeTournament(1, { name: 'Euro 2026' }),
+        games: [makeGame({ status: 1 })],
+      });
+
+      lastConfirm().onConfirm();
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenLastCalledWith('/tournament/1');
+      expect(wrapper.find('.modal').exists()).toBe(false);
+      expect(wrapper.findAll('.game-box')).toHaveLength(0);
+      expect(wrapper.find('.tab-empty__copy').text()).toContain('already been evaluated');
     });
 
     it('notifies an error when the evaluation request fails', async () => {
@@ -341,22 +359,34 @@ describe('pages/admin', () => {
       );
     });
 
-    // NOTE: pins current behavior — the `loading` ref is never set by doEvaluate,
-    // so the button never shows its loading state while the POST is pending.
-    it('does not enter the loading state while the request is pending', async () => {
+    it('keeps the modal open and does not refresh when the evaluation fails', async () => {
+      const wrapper = await fillAndEvaluate();
+      authFetch.mockRejectedValueOnce(new Error('boom'));
+
+      lastConfirm().onConfirm();
+      await flushPromises();
+
+      expect(wrapper.find('.modal').exists()).toBe(true);
+      // 1 initial details fetch + 1 failed POST, no refresh
+      expect(authFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('shows the loading state and disables the button while the request is pending', async () => {
       const wrapper = await fillAndEvaluate();
       let resolveEvaluate!: (value: unknown) => void;
       authFetch.mockImplementationOnce(() => new Promise((resolve) => (resolveEvaluate = resolve)));
+      authFetch.mockResolvedValueOnce({ ...makeTournament(1, { name: 'Euro 2026' }), games: [] });
 
       lastConfirm().onConfirm();
       await wrapper.vm.$nextTick();
 
       const button = wrapper.find('.btn--orange');
-      expect(button.classes()).not.toContain('btn--loading');
-      expect(button.attributes('disabled')).toBeUndefined();
+      expect(button.classes()).toContain('btn--loading');
+      expect(button.attributes('disabled')).toBeDefined();
 
       resolveEvaluate({});
       await flushPromises();
+      expect(wrapper.find('.modal').exists()).toBe(false);
     });
   });
 });

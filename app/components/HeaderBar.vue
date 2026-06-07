@@ -152,7 +152,7 @@
 <script setup lang="ts">
 import { signOut } from 'firebase/auth';
 
-const { user = {} as Record<string, any> } = defineProps<{
+const { user = null } = defineProps<{
   user?: Record<string, any> | null;
 }>();
 

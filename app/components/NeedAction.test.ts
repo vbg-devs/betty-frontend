@@ -134,13 +134,27 @@ describe('NeedAction', () => {
     expect(wrapper.find('.message').classes()).toContain('message--warning');
   });
 
-  // NOTE: timeToBet < 24 also matches games far in the past, so an old
-  // unfinished game (status !== 1) still shows the "too late" warning.
-  it('includes past unfinished games in the urgent list', async () => {
+  it('excludes past unfinished games from the urgent list', async () => {
     const wrapper = await mountSuspended(NeedAction, {
       props: { pools: [makePool(1, 'Group A', [makeGame(1, -72)])] },
     });
+    expect(wrapper.find('.message').exists()).toBe(false);
+  });
+
+  it('treats a game starting in 30 minutes as urgent', async () => {
+    const wrapper = await mountSuspended(NeedAction, {
+      props: { pools: [makePool(1, 'Group A', [makeGame(1, 0.5)])] },
+    });
     expect(wrapper.find('.message').classes()).toContain('message--warning');
+  });
+
+  it('shows an unfinished game that already started today without a warning', async () => {
+    const wrapper = await mountSuspended(NeedAction, {
+      props: { pools: [makePool(1, 'Group A', [makeGame(1, -2)])] },
+    });
+    const message = wrapper.find('.message');
+    expect(message.classes()).not.toContain('message--warning');
+    expect(message.text()).toContain('Todays games');
   });
 
   it('shows todays finished games without a warning', async () => {

@@ -61,29 +61,28 @@ describe('useGameStore', () => {
     expect(store.games.map((g) => g.id)).toEqual([1, 2]);
   });
 
-  // NOTE: pins current behavior — loading the same id twice appends a duplicate
-  // entry instead of deduplicating.
-  it('load() appends a duplicate when the same id is loaded twice', async () => {
+  it('load() replaces the existing entry when the same id is loaded twice', async () => {
     const store = useGameStore();
-    authFetch.mockResolvedValue(makeGame(5));
+    authFetch.mockResolvedValueOnce(makeGame(5));
+    authFetch.mockResolvedValueOnce(makeGame(5, { status: 2, home_team_score: 1 }));
 
     await store.load(5);
     await store.load(5);
 
-    expect(store.games).toHaveLength(2);
+    expect(store.games).toHaveLength(1);
+    expect(store.byId(5)).toMatchObject({ id: 5, status: 2, home_team_score: 1 });
+    expect(Object.isFrozen(store.games[0])).toBe(true);
   });
 
-  // NOTE: pins current behavior — a null API payload is pushed into games as-is,
-  // so byId() would throw when iterating over the null entry.
-  it('load() pushes null into games when the API returns null', async () => {
+  it('load() skips a null payload and leaves games untouched', async () => {
     authFetch.mockResolvedValue(null);
     const store = useGameStore();
 
     const result = await store.load(9);
 
     expect(result).toBeNull();
-    expect(store.games).toHaveLength(1);
-    expect(store.games[0]).toBeNull();
+    expect(store.games).toHaveLength(0);
+    expect(store.byId(9)).toBeUndefined();
   });
 
   it('load() propagates API rejections and leaves state untouched', async () => {

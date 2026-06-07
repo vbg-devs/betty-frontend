@@ -17,7 +17,7 @@
           </div>
         </div>
       </template>
-      <div>{{ group.members.length }} members</div>
+      <div>{{ memberCount }} {{ memberCount === 1 ? 'member' : 'members' }}</div>
     </Card>
   </NuxtLink>
 </template>
@@ -28,6 +28,8 @@ const { group = {} as Record<string, any> } = defineProps<{
 }>();
 
 const tournament = computed(() => group.tournament);
+
+const memberCount = computed(() => group.members?.length ?? 0);
 </script>
 
 <style scoped>

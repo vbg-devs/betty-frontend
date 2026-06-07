@@ -5,8 +5,8 @@
       'game--clickable': clickable,
       'game--alternative': alternative,
       'game--bet-done': betted,
-      'game--bet-urgent': timeToBet <= 24,
-      'game--bet-danger': timeToBet <= 12,
+      'game--bet-urgent': timeToBet > 0 && timeToBet <= 24,
+      'game--bet-danger': timeToBet > 0 && timeToBet <= 12,
       'game--over': game.status === 1,
     }"
     @click="emit('click-game', game)"
@@ -14,10 +14,10 @@
     <template v-if="alternative">
       <div class="game__row">
         <div class="game__column">
-          <TeamLogo :class="homeTeam" />
+          <TeamLogo :team="homeTeam" class="team__logo" />
         </div>
         <div class="game__column game__column--fill">
-          {{ homeTeam.name }}
+          {{ homeTeam?.name }}
         </div>
         <div class="game__column">
           {{ game.home_team_score }}
@@ -25,10 +25,10 @@
       </div>
       <div class="game__row">
         <div class="game__column">
-          <img src="https://via.placeholder.com/100x100" class="team__logo" />
+          <TeamLogo :team="awayTeam" class="team__logo" />
         </div>
         <div class="game__column game__column--fill">
-          {{ awayTeam.name }}
+          {{ awayTeam?.name }}
         </div>
         <div class="game__column">
           {{ game.away_team_score }}
@@ -51,7 +51,7 @@
         <div class="team">
           <TeamLogo :team="homeTeam" class="team__logo" />
           <div class="team__name">
-            {{ homeTeam.name }}
+            {{ homeTeam?.name }}
           </div>
         </div>
         <div>
@@ -71,7 +71,7 @@
         <div class="team">
           <TeamLogo :team="awayTeam" class="team__logo" />
           <div class="team__name">
-            {{ awayTeam.name }}
+            {{ awayTeam?.name }}
           </div>
         </div>
       </div>
@@ -130,8 +130,8 @@ const timeToBet = computed(() => {
   return differenceInHours(new Date(game.start_date), new Date());
 });
 
-const homeTeam = computed(() => teamStore.byId(game.home_team_id)!);
-const awayTeam = computed(() => teamStore.byId(game.away_team_id)!);
+const homeTeam = computed(() => teamStore.byId(game.home_team_id));
+const awayTeam = computed(() => teamStore.byId(game.away_team_id));
 
 const startDate = computed(() => {
   if (game.status === 1) return 'Finished';
@@ -151,11 +151,12 @@ const startDate = computed(() => {
 const isLive = computed(() => {
   if (game.status === 1) return false;
 
-  const currentDate = new Date();
-  currentDate.setMinutes(currentDate.getMinutes() + 150);
-  if (isAfter(currentDate, new Date(game.start_date))) return false;
+  const start = new Date(game.start_date);
+  if (!isAfter(new Date(), start)) return false;
 
-  return isAfter(new Date(), new Date(game.start_date));
+  const liveUntil = new Date(start);
+  liveUntil.setMinutes(liveUntil.getMinutes() + 150);
+  return isAfter(liveUntil, new Date());
 });
 </script>
 

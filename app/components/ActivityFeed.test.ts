@@ -12,9 +12,14 @@ class FakeWebSocket {
   static instances: FakeWebSocket[] = [];
   url: string;
   onmessage: ((event: { data: string }) => void) | null = null;
+  closed = false;
   constructor(url: string) {
     this.url = url;
     FakeWebSocket.instances.push(this);
+  }
+
+  close() {
+    this.closed = true;
   }
 }
 vi.stubGlobal('WebSocket', FakeWebSocket);
@@ -293,6 +298,19 @@ describe('ActivityFeed', () => {
 
       expect(listener).not.toHaveBeenCalled();
       window.removeEventListener('game-evaluated', listener);
+    });
+
+    it('closes the socket and detaches the message handler on unmount', async () => {
+      const wrapper = await mountFeed();
+      const socket = lastSocket();
+      expect(socket.closed).toBe(false);
+      expect(socket.onmessage).toBeTypeOf('function');
+
+      wrapper.unmount();
+
+      expect(socket.closed).toBe(true);
+      expect(socket.onmessage).toBeNull();
+      expect(store.all).toHaveLength(0);
     });
   });
 });

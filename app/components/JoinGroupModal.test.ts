@@ -5,12 +5,13 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
 import type { Group, Tournament } from '~/types';
 import JoinGroupModal from './JoinGroupModal.vue';
 
-const { authFetch, confirm } = vi.hoisted(() => ({
+const { authFetch, confirm, alert } = vi.hoisted(() => ({
   authFetch: vi.fn(),
   confirm: vi.fn(),
+  alert: vi.fn(),
 }));
 mockNuxtImport('useApi', () => () => ({ authFetch }));
-mockNuxtImport('useNotify', () => () => ({ confirm }));
+mockNuxtImport('useNotify', () => () => ({ confirm, alert }));
 
 const joinRoute = '/dashboard/groups/join/ABC123';
 
@@ -49,6 +50,7 @@ describe('JoinGroupModal', () => {
   beforeEach(() => {
     authFetch.mockReset();
     confirm.mockReset();
+    alert.mockReset();
     push = vi.fn().mockResolvedValue(undefined);
     useRouter().push = push as never;
     useTournamentStore().tournaments = [];
@@ -232,6 +234,7 @@ describe('JoinGroupModal', () => {
       expect(confirm.mock.calls[0]![0].question).toBe(
         "It looks like you're already member of <strong>Office Pool</strong>. Go there now?",
       );
+      expect(alert).not.toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalledWith(err);
 
       confirm.mock.calls[0]![0].onConfirm();
@@ -239,7 +242,7 @@ describe('JoinGroupModal', () => {
       errorSpy.mockRestore();
     });
 
-    it('logs and shows no confirm when the join fails with a non-409 error', async () => {
+    it('shows a critical alert when the join fails with a non-409 error', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err = { response: { status: 500 } };
       authFetch.mockRejectedValue(err);
@@ -252,6 +255,11 @@ describe('JoinGroupModal', () => {
       await flushPromises();
 
       expect(confirm).not.toHaveBeenCalled();
+      expect(alert).toHaveBeenCalledWith({
+        title: 'Could not join group',
+        message: 'Something went wrong while joining the group. Please try again.',
+        state: 'critical',
+      });
       expect(errorSpy).toHaveBeenCalledWith(err);
       expect(push).not.toHaveBeenCalled();
       const button = wrapper.find('.btn--orange');

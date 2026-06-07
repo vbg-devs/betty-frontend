@@ -34,6 +34,7 @@ const awayTeam = computed(() => {
 });
 
 onMounted(() => {
+  if (!message.game_id || gameStore.byId(message.game_id)) return;
   gameStore.load(message.game_id);
 });
 </script>

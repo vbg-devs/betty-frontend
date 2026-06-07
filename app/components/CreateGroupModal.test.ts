@@ -268,10 +268,7 @@ describe('CreateGroupModal', () => {
     errorSpy.mockRestore();
   });
 
-  // NOTE: pins current behavior — loading is never reset on the success path,
-  // so if the created group is missing from the reloaded list the form stays
-  // stuck on a disabled CREATING… button.
-  it('stays stuck loading when the created group is missing after reload', async () => {
+  it('returns to form mode with a re-enabled button when the created group is missing after reload', async () => {
     authFetch.mockImplementation((url: string) =>
       url === '/group' ? Promise.resolve({ group_id: 5 }) : Promise.resolve([]),
     );
@@ -281,8 +278,19 @@ describe('CreateGroupModal', () => {
     await flushPromises();
 
     expect(wrapper.find('form').exists()).toBe(true);
-    expect(createBtn(wrapper).text()).toBe('CREATING…');
+    expect(createBtn(wrapper).text()).toBe('CREATE GROUP');
+    expect(createBtn(wrapper).attributes('disabled')).toBeUndefined();
+  });
+
+  it('disables the create button when the selected tournament is no longer running', async () => {
+    const wrapper = await mountModal();
+    await fillForm(wrapper);
+    expect(createBtn(wrapper).attributes('disabled')).toBeUndefined();
+
+    useTournamentStore().tournaments = [];
+    await nextTick();
     expect(createBtn(wrapper).attributes('disabled')).toBeDefined();
+    expect(createBtn(wrapper).classes()).toContain('btn--disabled');
   });
 
   it('toggles the body no-scroll class on mount and unmount', async () => {

@@ -1,6 +1,6 @@
 // @vitest-environment nuxt
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime';
 import GameStartSoonListItem from './GameStartSoonListItem.vue';
 import TeamLogo from './TeamLogo.vue';
@@ -96,23 +96,30 @@ describe('GameStartSoonListItem', () => {
     expect(logos[0]!.props('team')).toEqual(away);
   });
 
-  // NOTE: onMounted always refetches even when the game is already cached, so
-  // gameStore ends up with a duplicate entry — pins current behavior.
-  it('refetches on mount and pushes a duplicate when the game is already cached', async () => {
+  it('skips the fetch on mount when the game is already cached', async () => {
     const gameStore = useGameStore();
     gameStore.games.push(game);
-    authFetch.mockResolvedValue(game);
 
     await mountSuspended(GameStartSoonListItem, { props: { match } });
     await flushPromises();
 
-    expect(authFetch).toHaveBeenCalledWith('/game/10');
-    expect(gameStore.games).toHaveLength(2);
+    expect(authFetch).not.toHaveBeenCalled();
+    expect(gameStore.games).toHaveLength(1);
   });
 
-  // NOTE: the match prop is declared optional with a {} default, but the
-  // component reads match.Games[0] unguarded — omitting it throws.
-  it('throws when the match prop is omitted', () => {
-    expect(() => mount(GameStartSoonListItem)).toThrow(TypeError);
+  it('renders nothing and skips the load when the match prop is omitted', async () => {
+    const wrapper = await mountSuspended(GameStartSoonListItem);
+
+    expect(authFetch).not.toHaveBeenCalled();
+    expect(wrapper.find('.game-bet-list-item').exists()).toBe(false);
+  });
+
+  it('skips the load when the match has no games', async () => {
+    const wrapper = await mountSuspended(GameStartSoonListItem, {
+      props: { match: { Games: [] } },
+    });
+
+    expect(authFetch).not.toHaveBeenCalled();
+    expect(wrapper.find('.game-bet-list-item').exists()).toBe(false);
   });
 });

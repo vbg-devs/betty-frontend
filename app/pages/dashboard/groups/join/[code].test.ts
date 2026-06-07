@@ -79,11 +79,8 @@ describe('pages/dashboard/groups/join/[code]', () => {
     expect(modal.props('group')).toEqual(group);
   });
 
-  // NOTE: pins current behavior — on fetch failure the page still renders the
-  // modal but with group=null, which the real JoinGroupModal cannot handle
-  // (its default {} only applies to undefined, so group.header_image_url throws).
-  // The onMounted has no catch, so the error escapes to the app error handler.
-  it('hides the loader and renders the modal with a null group when the fetch fails', async () => {
+  it('hides the loader and renders an error state instead of the modal when the fetch fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const fetchError = new Error('not found');
     authFetch.mockRejectedValue(fetchError);
     const errorHandler = vi.fn();
@@ -91,10 +88,21 @@ describe('pages/dashboard/groups/join/[code]', () => {
     await flushPromises();
 
     expect(wrapper.find('.loader').exists()).toBe(false);
-    const modal = wrapper.findComponent(JoinGroupModalStub);
-    expect(modal.exists()).toBe(true);
-    expect(modal.props('group')).toBeNull();
-    expect(errorHandler).toHaveBeenCalledTimes(1);
-    expect(errorHandler.mock.calls[0]![0]).toBe(fetchError);
+    expect(wrapper.findComponent(JoinGroupModalStub).exists()).toBe(false);
+    const error = wrapper.find('.join-error');
+    expect(error.exists()).toBe(true);
+    expect(error.text()).toContain('Could not load this invite');
+    expect(error.find('a').attributes('href')).toBe('/dashboard');
+    expect(errorHandler).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(fetchError);
+    errorSpy.mockRestore();
+  });
+
+  it('shows neither the modal nor the error state while still loading', async () => {
+    authFetch.mockReturnValue(new Promise(() => {}));
+    const wrapper = await mountPage();
+
+    expect(wrapper.find('.join-error').exists()).toBe(false);
+    expect(wrapper.findComponent(JoinGroupModalStub).exists()).toBe(false);
   });
 });

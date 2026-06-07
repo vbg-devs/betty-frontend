@@ -99,18 +99,40 @@ describe('useBetStore', () => {
       expect(result).toEqual(updated);
     });
 
-    // NOTE: pins current behavior — update() never syncs the local bets list,
-    // even when the updated bet was previously placed through this store.
-    it('does not modify local bets state', async () => {
-      const original = makeBet({ id: 5, home_team_score: 1 });
+    it('patches the matching local bet with the server response', async () => {
       const store = useBetStore();
-      authFetch.mockResolvedValueOnce(original);
+      authFetch.mockResolvedValueOnce(makeBet({ id: 5, home_team_score: 1 }));
+      await store.place({ game_id: 20 });
+
+      const updated = makeBet({ id: 5, home_team_score: 9 });
+      authFetch.mockResolvedValueOnce(updated);
+      await store.update({ id: 5, home_team_score: 9 });
+
+      expect(store.bets).toEqual([updated]);
+      expect(store.all).toEqual([updated]);
+    });
+
+    it('keeps the patched bet frozen', async () => {
+      const store = useBetStore();
+      authFetch.mockResolvedValueOnce(makeBet({ id: 5 }));
       await store.place({ game_id: 20 });
 
       authFetch.mockResolvedValueOnce(makeBet({ id: 5, home_team_score: 9 }));
       await store.update({ id: 5, home_team_score: 9 });
 
-      expect(store.bets).toEqual([original]);
+      expect(Object.isFrozen(store.bets[0])).toBe(true);
+    });
+
+    it('leaves local bets untouched when the updated id is not in state', async () => {
+      const other = makeBet({ id: 1 });
+      const store = useBetStore();
+      authFetch.mockResolvedValueOnce(other);
+      await store.place({ game_id: 20 });
+
+      authFetch.mockResolvedValueOnce(makeBet({ id: 5, home_team_score: 9 }));
+      await store.update({ id: 5, home_team_score: 9 });
+
+      expect(store.bets).toEqual([other]);
     });
 
     it('propagates API rejections', async () => {

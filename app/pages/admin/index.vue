@@ -246,6 +246,7 @@ function evaluateGame() {
 }
 
 async function doEvaluate(payload: Record<string, number>) {
+  loading.value = true;
   try {
     await authFetch('/evaluategame', { method: 'POST', body: payload });
     notify({
@@ -253,12 +254,18 @@ async function doEvaluate(payload: Record<string, number>) {
       message: 'Yeeeeeah',
       state: 'success',
     });
+    selectedGame.value = null;
+    if (selectedTournament.value) {
+      tournamentDetails.value = await authFetch<any>(`/tournament/${selectedTournament.value.id}`);
+    }
   } catch (err) {
     notify({
       title: 'Could not evaluate game',
       message: `Could not evaluate, check logs.. \n\nError: ${err}`,
       state: 'error',
     });
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -273,7 +280,6 @@ function selectTournament(tournament: Tournament) {
 
 <style scoped>
 .admin {
-
   color: var(--cream);
   font-family:
     'Inter',

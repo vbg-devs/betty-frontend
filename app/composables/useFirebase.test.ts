@@ -137,26 +137,54 @@ describe('useCurrentUser', () => {
     expect(second.isReady.value).toBe(true);
   });
 
-  // NOTE: pins current behavior — every caller before the first auth event
-  // registers its own listener because the guard only checks isReady.
-  it('subscribes once per caller while auth is still pending', async () => {
+  it('shares a single subscription across callers while auth is still pending', async () => {
     const { useCurrentUser } = await loadFirebase();
 
     useCurrentUser();
     useCurrentUser();
 
-    expect(onAuthStateChanged).toHaveBeenCalledTimes(2);
+    expect(onAuthStateChanged).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('useAuthToken', () => {
-  // NOTE: pins current behavior — useAuthToken does not wait for auth
-  // restoration; it rejects immediately whenever currentUser is null.
-  it('rejects with "Not authenticated" when no user is signed in', async () => {
+  it('waits for auth restoration and resolves the restored user token', async () => {
     getAuth.mockReturnValue(makeAuth(null));
+    const unsubscribe = vi.fn();
+    onAuthStateChanged.mockReturnValue(unsubscribe);
     const { useAuthToken } = await loadFirebase();
 
-    await expect(useAuthToken()).rejects.toThrow('Not authenticated');
+    const tokenPromise = useAuthToken();
+    expect(onAuthStateChanged).toHaveBeenCalledTimes(1);
+    const listener = onAuthStateChanged.mock.calls[0]![1] as (u: User | null) => void;
+    const getIdToken = vi.fn().mockResolvedValue('restored-token');
+    listener({ getIdToken } as unknown as User);
+
+    await expect(tokenPromise).resolves.toBe('restored-token');
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects with "Not authenticated" only once restoration completes with no user', async () => {
+    getAuth.mockReturnValue(makeAuth(null));
+    const unsubscribe = vi.fn();
+    onAuthStateChanged.mockReturnValue(unsubscribe);
+    const { useAuthToken } = await loadFirebase();
+
+    const tokenPromise = useAuthToken();
+    const listener = onAuthStateChanged.mock.calls[0]![1] as (u: User | null) => void;
+    listener(null);
+
+    await expect(tokenPromise).rejects.toThrow('Not authenticated');
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not subscribe when a user is already signed in', async () => {
+    const getIdToken = vi.fn().mockResolvedValue('id-token');
+    getAuth.mockReturnValue(makeAuth({ getIdToken } as unknown as User));
+    const { useAuthToken } = await loadFirebase();
+
+    await expect(useAuthToken()).resolves.toBe('id-token');
+    expect(onAuthStateChanged).not.toHaveBeenCalled();
   });
 
   it('resolves the id token of the signed-in user', async () => {

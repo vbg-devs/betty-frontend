@@ -211,14 +211,19 @@ watch(
       document.body.classList.remove('no-scroll');
     }
   },
+  { immediate: true },
 );
 
-watch(myBet, (newVal) => {
-  if (newVal) {
-    homeScore.value = newVal.home_team_score;
-    awayScore.value = newVal.away_team_score;
-  }
-});
+watch(
+  myBet,
+  (newVal) => {
+    if (newVal) {
+      homeScore.value = newVal.home_team_score;
+      awayScore.value = newVal.away_team_score;
+    }
+  },
+  { immediate: true },
+);
 
 watch(
   lockInput,

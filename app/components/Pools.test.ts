@@ -150,9 +150,19 @@ describe('Pools', () => {
       expect(wrapper.find('.pool__title').text()).toBe('Quarter-final - Tomorrow');
     });
 
-    // NOTE: pins current behavior — a day group takes the pool name of its
-    // earliest game, even when the same day mixes games from several pools.
-    it('uses the earliest game pool name for a mixed-pool day', async () => {
+    it('combines the pool names of a mixed-pool day in start order', async () => {
+      const wrapper = await mountPools({
+        pools: [
+          makePool(1, 'Round of 16', [makeGame({ id: 1, start_date: '2026-06-16T15:00:00' })]),
+          makePool(2, 'Quarter-final', [makeGame({ id: 2, start_date: '2026-06-16T09:00:00' })]),
+        ],
+      });
+      const groups = wrapper.findAll('.day-group');
+      expect(groups).toHaveLength(1);
+      expect(groups[0]!.find('.pool__title').text()).toBe('Quarter-final & Round of 16 - Tomorrow');
+    });
+
+    it('shows only the day title when a mixed-pool day includes a group pool', async () => {
       const wrapper = await mountPools({
         pools: [
           makePool(1, 'Group A', [makeGame({ id: 1, start_date: '2026-06-16T15:00:00' })]),
@@ -161,7 +171,7 @@ describe('Pools', () => {
       });
       const groups = wrapper.findAll('.day-group');
       expect(groups).toHaveLength(1);
-      expect(groups[0]!.find('.pool__title').text()).toBe('Knockout - Tomorrow');
+      expect(groups[0]!.find('.pool__title').text()).toBe('Tomorrow');
     });
 
     it('marks the first group starting now or later as next upcoming', async () => {
@@ -182,10 +192,7 @@ describe('Pools', () => {
       ]);
     });
 
-    // NOTE: pins current behavior — the upcoming check uses the first game of
-    // the day, so a day whose first game already started is skipped even if a
-    // later game that day is still upcoming.
-    it('skips today when its first game already started', async () => {
+    it('flags today as next upcoming when its first game started but a later one has not', async () => {
       const wrapper = await mountPools({
         pools: [
           makePool(1, 'Group A', [
@@ -196,7 +203,7 @@ describe('Pools', () => {
         ],
       });
       const groups = wrapper.findAll('.day-group');
-      expect(groups.map((g) => g.classes().includes('is-next-upcoming'))).toEqual([false, true]);
+      expect(groups.map((g) => g.classes().includes('is-next-upcoming'))).toEqual([true, false]);
     });
 
     it('marks no group when all games are in the past', async () => {

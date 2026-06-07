@@ -11,12 +11,14 @@ const userStore = useUserStore();
 
 const userId = computed(() => userStore.id);
 
+const userIds = computed<string[]>(() => message.user_ids ?? []);
+
 const hadCorrect = computed(() => {
-  return message.user_ids.includes(userId.value);
+  return userId.value != null && userIds.value.includes(userId.value);
 });
 
 const text = computed(() => {
-  const correct = message.user_ids.length;
+  const correct = userIds.value.length;
   if (hadCorrect.value) {
     return `You and <strong>${correct - 1}</strong> other(s) had the exact score`;
   }

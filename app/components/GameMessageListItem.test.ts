@@ -104,27 +104,22 @@ describe('GameMessageListItem', () => {
     expect(wrapper.find('strong').text()).toBe('-');
   });
 
-  // NOTE: pins current behavior — with the default empty message the component
-  // still fires a fetch for '/game/undefined' instead of skipping the load.
-  it('requests /game/undefined when no message prop is given', async () => {
+  it('skips the load when no message prop is given', async () => {
     const wrapper = await mountSuspended(GameMessageListItem);
 
-    expect(authFetch).toHaveBeenCalledWith('/game/undefined');
+    expect(authFetch).not.toHaveBeenCalled();
     expect(wrapper.find('.game-message-list-item').exists()).toBe(false);
   });
 
-  // NOTE: pins current behavior — load() always fetches on mount, even when
-  // the game is already cached in the store, and pushes a duplicate entry.
-  it('fetches again on mount even when the game is already in the store', async () => {
+  it('skips the fetch on mount when the game is already in the store', async () => {
     useGameStore().games.push(game);
-    authFetch.mockResolvedValue(game);
 
     await mountSuspended(GameMessageListItem, {
       props: { message: { game_id: 7 } },
     });
     await flushPromises();
 
-    expect(authFetch).toHaveBeenCalledWith('/game/7');
-    expect(useGameStore().games.filter((g) => g.id === 7)).toHaveLength(2);
+    expect(authFetch).not.toHaveBeenCalled();
+    expect(useGameStore().games.filter((g) => g.id === 7)).toHaveLength(1);
   });
 });

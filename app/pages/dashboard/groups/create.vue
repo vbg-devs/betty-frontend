@@ -15,7 +15,7 @@
       </div>
       <div v-else key="settings">
         <form @submit.prevent="create">
-          <div class="selected-tournament">Tournamnt: {{ selectedTournament.name }}</div>
+          <div class="selected-tournament">Tournament: {{ selectedTournament.name }}</div>
 
           <div class="form-row">
             <input
@@ -60,8 +60,8 @@
           <div class="form-row">
             <button
               class="button button--action"
-              :disabled="loading"
-              :class="{ 'button--disabled': loading }"
+              :disabled="loading || !canSave"
+              :class="{ 'button--disabled': loading || !canSave }"
             >
               Create group
             </button>
@@ -89,12 +89,19 @@ const loading = ref(false);
 
 const tournaments = computed(() => tournamentStore.running);
 
+const canSave = computed(() => {
+  if (name.value.length === 0) return false;
+  if (winPoints.value.length === 0) return false;
+  if (exactScorePoints.value.length === 0) return false;
+  return true;
+});
+
 function selectTournament(payload: Tournament) {
   selectedTournament.value = payload;
 }
 
 async function create() {
-  if (!selectedTournament.value) return;
+  if (!selectedTournament.value || !canSave.value) return;
 
   const payload = {
     name: name.value,
@@ -103,6 +110,7 @@ async function create() {
     exact_result_points: parseFloat(exactScorePoints.value),
     allow_sneak_peek: peak.value,
     group_play_deadline: selectedTournament.value.start_date,
+    welcome_message: message.value,
     mode: 0,
   };
 

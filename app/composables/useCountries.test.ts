@@ -87,7 +87,7 @@ describe('useCountries', () => {
 
     expect(result).toHaveLength(22);
     expect(result[0]!.name).toBe('Argentina');
-    expect(loaded.value).toBe(true);
+    expect(loaded.value).toBe(false);
     expect(loading.value).toBe(false);
   });
 
@@ -103,21 +103,22 @@ describe('useCountries', () => {
     expect(second.map((c) => c.code)).toEqual(['JP']);
   });
 
-  it('load() does not retry after a failure and keeps the fallback', async () => {
+  it('load() retries after a failure and replaces the fallback', async () => {
     authFetch.mockRejectedValue(new Error('boom'));
-    const { load } = useCountries();
-    await load();
+    const { load, loaded } = useCountries();
+    const fallback = await load();
+    expect(fallback).toHaveLength(22);
+    expect(loaded.value).toBe(false);
 
     authFetch.mockResolvedValue([country('JP', 'Japan')]);
     const result = await load();
 
-    expect(authFetch).toHaveBeenCalledTimes(1);
-    expect(result).toHaveLength(22);
+    expect(authFetch).toHaveBeenCalledTimes(2);
+    expect(result.map((c) => c.code)).toEqual(['JP']);
+    expect(loaded.value).toBe(true);
   });
 
-  it('load() while a fetch is in flight returns the current value without a second fetch', async () => {
-    // NOTE: pins current behavior — a concurrent caller gets the stale
-    // (pre-load) list back instead of awaiting the in-flight request.
+  it('load() while a fetch is in flight awaits the in-flight request without a second fetch', async () => {
     const pending = deferred<Country[]>();
     authFetch.mockReturnValue(pending.promise);
     const { load, loading, loaded } = useCountries();
@@ -126,15 +127,31 @@ describe('useCountries', () => {
     expect(loading.value).toBe(true);
     expect(loaded.value).toBe(false);
 
-    const concurrent = await load();
-    expect(concurrent).toEqual([]);
+    const concurrentCall = load();
     expect(authFetch).toHaveBeenCalledTimes(1);
 
     pending.resolve([country('FI', 'Finland')]);
-    const first = await firstCall;
+    const [first, concurrent] = await Promise.all([firstCall, concurrentCall]);
     expect(first.map((c) => c.code)).toEqual(['FI']);
+    expect(concurrent).toEqual(first);
     expect(loading.value).toBe(false);
     expect(loaded.value).toBe(true);
+  });
+
+  it('concurrent load() callers during a failing fetch both receive the fallback', async () => {
+    const pending = deferred<Country[]>();
+    authFetch.mockReturnValue(pending.promise);
+    const { load, loaded } = useCountries();
+
+    const firstCall = load();
+    const concurrentCall = load();
+    expect(authFetch).toHaveBeenCalledTimes(1);
+
+    pending.reject(new Error('network down'));
+    const [first, concurrent] = await Promise.all([firstCall, concurrentCall]);
+    expect(first).toHaveLength(22);
+    expect(concurrent).toEqual(first);
+    expect(loaded.value).toBe(false);
   });
 
   it('shares state across useCountries() instances', async () => {

@@ -142,19 +142,16 @@ describe('CompleteProfileModal', () => {
       expect(button.classes()).not.toContain('btn--disabled');
     });
 
-    it('allows a whitespace-only name and submits an empty trimmed name', async () => {
-      // NOTE: pins current behavior — canSave only checks raw length, so a
-      // whitespace-only name passes validation but is trimmed to '' on submit.
+    it('keeps save disabled for a whitespace-only name', async () => {
       const wrapper = await openModal({ email: 'j@e.com' });
       await wrapper.find('input').setValue('   ');
-      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined();
 
-      authFetch.mockResolvedValueOnce(makeProfile());
-      await submit(wrapper);
-      expect(authFetch).toHaveBeenLastCalledWith(
-        '/user',
-        expect.objectContaining({ body: expect.objectContaining({ name: '' }) }),
-      );
+      const button = wrapper.find('button[type="submit"]');
+      expect(button.attributes('disabled')).toBeDefined();
+      expect(button.classes()).toContain('btn--disabled');
+
+      await wrapper.find('input').setValue('  Jane  ');
+      expect(button.attributes('disabled')).toBeUndefined();
     });
   });
 

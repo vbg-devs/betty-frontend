@@ -168,17 +168,18 @@ describe('UpdateProfileModal', () => {
       await wrapper.find('form').trigger('submit');
       await flushPromises();
 
-      // NOTE: pins current behavior — the email ref is never populated from
-      // the /user/me response, so the update always submits email: ''.
+      // The backend PUT /user/me only applies name and country, so the payload
+      // must never carry an email — an empty one used to wipe the stored address.
       expect(authFetch).toHaveBeenLastCalledWith('/user/me', {
         method: 'PUT',
         body: {
-          email: '',
           name: 'New Name',
           image_url: 'https://cdn.example/jane.png',
           country: 'XX',
         },
       });
+      const putBody = authFetch.mock.calls.at(-1)![1].body;
+      expect(putBody).not.toHaveProperty('email');
       expect(alert).toHaveBeenCalledWith({
         title: 'Profile updated',
         message: 'Refresh the page to make sure the changes are visible',

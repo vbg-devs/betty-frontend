@@ -54,15 +54,13 @@ describe('useMessageStore', () => {
       expect(store.messages.map((m) => m.id)).toEqual([4, 5, 6, 7, 8]);
     });
 
-    // NOTE: pins current behavior — the cap check is `length === 5`, so a
-    // state seeded above the cap grows unbounded instead of being trimmed.
-    it('does not trim when state was seeded beyond the cap', () => {
+    it('trims back to the cap when state was seeded beyond it', () => {
       const store = useMessageStore();
       store.messages = [1, 2, 3, 4, 5, 6].map(makeMessage);
 
       store.add(makeMessage(7));
 
-      expect(store.messages).toHaveLength(7);
+      expect(store.messages.map((m) => m.id)).toEqual([3, 4, 5, 6, 7]);
     });
   });
 

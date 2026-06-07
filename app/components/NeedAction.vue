@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { differenceInHours, isToday } from 'date-fns';
+import { isToday } from 'date-fns';
 
 const {
   pools = [],
@@ -128,7 +128,10 @@ const fakeUrgentGames = computed(() => {
 
 const gamesThatNeedsAttention = computed(() => {
   const real = allGames.value
-    .filter((x: any) => x.status !== 1 && !hasBet(x) && timeToBet(x) < 24)
+    .filter((x: any) => {
+      const hoursLeft = timeToBet(x);
+      return x.status !== 1 && !hasBet(x) && hoursLeft > 0 && hoursLeft < 24;
+    })
     .slice(0, 3);
   if (real.length === 0) return fakeUrgentGames.value;
   return real;
@@ -143,8 +146,9 @@ const games = computed(() => {
   return gamesThatNeedsAttention.value;
 });
 
+// Fractional hours so a game minutes away still counts as urgent.
 function timeToBet(game: any) {
-  return differenceInHours(new Date(game.start_date), new Date());
+  return (new Date(game.start_date).getTime() - Date.now()) / (60 * 60 * 1000);
 }
 
 function clickGame(payload: any) {
@@ -182,7 +186,6 @@ function placedBetAwayTeam(game: any) {
 
 <style scoped>
 .message {
-
   background: var(--indigo-dark);
   border-left: 3px solid rgba(255, 255, 255, 0.15);
   padding: 18px 20px;

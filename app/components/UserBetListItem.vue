@@ -16,10 +16,8 @@
     </div>
 
     <div class="bet-row__points">
-      <template v-if="showScore && bet.processed_at !== null">
-        <span class="bet-row__pts">{{
-          bet.user_points > 0 ? `+${bet.user_points}P` : '0P'
-        }}</span>
+      <template v-if="showScore && isProcessed">
+        <span class="bet-row__pts">{{ bet.user_points > 0 ? `+${bet.user_points}P` : '0P' }}</span>
       </template>
       <template v-else>
         <span class="bet-row__pending">·</span>
@@ -38,24 +36,34 @@ const { bet = {} as Record<string, any>, peek = false } = defineProps<{
 
 const userStore = useUserStore();
 const teamStore = useTeamStore();
+const groupStore = useGroupStore();
 
 const userId = computed(() => userStore.id);
 
-const isMyScore = computed(() => bet.user_id === userId.value);
+const isMyScore = computed(() => !!bet.user_id && !!userId.value && bet.user_id === userId.value);
+
+const isProcessed = computed(() => bet.processed_at != null);
 
 const showScore = computed(() => {
   if (peek) return true;
-  if (bet.processed_at !== null) return true;
-  if (isAfter(new Date(), new Date(bet.game.start_date))) return true;
+  if (isProcessed.value) return true;
+  const startDate = bet.game?.start_date;
+  if (startDate && isAfter(new Date(), new Date(startDate))) return true;
   return false;
 });
 
-const homeTeam = computed(() => teamStore.byId(bet.game.home_team_id));
-const awayTeam = computed(() => teamStore.byId(bet.game.away_team_id));
+const homeTeam = computed(() => teamStore.byId(bet.game?.home_team_id));
+const awayTeam = computed(() => teamStore.byId(bet.game?.away_team_id));
 
 const resultClass = computed(() => {
-  if (!showScore.value || bet.processed_at === null) return 'bet-row--pending';
-  if (bet.user_points === 3 || bet.user_points === 4) return 'bet-row--exact';
+  if (!showScore.value || !isProcessed.value) return 'bet-row--pending';
+  const exactPoints = groupStore.byId(bet.group_id)?.exact_result_points;
+  // Fall back to the legacy 3/4 heuristic when the group config isn't loaded.
+  const isExact =
+    exactPoints != null
+      ? bet.user_points === exactPoints
+      : bet.user_points === 3 || bet.user_points === 4;
+  if (isExact && bet.user_points > 0) return 'bet-row--exact';
   if (bet.user_points > 0) return 'bet-row--win';
   return 'bet-row--miss';
 });

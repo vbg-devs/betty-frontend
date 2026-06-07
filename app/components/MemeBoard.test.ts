@@ -182,19 +182,15 @@ describe('MemeBoard', () => {
       expect(wrapper.find('.meme-board__username').text()).toContain('about 2 hours ago');
     });
 
-    // NOTE: pins current behavior — getUser() returns undefined for an author
-    // missing from members and the template dereferences .nickname, so the
-    // whole board fails to render (e.g. after a member leaves the group).
-    it('crashes rendering a message whose author is not in members', async () => {
-      const errorHandler = vi.fn();
-      authFetch.mockResolvedValueOnce([makeMessage({ user_id: 'uid-99' })]);
-      await mountSuspended(MemeBoard, {
-        props: { members },
-        global: { config: { errorHandler } },
-      });
-      await flushPromises();
-      expect(errorHandler).toHaveBeenCalled();
-      expect(errorHandler.mock.calls[0]![0]).toBeInstanceOf(TypeError);
+    it('renders a fallback name for a message whose author is not in members', async () => {
+      const wrapper = await mountBoard([
+        makeMessage({ id: 1, user_id: 'uid-99' }),
+        makeMessage({ id: 2, user_id: 'uid-1' }),
+      ]);
+      const names = wrapper.findAll('.meme-board__username strong');
+      expect(names[0]!.text()).toBe('Unknown');
+      expect(names[1]!.text()).toBe('janie');
+      expect(wrapper.findAll('.meme-board__message')).toHaveLength(2);
     });
   });
 
@@ -437,19 +433,37 @@ describe('MemeBoard', () => {
       expect(authFetch).toHaveBeenCalledTimes(1);
     });
 
-    it('logs a failed post, adds nothing and still clears the input', async () => {
-      // NOTE: pins current behavior — the input is cleared before the POST
-      // settles, so the typed message is lost when the request fails.
+    it('logs a failed post, adds nothing and keeps the typed message in the input', async () => {
       const wrapper = await mountBoard([]);
       authFetch.mockRejectedValueOnce(new Error('boom'));
 
       const input = wrapper.find('.meme-board__input');
-      await input.setValue('lost');
+      await input.setValue('kept');
       await input.trigger('keyup', { key: 'Enter' });
       await flushPromises();
 
       expect(console.error).toHaveBeenCalled();
       expect(wrapper.findAll('.meme-board__message')).toHaveLength(0);
+      expect((input.element as HTMLInputElement).value).toBe('kept');
+    });
+
+    it('ignores a second Enter while a post is in flight', async () => {
+      const wrapper = await mountBoard([]);
+      let resolvePost!: (msg: GroupMessage) => void;
+      authFetch.mockImplementationOnce(() => new Promise((resolve) => (resolvePost = resolve)));
+
+      const input = wrapper.find('.meme-board__input');
+      await input.setValue('once');
+      await input.trigger('keyup', { key: 'Enter' });
+      await input.trigger('keyup', { key: 'Enter' });
+
+      // 1 GET on mount + exactly 1 POST despite the double Enter.
+      expect(authFetch).toHaveBeenCalledTimes(2);
+
+      resolvePost(makeMessage({ id: 2, body: 'once' }));
+      await flushPromises();
+
+      expect(wrapper.findAll('.meme-board__message')).toHaveLength(1);
       expect((input.element as HTMLInputElement).value).toBe('');
     });
   });
@@ -502,6 +516,24 @@ describe('MemeBoard', () => {
       resolveSearch({ data: gifs });
       await flushPromises();
       expect(shown(wrapper.find('.meme-board__spinner'))).toBe(false);
+    });
+
+    it('logs a failed search, resets loading and keeps the query so a retry works', async () => {
+      gifSearch.mockRejectedValueOnce(new Error('giphy down'));
+      const wrapper = await mountBoard([]);
+      await searchGifs(wrapper);
+
+      expect(console.error).toHaveBeenCalled();
+      expect(shown(wrapper.find('.meme-board__spinner'))).toBe(false);
+      expect(shown(wrapper.find('.gif-selector'))).toBe(false);
+      const input = wrapper.find('.meme-board__input');
+      expect((input.element as HTMLInputElement).value).toBe('cats');
+
+      gifSearch.mockResolvedValueOnce({ data: gifs });
+      await input.trigger('keyup', { key: 'Enter' });
+      await flushPromises();
+      expect(gifSearch).toHaveBeenCalledTimes(2);
+      expect(shown(wrapper.find('.gif-selector'))).toBe(true);
     });
 
     it('keeps the selector hidden when the search returns nothing', async () => {

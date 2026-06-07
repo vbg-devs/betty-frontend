@@ -269,7 +269,7 @@ describe('NotificationTester', () => {
       expect(store.messages.map((m) => m.type)).toEqual(['bet_placed', 'bet_updated']);
 
       vi.advanceTimersByTime(1600);
-      // NOTE: the message store keeps at most 5 entries, so only the last 5 of the 10 types remain.
+      // The message store keeps at most 5 entries by design, so only the last 5 of the 10 types remain.
       expect(store.messages.map((m) => m.type)).toEqual([
         'group_joined',
         'group_left',

@@ -80,6 +80,34 @@ describe('BetHistory', () => {
     expect(percentages[1]!.text()).toBe('33%');
   });
 
+  it('distributes the leftover point so an even three-way split sums to 100', async () => {
+    // 1/1/1 would be 33/33/33 = 99 with independent rounding.
+    const bets = [makeBet(1, 0), makeBet(0, 1), makeBet(2, 2)];
+    const wrapper = await mountSuspended(BetHistory, { props: { bets } });
+    const percentages = wrapper.findAll('.bet-percentage');
+    expect(percentages[0]!.text()).toBe('34%');
+    expect(percentages[1]!.text()).toBe('33%');
+    expect(wrapper.find('.tie').text()).toBe('33%');
+  });
+
+  it('never rounds the segments above 100 in total', async () => {
+    // 3/2/2 of 7 would be 43/29/29 = 101 with independent rounding.
+    const bets = [
+      makeBet(1, 0),
+      makeBet(2, 0),
+      makeBet(3, 1),
+      makeBet(0, 1),
+      makeBet(0, 2),
+      makeBet(1, 1),
+      makeBet(2, 2),
+    ];
+    const wrapper = await mountSuspended(BetHistory, { props: { bets } });
+    const percentages = wrapper.findAll('.bet-percentage');
+    expect(percentages[0]!.text()).toBe('43%');
+    expect(percentages[1]!.text()).toBe('29%');
+    expect(wrapper.find('.tie').text()).toBe('28%');
+  });
+
   it('shows all-zero percentages when there are no bets', async () => {
     const wrapper = await mountSuspended(BetHistory, { props: { bets: [] } });
     const percentages = wrapper.findAll('.bet-percentage');

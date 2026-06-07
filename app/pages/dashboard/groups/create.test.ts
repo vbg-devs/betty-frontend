@@ -97,8 +97,7 @@ describe('pages/dashboard/groups/create', () => {
 
       expect(wrapper.find('.tournaments').exists()).toBe(false);
       expect(wrapper.find('form').exists()).toBe(true);
-      // NOTE: pins the "Tournamnt" typo in the template (should be "Tournament").
-      expect(wrapper.find('.selected-tournament').text()).toBe('Tournamnt: Copa 2026');
+      expect(wrapper.find('.selected-tournament').text()).toBe('Tournament: Copa 2026');
     });
 
     it('renders all fields with their defaults', async () => {
@@ -120,8 +119,23 @@ describe('pages/dashboard/groups/create', () => {
       const checkbox = wrapper.find('input[type="checkbox"]');
       expect((checkbox.element as HTMLInputElement).checked).toBe(true);
 
+      // The button starts disabled because the name and point fields are empty.
       const button = wrapper.find('button');
       expect(button.text()).toBe('Create group');
+      expect(button.attributes('disabled')).toBeDefined();
+      expect(button.classes()).toContain('button--disabled');
+    });
+
+    it('enables the button once the name and both point fields are filled', async () => {
+      const wrapper = await mountWithSelectedTournament(makeTournament(5));
+
+      await wrapper.find('input[type="text"]').setValue('My Group');
+      const numberInputs = wrapper.findAll('input[type="number"]');
+      await numberInputs[0]!.setValue('2');
+      expect(wrapper.find('button').attributes('disabled')).toBeDefined();
+
+      await numberInputs[1]!.setValue('5');
+      const button = wrapper.find('button');
       expect(button.attributes('disabled')).toBeUndefined();
       expect(button.classes()).not.toContain('button--disabled');
     });
@@ -147,7 +161,6 @@ describe('pages/dashboard/groups/create', () => {
       await wrapper.find('form').trigger('submit');
       await flushPromises();
 
-      // NOTE: pins that the "Welcome message" input is never sent in the payload.
       expect(authFetch).toHaveBeenCalledWith('/group', {
         method: 'POST',
         body: {
@@ -157,6 +170,7 @@ describe('pages/dashboard/groups/create', () => {
           exact_result_points: 5,
           allow_sneak_peek: false,
           group_play_deadline: '2026-06-11T00:00:00Z',
+          welcome_message: 'Welcome everyone',
           mode: 0,
         },
       });
@@ -164,7 +178,7 @@ describe('pages/dashboard/groups/create', () => {
       expect(push).toHaveBeenCalledWith('/dashboard/groups/55');
     });
 
-    it('sends sneak peek enabled and NaN points when the fields are left untouched', async () => {
+    it('does not submit when the fields are left untouched, so no NaN points are sent', async () => {
       authFetch.mockImplementation((url: string) =>
         Promise.resolve(url === '/group' ? { group_id: 1 } : []),
       );
@@ -173,17 +187,32 @@ describe('pages/dashboard/groups/create', () => {
       await wrapper.find('form').trigger('submit');
       await flushPromises();
 
-      const body = authFetch.mock.calls.find((c) => c[0] === '/group')![1].body;
-      expect(body.name).toBe('');
-      expect(body.allow_sneak_peek).toBe(true);
-      // NOTE: pins that empty point inputs are sent as NaN (no validation in the page).
-      expect(body.correct_team_points).toBeNaN();
-      expect(body.exact_result_points).toBeNaN();
+      expect(authFetch).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalled();
     });
+
+    it('does not submit while a point field is still empty', async () => {
+      const wrapper = await mountWithSelectedTournament(makeTournament(5));
+      await wrapper.find('input[type="text"]').setValue('My Group');
+      await wrapper.findAll('input[type="number"]')[0]!.setValue('2');
+
+      await wrapper.find('form').trigger('submit');
+      await flushPromises();
+
+      expect(authFetch).not.toHaveBeenCalled();
+    });
+
+    async function fillRequiredFields(wrapper: Awaited<ReturnType<typeof mountPage>>) {
+      await wrapper.find('input[type="text"]').setValue('My Group');
+      const numberInputs = wrapper.findAll('input[type="number"]');
+      await numberInputs[0]!.setValue('2');
+      await numberInputs[1]!.setValue('5');
+    }
 
     it('disables the button while the request is pending', async () => {
       authFetch.mockReturnValue(new Promise(() => {}));
       const wrapper = await mountWithSelectedTournament(makeTournament(5));
+      await fillRequiredFields(wrapper);
 
       await wrapper.find('form').trigger('submit');
 
@@ -197,6 +226,7 @@ describe('pages/dashboard/groups/create', () => {
       const err = new Error('boom');
       authFetch.mockRejectedValue(err);
       const wrapper = await mountWithSelectedTournament(makeTournament(5));
+      await fillRequiredFields(wrapper);
 
       await wrapper.find('form').trigger('submit');
       await flushPromises();

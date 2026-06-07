@@ -263,12 +263,10 @@ describe('pages/dashboard/groups/[id]', () => {
       expect(w.find('.stat--ghost .stat__value').text()).toBe('0%');
     });
 
-    // NOTE: pins current behavior — String('–').padStart(2, '0') renders '0–' for
-    // non-members instead of a plain dash. Looks like a cosmetic source bug.
-    it('renders "0–" as the rank when the current user is not a member', async () => {
+    it('renders a plain dash as the rank when the current user is not a member', async () => {
       useUserStore().user = makeUser({ id: 'uid-999' });
       const w = await mountPage();
-      expect(w.find('.stat--orange .stat__value').text()).toBe('0–');
+      expect(w.find('.stat--orange .stat__value').text()).toBe('–');
     });
 
     it('treats a missing tournament as ended and drops the tournament name', async () => {
@@ -299,6 +297,22 @@ describe('pages/dashboard/groups/[id]', () => {
       const finish = w.find('.stat--ghost');
       expect(finish.find('.stat__kicker').text()).toBe('YOUR FINISH');
       expect(finish.find('.stat__value').text()).toBe('01');
+    });
+
+    it('shows "YOU WON" when the current user is a tied co-champion sorted after the other', async () => {
+      useTournamentStore().tournaments = [makeTournament({ end_date: PAST })];
+      useGroupStore().groups = [
+        makeGroup({
+          members: [
+            makeMember({ user_id: 'uid-101', name: 'Bob Jones', score: 10 }),
+            makeMember({ user_id: 'uid-100', name: 'Alice Smith', score: 10, access_level: 0 }),
+            makeMember({ user_id: 'uid-102', name: 'Cara Lane', score: 5 }),
+          ],
+        }),
+      ];
+      const w = await mountPage();
+      expect(w.find('.stat--champion .stat__kicker').text()).toBe('YOU WON');
+      expect(w.find('.podium-card__title').text()).toBe('YOU TOOK IT.');
     });
 
     it('shows "CHAMPION" and the losing placement for a non-winner on an ended tournament', async () => {
