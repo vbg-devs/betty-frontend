@@ -1,0 +1,6 @@
+# Code-signing overlay, included by project.yml. The TestFlight workflow
+# overwrites this file with the real DEVELOPMENT_TEAM before archiving;
+# the committed version stays signing-neutral so local builds need no team.
+settings:
+  base:
+    CODE_SIGN_STYLE: Automatic

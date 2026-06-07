@@ -50,3 +50,84 @@ jobs:
           name: coverage
           path: coverage/
           if-no-files-exist: ignore
+
+  # macOS minutes bill at 10x Linux, so the iOS job only runs when iOS code
+  # actually changed. The TestFlight workflow applies the same path guard.
+  ios-changes:
+    name: Check for iOS changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ios: ${{ steps.diff.outputs.ios }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diff for ios/ changes
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            RANGE="origin/${BASE_REF}...HEAD"
+          else
+            # First-parent diff = everything the merge/push brought in.
+            RANGE="HEAD^ HEAD"
+          fi
+          if git diff --name-only $RANGE | grep -qE '^(ios/|\.github/workflows/(ci|ios-testflight)\.yml)'; then
+            echo "ios=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No iOS changes; skipping iOS job."
+            echo "ios=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  ios:
+    name: iOS build, unit & e2e tests (simulator)
+    needs: ios-changes
+    if: needs.ios-changes.outputs.ios == 'true'
+    # macos-26 is required: Apple rejects App Store uploads not built with the
+    # iOS 26 SDK since 2026-04-28, and CI stays on the same Xcode as releases.
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      XCODE_VERSION: "26.5"
+      SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode ${{ env.XCODE_VERSION }}
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          xcodebuild -project Betty.xcodeproj -scheme Betty \
+            -destination "$SIMULATOR_DESTINATION" \
+            build-for-testing
+
+      - name: Unit tests
+        run: |
+          set -o pipefail
+          xcodebuild -project Betty.xcodeproj -scheme Betty \
+            -destination "$SIMULATOR_DESTINATION" \
+            test-without-building -only-testing:BettyTests
+
+      # Full e2e against the in-process mock backend (hermetic, no network).
+      - name: UI tests (mock e2e)
+        run: |
+          set -o pipefail
+          xcodebuild -project Betty.xcodeproj -scheme Betty \
+            -destination "$SIMULATOR_DESTINATION" \
+            test-without-building -only-testing:BettyUITests

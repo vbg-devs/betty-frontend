@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "easter_island.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
