@@ -163,12 +163,17 @@ jobs:
 
       # The .xctestrun references the .app bundles via __TESTROOT__ (paths relative
       # to the xctestrun's own dir), so the whole Build/Products tree must travel
-      # together for `test-without-building -xctestrun` to resolve on the shards.
+      # together. tar (rather than a raw artifact upload) preserves the app binary's
+      # executable bit and bundle symlinks — upload-artifact strips both, and the
+      # simulator then can't launch the app on the shards.
+      - name: Package compiled test bundle
+        run: tar -czf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C .derived/Build Products
+
       - name: Upload compiled test bundle
         uses: actions/upload-artifact@v4
         with:
           name: betty-test-bundle
-          path: ios/.derived/Build/Products
+          path: ${{ runner.temp }}/betty-test-bundle.tar.gz
           retention-days: 1
           if-no-files-found: error
 
@@ -208,20 +213,22 @@ jobs:
     env:
       XCODE_VERSION: "26.5"
       SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
-    defaults:
-      run:
-        working-directory: ios
+    # No working-directory: these shards don't check out the repo (the prebuilt
+    # bundle is self-contained), so `ios/` doesn't exist — steps run from the
+    # workspace root and use $RUNNER_TEMP plus ios/-prefixed paths they create.
     steps:
       - name: Select Xcode ${{ env.XCODE_VERSION }}
         run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
 
       # No checkout/build: `test-without-building -xctestrun` runs purely from the
-      # downloaded products, restored to the same path the .xctestrun was built at.
+      # prebuilt products. Download the tarball, then unpack it (perms/symlinks
+      # intact) — this also recreates the ios/.derived/Build/Products tree the
+      # .xctestrun's __TESTROOT__ resolves against.
       - name: Download compiled test bundle
         uses: actions/download-artifact@v4
         with:
           name: betty-test-bundle
-          path: ios/.derived/Build/Products
+          path: ${{ runner.temp }}
 
       # Time allowances turn a hung test into one failure instead of a wedged shard.
       - name: UI tests (mock e2e) — ${{ matrix.name }}
@@ -229,7 +236,9 @@ jobs:
           CLASSES: ${{ matrix.classes }}
         run: |
           set -o pipefail
-          XCTESTRUN=$(ls .derived/Build/Products/*.xctestrun | head -1)
+          mkdir -p ios/.derived/Build
+          tar -xzf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C ios/.derived/Build
+          XCTESTRUN=$(find ios/.derived/Build/Products -name '*.xctestrun' | head -1)
           ARGS=""
           for c in $CLASSES; do ARGS="$ARGS -only-testing:BettyUITests/$c"; done
           xcodebuild test-without-building \
