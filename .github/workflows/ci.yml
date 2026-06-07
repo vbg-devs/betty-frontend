@@ -125,9 +125,13 @@ jobs:
             test-without-building -only-testing:BettyTests
 
       # Full e2e against the in-process mock backend (hermetic, no network).
+      # Time allowances turn a hung test into one failure instead of a wedged job.
       - name: UI tests (mock e2e)
         run: |
           set -o pipefail
           xcodebuild -project Betty.xcodeproj -scheme Betty \
             -destination "$SIMULATOR_DESTINATION" \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 120 \
+            -maximum-test-execution-time-allowance 240 \
             test-without-building -only-testing:BettyUITests

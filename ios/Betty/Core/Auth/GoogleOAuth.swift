@@ -16,6 +16,10 @@ final class GoogleOAuthFlow: NSObject, ASWebAuthenticationPresentationContextPro
     private var session: ASWebAuthenticationSession?
     private let transport: any HTTPTransport
 
+    /// Test hook: takes precedence over the launch environment and Info.plist,
+    /// so unit tests stay deterministic whatever client ID the build ships.
+    var clientIDOverride: String?
+
     init(transport: any HTTPTransport = URLSessionTransport()) {
         self.transport = transport
     }
@@ -26,6 +30,9 @@ final class GoogleOAuthFlow: NSObject, ASWebAuthenticationPresentationContextPro
         // UI tests override the shipped client ID so the not-configured boundary
         // stays testable regardless of the real Info.plist value.
         if let override = ProcessInfo.processInfo.environment["BETTY_GOOGLE_CLIENT_ID"] {
+            configured = override
+        }
+        if let override = clientIDOverride {
             configured = override
         }
         #endif

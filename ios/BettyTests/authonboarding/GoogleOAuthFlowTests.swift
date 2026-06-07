@@ -103,10 +103,11 @@ import Testing
     // MARK: - Client-ID guard
 
     @Test func signInWithPlaceholderClientIDFailsBeforeAnyNetwork() async {
-        // The test host ships the placeholder GoogleOAuthClientID ("YOUR_…") — signIn()
-        // must refuse before presenting a session or touching the transport.
+        // Force the placeholder (the shipped Info.plist carries a real client ID) —
+        // signIn() must refuse before presenting a session or touching the transport.
         let transport = MockTransport()
         let flow = GoogleOAuthFlow(transport: transport)
+        flow.clientIDOverride = "YOUR_IOS_OAUTH_CLIENT_ID.apps.googleusercontent.com"
 
         await #expect(throws: AuthError.googleClientIDMissing) {
             _ = try await flow.signIn()
