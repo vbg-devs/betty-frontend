@@ -94,7 +94,7 @@ iOS (`ios/`): `xcodegen generate`, then
   securetoken, Keychain persistence. Google sign-in's iOS OAuth client ID is
   set in project.yml (`GoogleOAuthClientID`).
 
-Android (`android/`): Kotlin + Jetpack Compose, applicationId `social.betty.app`
+Android (`android/`): Kotlin + Jetpack Compose, applicationId `social.betty.android`
 (code/namespace `social.betty`),
 AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
 8.14). Needs `local.properties` with `sdk.dir` (or `ANDROID_HOME`).
@@ -142,7 +142,7 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
   The first upload to a track must be done once manually in Play Console.
 - `versionName` comes from the workflow env; `versionCode` is `100 + run_number`
   (never reuse/decrease), passed via `-PversionCode/-PversionName`.
-- applicationId `social.betty.app` (the existing Play/Firebase app; debug uses the
+- applicationId `social.betty.android` (the existing Play/Firebase app; debug uses the
   `.debug` suffix; namespace/code package is `social.betty`). Enroll in Play
   App Signing; the keystore above is the upload key.
 

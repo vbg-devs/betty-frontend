@@ -9,13 +9,13 @@ plugins {
 
 android {
     // `namespace` is the code/R/BuildConfig package; `applicationId` is the store identity.
-    // The existing Play + Firebase app (project betty-f676d) is registered as
-    // `social.betty.app`, so the store id must match it (debug uses the `.debug` suffix).
+    // The Play app is `social.betty.android` (a fresh app — the older `social.betty.app`
+    // registration's upload key was lost). Debug uses the `.debug` suffix.
     namespace = "social.betty"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "social.betty.app"
+        applicationId = "social.betty.android"
         minSdk = 26
         targetSdk = 36
         // Build numbers ascend like iOS; CI overrides via -PversionCode/-PversionName.
