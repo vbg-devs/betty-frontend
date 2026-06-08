@@ -179,9 +179,11 @@ jobs:
 
   # The hermetic e2e suite (in-process mock backend on ephemeral loopback ports, no
   # network) sharded across parallel runners. Each shard downloads the prebuilt
-  # bundle and runs a test-count-balanced subset with 2 in-runner simulator clones
-  # (a 3-vCPU standard runner sustains ~2 cleanly). Wall-clock per shard is ~7 min,
-  # so the whole e2e stage finishes in ~10 min instead of the old ~60 min serial run.
+  # bundle and runs a test-count-balanced subset SERIALLY: the 7-way matrix is the
+  # parallelism, and a second in-runner simulator clone over-subscribes the 3-vCPU
+  # macos-26 runner — app launches get starved and hit the per-test time allowance
+  # (the shard1/2/3 hangs that made this necessary). Wall-clock per shard is ~6 min,
+  # so the whole e2e stage finishes in ~8 min instead of the old ~60 min serial run.
   #
   # Rebalance the matrix when a class grows materially — the slowest shard is the
   # floor. Gated to iOS changes; a workflow_dispatch with run_ios_e2e=false skips
@@ -241,10 +243,11 @@ jobs:
           XCTESTRUN=$(find ios/.derived/Build/Products -name '*.xctestrun' | head -1)
           ARGS=""
           for c in $CLASSES; do ARGS="$ARGS -only-testing:BettyUITests/$c"; done
+          # Serial within the shard (parallel clones starve the runner — see above).
           xcodebuild test-without-building \
             -xctestrun "$XCTESTRUN" \
             -destination "$SIMULATOR_DESTINATION" \
-            -parallel-testing-enabled YES -parallel-testing-worker-count 2 \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 120 \
             -maximum-test-execution-time-allowance 240 \
