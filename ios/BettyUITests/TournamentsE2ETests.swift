@@ -187,6 +187,86 @@ final class TournamentsE2ETests: TournamentsAreaTestCase {
         XCTAssertTrue(list.card(5).staticTexts["Copa Nova"].exists)
     }
 
+    // MARK: Teams browser
+
+    /// Bundled scheme art renders as an image (no monogram text); a missing or unknown
+    /// `image_url` falls back to the first-letter monogram.
+    func testTeamsBrowserShowsBundledLogosAndMonogramFallbacks() {
+        withScenario { scenario in
+            if let index = scenario.teams.firstIndex(where: { $0.id == 101 }) {
+                scenario.teams[index].imageURL = "flag:se" // bundled asset flag/se
+            }
+            if let index = scenario.teams.firstIndex(where: { $0.id == 103 }) {
+                scenario.teams[index].imageURL = "weird:xx" // unknown scheme
+            }
+        }
+        launchApp()
+        let teams = openTeamsSection()
+
+        waitFor(teams.cell(101))
+        XCTAssertTrue(teams.cell(101).staticTexts["SWEDEN"].exists)
+        XCTAssertTrue(teams.cell(102).staticTexts["ENGLAND"].exists)
+        XCTAssertTrue(teams.cell(103).staticTexts["SPAIN"].exists)
+        XCTAssertTrue(teams.cell(104).staticTexts["FRANCE"].exists)
+
+        // Bundled flag → image only, no monogram letter inside the logo circle.
+        waitFor(teams.logo(101))
+        XCTAssertFalse(teams.logo(101).staticTexts.firstMatch.exists)
+        // Missing image_url → monogram.
+        waitFor(teams.monogram(teamID: 102, letter: "E"))
+        // Unknown scheme with no bundled asset → monogram.
+        waitFor(teams.monogram(teamID: 103, letter: "S"))
+    }
+
+    /// The local name filter narrows the grid case-insensitively per keystroke.
+    func testTeamsBrowserSearchFiltersTeams() {
+        launchApp()
+        let teams = openTeamsSection()
+        waitFor(teams.cell(101))
+
+        waitFor(teams.searchField).tap()
+        teams.searchField.typeText("swe")
+
+        waitForDisappearance(teams.cell(102))
+        XCTAssertTrue(teams.cell(101).exists)
+        XCTAssertFalse(teams.cell(103).exists)
+        XCTAssertFalse(teams.cell(104).exists)
+    }
+
+    /// No matches → the NO TEAMS panel quoting the query; the clear button restores.
+    func testTeamsBrowserNoMatchEmptyCopyAndClearRestores() {
+        launchApp()
+        let teams = openTeamsSection()
+        waitFor(teams.cell(101))
+
+        waitFor(teams.searchField).tap()
+        teams.searchField.typeText("zzz")
+
+        let panel = waitFor(teams.emptyPanel)
+        XCTAssertTrue(panel.staticTexts["NO TEAMS"].exists)
+        XCTAssertTrue(panel.staticTexts["No teams match \"zzz\"."].exists)
+
+        waitFor(teams.clearSearchButton).tap()
+        waitFor(teams.cell(101))
+        XCTAssertTrue(teams.cell(104).exists)
+        XCTAssertFalse(teams.emptyPanel.exists)
+    }
+
+    /// Empty teams table (404 → []) shows the pull-to-refresh empty copy.
+    func testTeamsBrowserEmptyStoreShowsPullToRefreshCopy() {
+        withScenario { $0.teams = [] }
+        launchApp()
+        let teams = openTeamsSection()
+
+        let panel = waitFor(teams.emptyPanel)
+        XCTAssertTrue(panel.staticTexts["NO TEAMS"].exists)
+        XCTAssertTrue(panel.staticTexts["No teams loaded yet. Pull to refresh."].exists)
+    }
+}
+
+// MARK: - Tournament detail sheet + admin gating (non-admin side)
+
+final class TournamentsDetailE2ETests: TournamentsAreaTestCase {
     // MARK: Detail sheet
 
     /// Sheet header: tournament name + the "MMM dd HH:mm - MMM dd HH:mm" dates line.
@@ -342,82 +422,6 @@ final class TournamentsE2ETests: TournamentsAreaTestCase {
         waitFor(card.staticTexts["Finished"], timeout: 15)
         XCTAssertTrue(card.staticTexts["3"].exists)
         XCTAssertTrue(card.staticTexts["2"].exists)
-    }
-
-    // MARK: Teams browser
-
-    /// Bundled scheme art renders as an image (no monogram text); a missing or unknown
-    /// `image_url` falls back to the first-letter monogram.
-    func testTeamsBrowserShowsBundledLogosAndMonogramFallbacks() {
-        withScenario { scenario in
-            if let index = scenario.teams.firstIndex(where: { $0.id == 101 }) {
-                scenario.teams[index].imageURL = "flag:se" // bundled asset flag/se
-            }
-            if let index = scenario.teams.firstIndex(where: { $0.id == 103 }) {
-                scenario.teams[index].imageURL = "weird:xx" // unknown scheme
-            }
-        }
-        launchApp()
-        let teams = openTeamsSection()
-
-        waitFor(teams.cell(101))
-        XCTAssertTrue(teams.cell(101).staticTexts["SWEDEN"].exists)
-        XCTAssertTrue(teams.cell(102).staticTexts["ENGLAND"].exists)
-        XCTAssertTrue(teams.cell(103).staticTexts["SPAIN"].exists)
-        XCTAssertTrue(teams.cell(104).staticTexts["FRANCE"].exists)
-
-        // Bundled flag → image only, no monogram letter inside the logo circle.
-        waitFor(teams.logo(101))
-        XCTAssertFalse(teams.logo(101).staticTexts.firstMatch.exists)
-        // Missing image_url → monogram.
-        waitFor(teams.monogram(teamID: 102, letter: "E"))
-        // Unknown scheme with no bundled asset → monogram.
-        waitFor(teams.monogram(teamID: 103, letter: "S"))
-    }
-
-    /// The local name filter narrows the grid case-insensitively per keystroke.
-    func testTeamsBrowserSearchFiltersTeams() {
-        launchApp()
-        let teams = openTeamsSection()
-        waitFor(teams.cell(101))
-
-        waitFor(teams.searchField).tap()
-        teams.searchField.typeText("swe")
-
-        waitForDisappearance(teams.cell(102))
-        XCTAssertTrue(teams.cell(101).exists)
-        XCTAssertFalse(teams.cell(103).exists)
-        XCTAssertFalse(teams.cell(104).exists)
-    }
-
-    /// No matches → the NO TEAMS panel quoting the query; the clear button restores.
-    func testTeamsBrowserNoMatchEmptyCopyAndClearRestores() {
-        launchApp()
-        let teams = openTeamsSection()
-        waitFor(teams.cell(101))
-
-        waitFor(teams.searchField).tap()
-        teams.searchField.typeText("zzz")
-
-        let panel = waitFor(teams.emptyPanel)
-        XCTAssertTrue(panel.staticTexts["NO TEAMS"].exists)
-        XCTAssertTrue(panel.staticTexts["No teams match \"zzz\"."].exists)
-
-        waitFor(teams.clearSearchButton).tap()
-        waitFor(teams.cell(101))
-        XCTAssertTrue(teams.cell(104).exists)
-        XCTAssertFalse(teams.emptyPanel.exists)
-    }
-
-    /// Empty teams table (404 → []) shows the pull-to-refresh empty copy.
-    func testTeamsBrowserEmptyStoreShowsPullToRefreshCopy() {
-        withScenario { $0.teams = [] }
-        launchApp()
-        let teams = openTeamsSection()
-
-        let panel = waitFor(teams.emptyPanel)
-        XCTAssertTrue(panel.staticTexts["NO TEAMS"].exists)
-        XCTAssertTrue(panel.staticTexts["No teams loaded yet. Pull to refresh."].exists)
     }
 
     // MARK: Admin gating (non-admin side)

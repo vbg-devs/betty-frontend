@@ -55,7 +55,7 @@ jobs:
         with:
           name: coverage
           path: coverage/
-          if-no-files-exist: ignore
+          if-no-files-found: ignore
 
   # macOS minutes bill at 10x Linux, so the iOS job only runs when iOS code
   # actually changed. The TestFlight workflow applies the same path guard.
@@ -97,14 +97,17 @@ jobs:
             echo "ios=false" >> "$GITHUB_OUTPUT"
           fi
 
-  ios:
-    name: iOS build, unit & e2e tests (simulator)
+  # Builds the app + test bundles once and runs the fast unit suite. The compiled
+  # products are published so the e2e shards never rebuild (a macOS build is ~6 min
+  # of billed-at-10x time; doing it once instead of per-shard is the whole point).
+  ios-build:
+    name: iOS build & unit tests (simulator)
     needs: ios-changes
     if: needs.ios-changes.outputs.ios == 'true'
     # macos-26 is required: Apple rejects App Store uploads not built with the
     # iOS 26 SDK since 2026-04-28, and CI stays on the same Xcode as releases.
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 40
     env:
       XCODE_VERSION: "26.5"
       SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
@@ -113,6 +116,23 @@ jobs:
         working-directory: ios
     steps:
       - uses: actions/checkout@v4
+
+      # Guard against silently-skipped tests: every test-bearing UITest class must be
+      # assigned to exactly one e2e shard. A class added without a shard entry would
+      # never run yet CI would stay green — fail loudly instead. (macOS runs bash, so
+      # process substitution below is available.)
+      - name: Verify e2e shard coverage
+        run: |
+          set -euo pipefail
+          declared=$(for f in BettyUITests/*.swift; do
+            awk '/^[[:space:]]*(final )?class [A-Za-z0-9_]+[[:space:]]*:/{c=$0;sub(/.*class /,"",c);sub(/[[:space:]:].*/,"",c);cls=c;n[cls]=n[cls]+0} /^[[:space:]]*func test/{if(cls)n[cls]++} END{for(k in n)if(n[k]>0)print k}' "$f"
+          done | sort -u)
+          assigned=$(grep -E '^[[:space:]]*classes:' ../.github/workflows/ci.yml | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
+          unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
+          if [ -n "$missing" ]; then echo "::error::UITest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
+          if [ -n "$unknown" ]; then echo "::error::e2e shard references unknown UITest classes:"; echo "$unknown"; exit 1; fi
+          echo "All $(echo "$declared" | grep -c .) UITest classes are covered by the e2e shards."
 
       - name: Select Xcode ${{ env.XCODE_VERSION }}
         run: |
@@ -130,6 +150,7 @@ jobs:
           set -o pipefail
           xcodebuild -project Betty.xcodeproj -scheme Betty \
             -destination "$SIMULATOR_DESTINATION" \
+            -derivedDataPath .derived \
             build-for-testing
 
       - name: Unit tests
@@ -137,19 +158,105 @@ jobs:
           set -o pipefail
           xcodebuild -project Betty.xcodeproj -scheme Betty \
             -destination "$SIMULATOR_DESTINATION" \
+            -derivedDataPath .derived \
             test-without-building -only-testing:BettyTests
 
-      # Full e2e against the in-process mock backend (hermetic, no network).
-      # Dispatch-only: the ~60-min suite is too slow for CI until it is
-      # parallelized — run it locally or via workflow_dispatch before releases.
-      # Time allowances turn a hung test into one failure instead of a wedged job.
-      - name: UI tests (mock e2e)
-        if: github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e
+      # The .xctestrun references the .app bundles via __TESTROOT__ (paths relative
+      # to the xctestrun's own dir), so the whole Build/Products tree must travel
+      # together. tar (rather than a raw artifact upload) preserves the app binary's
+      # executable bit and bundle symlinks — upload-artifact strips both, and the
+      # simulator then can't launch the app on the shards.
+      - name: Package compiled test bundle
+        run: tar -czf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C .derived/Build Products
+
+      - name: Upload compiled test bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: betty-test-bundle
+          path: ${{ runner.temp }}/betty-test-bundle.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+
+  # The hermetic e2e suite (in-process mock backend on ephemeral loopback ports, no
+  # network) sharded across parallel runners. Each shard downloads the prebuilt
+  # bundle and runs its subset SERIALLY (-parallel-testing-enabled NO): the matrix
+  # is the parallelism, and a second in-runner simulator clone over-subscribes the
+  # 3-vCPU macos-26 runner — app launches get starved and hit the per-test time
+  # allowance (the hangs that made this necessary). The GitHub Free plan caps macOS
+  # jobs at ~6 concurrent and offers no larger runners, so the suite is split into
+  # 6 shards that run in a single wave; the full suite lands at ~15 min (down from
+  # ~60 serial). Reaching ~10 min would need a paid plan's larger runners / more
+  # concurrency.
+  #
+  # Rebalance the matrix when a class grows materially — serial within a shard, the
+  # wall-clock is the SUM of its classes' durations, so the slowest shard is the
+  # floor. Shards are balanced by measured duration; keep the heavy WebSocket classes
+  # (LiveE2ETests, TournamentsDetailE2ETests) on separate shards. Gated to iOS
+  # changes; workflow_dispatch with run_ios_e2e=false skips e2e (build+unit only).
+  ios-e2e:
+    name: iOS e2e ${{ matrix.name }}
+    needs: [ios-changes, ios-build]
+    if: needs.ios-changes.outputs.ios == 'true' && (github.event_name != 'workflow_dispatch' || inputs.run_ios_e2e)
+    runs-on: macos-26
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        # 6 shards (= the Free-plan macOS concurrency cap, so all run in one wave)
+        # balanced by measured per-class duration; the two heavy WebSocket classes
+        # (LiveE2ETests, TournamentsDetailE2ETests) are isolated on shards 1 and 2.
+        include:
+          - name: shard1
+            classes: LiveE2ETests GroupJoinInviteE2ETests CompleteProfileE2ETests GroupDetailMoreE2ETests AuthBootFailureE2ETests
+          - name: shard2
+            classes: TournamentsDetailE2ETests TournamentsAdminE2ETests GroupDetailLeaderboardE2ETests GroupDetailNonAuthorCoverE2ETests ProfileAdminE2ETests
+          - name: shard3
+            classes: ChatMoreE2ETests HomeE2ETests AuthSignInValidationE2ETests AuthSessionE2ETests GroupDetailGamesE2ETests GroupCreateE2ETests
+          - name: shard4
+            classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests
+          - name: shard5
+            classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests
+          - name: shard6
+            classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests
+    env:
+      XCODE_VERSION: "26.5"
+      SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
+    # No working-directory: these shards don't check out the repo (the prebuilt
+    # bundle is self-contained), so `ios/` doesn't exist — steps run from the
+    # workspace root and use $RUNNER_TEMP plus ios/-prefixed paths they create.
+    steps:
+      - name: Select Xcode ${{ env.XCODE_VERSION }}
+        run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+
+      # No checkout/build: `test-without-building -xctestrun` runs purely from the
+      # prebuilt products. Download the tarball, then unpack it (perms/symlinks
+      # intact) — this also recreates the ios/.derived/Build/Products tree the
+      # .xctestrun's __TESTROOT__ resolves against.
+      - name: Download compiled test bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: betty-test-bundle
+          path: ${{ runner.temp }}
+
+      # Time allowances turn a hung test into one failure instead of a wedged shard.
+      - name: UI tests (mock e2e) — ${{ matrix.name }}
+        env:
+          CLASSES: ${{ matrix.classes }}
         run: |
           set -o pipefail
-          xcodebuild -project Betty.xcodeproj -scheme Betty \
+          mkdir -p ios/.derived/Build
+          tar -xzf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C ios/.derived/Build
+          XCTESTRUN=$(find ios/.derived/Build/Products -name '*.xctestrun' | head -1)
+          ARGS=""
+          for c in $CLASSES; do ARGS="$ARGS -only-testing:BettyUITests/$c"; done
+          # Serial within the shard (parallel clones starve the runner — see above).
+          # Generous allowances: the slower-but-fine WebSocket tests must not trip
+          # the per-test timeout at the single-clone pace.
+          xcodebuild test-without-building \
+            -xctestrun "$XCTESTRUN" \
             -destination "$SIMULATOR_DESTINATION" \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 240 \
-            test-without-building -only-testing:BettyUITests
+            -default-test-execution-time-allowance 240 \
+            -maximum-test-execution-time-allowance 420 \
+            $ARGS

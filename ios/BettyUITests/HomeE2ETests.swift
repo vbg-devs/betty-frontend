@@ -6,9 +6,66 @@ import XCTest
 /// classification incl. the 28-day recently-ended window, grouped/list card modes,
 /// global and per-tab empty states, load-failure recovery, pull-to-refresh, and
 /// navigation into group detail / create-group / browse / support.
-final class HomeE2ETests: BettyUITestCase {
-    private var home: HomeScreen { HomeScreen(app: app) }
+class HomeE2EBase: BettyUITestCase {
+    var home: HomeScreen { HomeScreen(app: app) }
 
+    // MARK: - Helpers
+
+    func launchToHome() {
+        launchApp()
+        waitFor(TabBarScreen(app: app).home, timeout: 30)
+        waitFor(home.navigationBar, timeout: 15)
+    }
+
+    /// The need-action banner derives from per-group bet matrices fetched after the
+    /// placements land — wait for those requests before asserting the banner's absence.
+    func waitForNeedActionInputs(timeout: TimeInterval = 10,
+                                 file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if backend.requests(method: "GET", pathPrefix: "/api/v1/bets/bygroup").count >= 2 { return }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        XCTFail("Timed out waiting for the need-action bet matrices to be fetched",
+                file: file, line: line)
+    }
+
+    /// SwiftUI doesn't always concatenate child texts into a button's label — accept a
+    /// hit on either the aggregated label or a descendant static text.
+    func contains(_ container: XCUIElement, _ fragment: String) -> Bool {
+        if container.label.contains(fragment) { return true }
+        return container.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS %@", fragment))
+            .firstMatch.exists
+    }
+
+    /// Same geometry as the Tournaments-suite helper (verified to fire `.refreshable`):
+    /// a 0.15 dy start lands in the large-title region where the drag doesn't reach the
+    /// scroll content.
+    func pullToRefresh() {
+        let scroll = app.scrollViews.firstMatch
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0.15, thenDragTo: end)
+    }
+
+    /// Swipe-down twin of `scrollTo` — climbs back up a LazyVStack until the element is
+    /// hittable (a top-edge swipe can fire `.refreshable`, which is harmless here).
+    func scrollUpTo(_ element: XCUIElement, maxSwipes: Int = 6,
+                    file: StaticString = #filePath, line: UInt = #line) {
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable { return }
+            app.swipeDown(velocity: .slow)
+        }
+        if !(element.exists && element.isHittable) {
+            XCTFail("Element not hittable after scrolling up: \(element)", file: file, line: line)
+        }
+    }
+}
+
+// MARK: - Rendering, tabs, hero, need-action, empty state, load failure
+
+final class HomeE2ETests: HomeE2EBase {
     // MARK: - Groups list rendering
 
     func testGroupsListRendersNamesPlacementsAndMemberCounts() {
@@ -256,7 +313,11 @@ final class HomeE2ETests: BettyUITestCase {
         home.loadFailedRetryButton.tap()
         waitFor(home.groupCard(named: "Sunday Legends"), timeout: 15)
     }
+}
 
+// MARK: - Pull-to-refresh, navigation, grouped / list card modes
+
+final class HomeNavigationE2ETests: HomeE2EBase {
     // MARK: - Pull-to-refresh
 
     func testPullToRefreshRefetchesGroupsAndTournaments() {
@@ -348,58 +409,5 @@ final class HomeE2ETests: BettyUITestCase {
         scrollTo(home.groupCardLink(DefaultScenario.groupSundayLegendsID))
         XCTAssertFalse(home.stackRow(DefaultScenario.groupSundayLegendsID).exists)
         XCTAssertFalse(home.stackCountPill(tournamentID: DefaultScenario.runningTournamentID).exists)
-    }
-
-    // MARK: - Helpers
-
-    private func launchToHome() {
-        launchApp()
-        waitFor(TabBarScreen(app: app).home, timeout: 30)
-        waitFor(home.navigationBar, timeout: 15)
-    }
-
-    /// The need-action banner derives from per-group bet matrices fetched after the
-    /// placements land — wait for those requests before asserting the banner's absence.
-    private func waitForNeedActionInputs(timeout: TimeInterval = 10,
-                                         file: StaticString = #filePath, line: UInt = #line) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if backend.requests(method: "GET", pathPrefix: "/api/v1/bets/bygroup").count >= 2 { return }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
-        }
-        XCTFail("Timed out waiting for the need-action bet matrices to be fetched",
-                file: file, line: line)
-    }
-
-    /// SwiftUI doesn't always concatenate child texts into a button's label — accept a
-    /// hit on either the aggregated label or a descendant static text.
-    private func contains(_ container: XCUIElement, _ fragment: String) -> Bool {
-        if container.label.contains(fragment) { return true }
-        return container.staticTexts
-            .matching(NSPredicate(format: "label CONTAINS %@", fragment))
-            .firstMatch.exists
-    }
-
-    /// Same geometry as the Tournaments-suite helper (verified to fire `.refreshable`):
-    /// a 0.15 dy start lands in the large-title region where the drag doesn't reach the
-    /// scroll content.
-    private func pullToRefresh() {
-        let scroll = app.scrollViews.firstMatch
-        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25))
-        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
-        start.press(forDuration: 0.15, thenDragTo: end)
-    }
-
-    /// Swipe-down twin of `scrollTo` — climbs back up a LazyVStack until the element is
-    /// hittable (a top-edge swipe can fire `.refreshable`, which is harmless here).
-    private func scrollUpTo(_ element: XCUIElement, maxSwipes: Int = 6,
-                            file: StaticString = #filePath, line: UInt = #line) {
-        for _ in 0..<maxSwipes {
-            if element.exists && element.isHittable { return }
-            app.swipeDown(velocity: .slow)
-        }
-        if !(element.exists && element.isHittable) {
-            XCTFail("Element not hittable after scrolling up: \(element)", file: file, line: line)
-        }
     }
 }

@@ -4,13 +4,16 @@ import XCTest
 /// messages), sending, emoji reactions with grouped counts, message deletion, the
 /// 10 s poll, and the activity-feed row variants fed by live WebSocket events
 /// (`GroupChatView` + `ChatMessageRow` + `ActivityFeedRows`).
-final class ChatE2ETests: BettyUITestCase {
-    private var chat: ChatScreen { ChatScreen(app: app) }
+///
+/// Shared navigation + wait helpers for the chat suites. Kept on a (non-final) base
+/// class so the parallel chat subclasses can each reach them.
+class ChatE2EBase: BettyUITestCase {
+    var chat: ChatScreen { ChatScreen(app: app) }
 
     // MARK: - Navigation
 
     /// Home → group card → group detail (GROUP tab) → "OPEN MEME BOARD →" push.
-    private func openChat(groupNamed name: String = "Sunday Legends") {
+    func openChat(groupNamed name: String = "Sunday Legends") {
         let home = HomeScreen(app: app)
         waitFor(TabBarScreen(app: app).home, timeout: 30)
         waitFor(home.navigationBar, timeout: 15)
@@ -20,7 +23,7 @@ final class ChatE2ETests: BettyUITestCase {
         waitFor(chat.navigationBar, timeout: 10)
     }
 
-    private func openActivitySection() {
+    func openActivitySection() {
         openChat()
         waitFor(chat.activitySegment).tap()
         waitFor(chat.activityEmptyTitle) // feed starts empty (live-only + pings filtered)
@@ -29,9 +32,9 @@ final class ChatE2ETests: BettyUITestCase {
 
     // MARK: - Wait helpers
 
-    private func waitForLabel(of element: XCUIElement, containing fragment: String,
-                              timeout: TimeInterval = 10,
-                              file: StaticString = #filePath, line: UInt = #line) {
+    func waitForLabel(of element: XCUIElement, containing fragment: String,
+                      timeout: TimeInterval = 10,
+                      file: StaticString = #filePath, line: UInt = #line) {
         let predicate = NSPredicate(format: "exists == true AND label CONTAINS %@", fragment)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         if XCTWaiter().wait(for: [expectation], timeout: timeout) != .completed {
@@ -43,9 +46,9 @@ final class ChatE2ETests: BettyUITestCase {
     /// Waits until the backend recorded at least `count` matching requests, then
     /// returns them (UI updates can land before the recorder is queried).
     @discardableResult
-    private func waitForBackendRequests(method: String, pathPrefix: String, count: Int = 1,
-                                        timeout: TimeInterval = 10,
-                                        file: StaticString = #filePath, line: UInt = #line) -> [MockHTTPRequest] {
+    func waitForBackendRequests(method: String, pathPrefix: String, count: Int = 1,
+                                timeout: TimeInterval = 10,
+                                file: StaticString = #filePath, line: UInt = #line) -> [MockHTTPRequest] {
         let predicate = NSPredicate { [backend] _, _ in
             (backend?.requests(method: method, pathPrefix: pathPrefix).count ?? 0) >= count
         }
@@ -57,7 +60,11 @@ final class ChatE2ETests: BettyUITestCase {
                                     file: file, line: line)
         return recorded
     }
+}
 
+// MARK: - Message list rendering + sending
+
+final class ChatE2ETests: ChatE2EBase {
     // MARK: - Message list rendering
 
     /// GET /messageboard/:groupid is fetched (amount=50, offset=0 — page index) and the
@@ -213,7 +220,11 @@ final class ChatE2ETests: BettyUITestCase {
         waitForLabel(of: chat.submitButton, containing: "SEND")
         XCTAssertEqual(chat.composerField.placeholderValue, "Send message to group")
     }
+}
 
+// MARK: - Reactions + deleting
+
+final class ChatReactionsE2ETests: ChatE2EBase {
     // MARK: - Reactions
 
     /// Chips group by emoji in first-seen order of the reactions array with counts.
@@ -375,7 +386,11 @@ final class ChatE2ETests: BettyUITestCase {
         XCTAssertFalse(app.staticTexts["Could not delete message"].exists,
                        "404 must be silent — the message is simply gone")
     }
+}
 
+// MARK: - Live updates (poll) + activity feed (WS event row variants)
+
+final class ChatActivityE2ETests: ChatE2EBase {
     // MARK: - Live updates
 
     /// A message appended server-side surfaces through the 10 s poll with no user action.

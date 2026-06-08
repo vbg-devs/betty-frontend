@@ -9,28 +9,28 @@ import XCTest
 // (Apple) and ASWebAuthenticationSession (Google) present out-of-process sheets that
 // XCUITest cannot drive, so federated tests stop at the tap → boundary reaction.
 
-// MARK: - Landing: email/password sign-in + sign-up + federated boundaries
+// MARK: - Landing: shared base (helpers + signed-out launch)
 
-final class AuthLandingE2ETests: BettyUITestCase {
+class AuthLandingE2EBase: BettyUITestCase {
     override var seedsAuthentication: Bool { false }
 
-    private var landing: AuthLandingScreen { AuthLandingScreen(app: app) }
+    var landing: AuthLandingScreen { AuthLandingScreen(app: app) }
 
     /// Scrolls the auth card into view and opens the collapsed email form.
-    private func openEmailForm() {
+    func openEmailForm() {
         scrollTo(landing.showEmailFormButton)
         landing.showEmailFormButton.tap()
         waitFor(landing.emailField)
     }
 
-    private func submitSignIn(email: String, password: String) {
+    func submitSignIn(email: String, password: String) {
         openEmailForm()
         landing.fillEmailForm(email: email, password: password)
         scrollTo(landing.signInSubmitButton)
         landing.signInSubmitButton.tap()
     }
 
-    private func submitSignUp(email: String, password: String) {
+    func submitSignUp(email: String, password: String) {
         scrollTo(landing.toggleToSignUp)
         landing.toggleToSignUp.tap()
         openEmailForm()
@@ -38,7 +38,11 @@ final class AuthLandingE2ETests: BettyUITestCase {
         scrollTo(landing.createAccountSubmitButton)
         landing.createAccountSubmitButton.tap()
     }
+}
 
+// MARK: - Landing: layout + happy-path sign-in/sign-up + federated boundaries
+
+final class AuthLandingE2ETests: AuthLandingE2EBase {
     // MARK: Landing layout
 
     func testSignedOutLaunchShowsLandingWithAllAuthOptions() {
@@ -95,78 +99,6 @@ final class AuthLandingE2ETests: BettyUITestCase {
         XCTAssertFalse(backend.requests(method: "GET", pathPrefix: "/api/v1/user/me").isEmpty)
     }
 
-    func testEmailSignInWrongPasswordShowsInvalidCredentialsError() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignIn(email: DefaultScenario.currentUserEmail, password: "definitely-wrong")
-
-        waitFor(staticText(containing: "Wrong email or password."), timeout: 15)
-        XCTAssertTrue(landing.errorPanel.exists)
-        XCTAssertTrue(landing.root.exists)
-        XCTAssertFalse(element(app, id: "root.main").exists)
-    }
-
-    func testEmailSignInUnknownEmailShowsInvalidCredentialsError() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignIn(email: "ghost@betty.test", password: "secret123")
-
-        // EMAIL_NOT_FOUND maps to the same collapsed copy as INVALID_LOGIN_CREDENTIALS.
-        waitFor(staticText(containing: "Wrong email or password."), timeout: 15)
-        XCTAssertTrue(landing.root.exists)
-    }
-
-    func testEmailSignInUserDisabledShowsDisabledError() {
-        backend.http.route("POST", "/v1/accounts:signInWithPassword") { _, _ in
-            MockWire.firebaseError("USER_DISABLED")
-        }
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignIn(email: DefaultScenario.currentUserEmail,
-                     password: DefaultScenario.currentUserPassword)
-
-        waitFor(staticText(containing: "This account has been disabled."), timeout: 15)
-        XCTAssertTrue(landing.root.exists)
-    }
-
-    func testEmailSignInTooManyAttemptsShowsThrottleError() {
-        backend.http.route("POST", "/v1/accounts:signInWithPassword") { _, _ in
-            MockWire.firebaseError("TOO_MANY_ATTEMPTS_TRY_LATER")
-        }
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignIn(email: DefaultScenario.currentUserEmail,
-                     password: DefaultScenario.currentUserPassword)
-
-        waitFor(staticText(containing: "Too many attempts"), timeout: 15)
-        XCTAssertTrue(landing.root.exists)
-    }
-
-    func testMalformedEmailFailsLocallyWithoutNetworkRequest() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignIn(email: "not-an-email", password: "whatever1")
-
-        waitFor(staticText(containing: "Enter a valid email address."), timeout: 10)
-        XCTAssertTrue(backend.requests(method: "POST", pathPrefix: "/v1/accounts:").isEmpty,
-                      "local validation must short-circuit before any identity request")
-        XCTAssertTrue(landing.root.exists)
-    }
-
-    func testEmailSubmitDisabledUntilBothFieldsFilled() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        openEmailForm()
-
-        XCTAssertFalse(landing.signInSubmitButton.isEnabled)
-        landing.emailField.tap()
-        landing.emailField.typeText(DefaultScenario.currentUserEmail)
-        XCTAssertFalse(landing.signInSubmitButton.isEnabled)
-        landing.passwordField.tap()
-        landing.passwordField.typeText("secret123")
-        XCTAssertTrue(landing.signInSubmitButton.isEnabled)
-    }
-
     // MARK: Email/password sign-up
 
     func testSignUpHappyPathOpensCompleteProfileGate() {
@@ -183,39 +115,6 @@ final class AuthLandingE2ETests: BettyUITestCase {
         let signUps = backend.requests(method: "POST", pathPrefix: "/v1/accounts:signUp")
         XCTAssertEqual(signUps.count, 1)
         XCTAssertEqual(signUps.first?.bodyJSON?["email"] as? String, AuthFixtures.freshSignupEmail)
-    }
-
-    func testSignUpExistingEmailShowsEmailExistsError() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignUp(email: DefaultScenario.currentUserEmail, password: "another-secret-1")
-
-        waitFor(staticText(containing: "An account with this email already exists."), timeout: 15)
-        XCTAssertTrue(landing.root.exists)
-        XCTAssertFalse(element(app, id: "root.completeProfile").exists)
-    }
-
-    func testSignUpShortPasswordFailsLocallyWithoutNetworkRequest() {
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignUp(email: AuthFixtures.freshSignupEmail, password: "abc")
-
-        waitFor(staticText(containing: "Password should be at least 6 characters."), timeout: 10)
-        XCTAssertTrue(backend.requests(method: "POST", pathPrefix: "/v1/accounts:signUp").isEmpty,
-                      "the 6-char minimum is enforced locally in sign-up mode")
-    }
-
-    func testSignUpServerWeakPasswordMapsToFriendlyCopy() {
-        backend.http.route("POST", "/v1/accounts:signUp") { _, _ in
-            MockWire.firebaseError("WEAK_PASSWORD : Password should be at least 6 characters")
-        }
-        launchApp()
-        waitFor(landing.root, timeout: 20)
-        submitSignUp(email: AuthFixtures.freshSignupEmail, password: "long-enough-but-rejected")
-
-        waitFor(staticText(containing: "Password should be at least 6 characters."), timeout: 15)
-        XCTAssertEqual(backend.requests(method: "POST", pathPrefix: "/v1/accounts:signUp").count, 1,
-                       "password passed local validation — the SERVER rejected it")
     }
 
     func testSignUpThenCompleteProfileFullJourneyLandsOnHome() {
@@ -290,6 +189,115 @@ final class AuthLandingE2ETests: BettyUITestCase {
         waitForDisappearance(alert)
         XCTAssertTrue(landing.root.exists)
         XCTAssertTrue(backend.requests(method: "POST", pathPrefix: "/v1/accounts:signInWithIdp").isEmpty)
+    }
+}
+
+// MARK: - Landing: sign-in/sign-up error + validation mapping
+
+final class AuthSignInValidationE2ETests: AuthLandingE2EBase {
+    func testEmailSignInWrongPasswordShowsInvalidCredentialsError() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignIn(email: DefaultScenario.currentUserEmail, password: "definitely-wrong")
+
+        waitFor(staticText(containing: "Wrong email or password."), timeout: 15)
+        XCTAssertTrue(landing.errorPanel.exists)
+        XCTAssertTrue(landing.root.exists)
+        XCTAssertFalse(element(app, id: "root.main").exists)
+    }
+
+    func testEmailSignInUnknownEmailShowsInvalidCredentialsError() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignIn(email: "ghost@betty.test", password: "secret123")
+
+        // EMAIL_NOT_FOUND maps to the same collapsed copy as INVALID_LOGIN_CREDENTIALS.
+        waitFor(staticText(containing: "Wrong email or password."), timeout: 15)
+        XCTAssertTrue(landing.root.exists)
+    }
+
+    func testEmailSignInUserDisabledShowsDisabledError() {
+        backend.http.route("POST", "/v1/accounts:signInWithPassword") { _, _ in
+            MockWire.firebaseError("USER_DISABLED")
+        }
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignIn(email: DefaultScenario.currentUserEmail,
+                     password: DefaultScenario.currentUserPassword)
+
+        waitFor(staticText(containing: "This account has been disabled."), timeout: 15)
+        XCTAssertTrue(landing.root.exists)
+    }
+
+    func testEmailSignInTooManyAttemptsShowsThrottleError() {
+        backend.http.route("POST", "/v1/accounts:signInWithPassword") { _, _ in
+            MockWire.firebaseError("TOO_MANY_ATTEMPTS_TRY_LATER")
+        }
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignIn(email: DefaultScenario.currentUserEmail,
+                     password: DefaultScenario.currentUserPassword)
+
+        waitFor(staticText(containing: "Too many attempts"), timeout: 15)
+        XCTAssertTrue(landing.root.exists)
+    }
+
+    func testMalformedEmailFailsLocallyWithoutNetworkRequest() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignIn(email: "not-an-email", password: "whatever1")
+
+        waitFor(staticText(containing: "Enter a valid email address."), timeout: 10)
+        XCTAssertTrue(backend.requests(method: "POST", pathPrefix: "/v1/accounts:").isEmpty,
+                      "local validation must short-circuit before any identity request")
+        XCTAssertTrue(landing.root.exists)
+    }
+
+    func testEmailSubmitDisabledUntilBothFieldsFilled() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        openEmailForm()
+
+        XCTAssertFalse(landing.signInSubmitButton.isEnabled)
+        landing.emailField.tap()
+        landing.emailField.typeText(DefaultScenario.currentUserEmail)
+        XCTAssertFalse(landing.signInSubmitButton.isEnabled)
+        landing.passwordField.tap()
+        landing.passwordField.typeText("secret123")
+        XCTAssertTrue(landing.signInSubmitButton.isEnabled)
+    }
+
+    func testSignUpExistingEmailShowsEmailExistsError() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignUp(email: DefaultScenario.currentUserEmail, password: "another-secret-1")
+
+        waitFor(staticText(containing: "An account with this email already exists."), timeout: 15)
+        XCTAssertTrue(landing.root.exists)
+        XCTAssertFalse(element(app, id: "root.completeProfile").exists)
+    }
+
+    func testSignUpShortPasswordFailsLocallyWithoutNetworkRequest() {
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignUp(email: AuthFixtures.freshSignupEmail, password: "abc")
+
+        waitFor(staticText(containing: "Password should be at least 6 characters."), timeout: 10)
+        XCTAssertTrue(backend.requests(method: "POST", pathPrefix: "/v1/accounts:signUp").isEmpty,
+                      "the 6-char minimum is enforced locally in sign-up mode")
+    }
+
+    func testSignUpServerWeakPasswordMapsToFriendlyCopy() {
+        backend.http.route("POST", "/v1/accounts:signUp") { _, _ in
+            MockWire.firebaseError("WEAK_PASSWORD : Password should be at least 6 characters")
+        }
+        launchApp()
+        waitFor(landing.root, timeout: 20)
+        submitSignUp(email: AuthFixtures.freshSignupEmail, password: "long-enough-but-rejected")
+
+        waitFor(staticText(containing: "Password should be at least 6 characters."), timeout: 15)
+        XCTAssertEqual(backend.requests(method: "POST", pathPrefix: "/v1/accounts:signUp").count, 1,
+                       "password passed local validation — the SERVER rejected it")
     }
 }
 

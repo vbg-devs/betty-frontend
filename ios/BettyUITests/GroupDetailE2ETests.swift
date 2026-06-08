@@ -5,13 +5,13 @@ import XCTest
 /// upcoming/live/finished row states, bet placement & editing through the BetSheet
 /// (incl. the universal-edit POST pin and the 423 "betting closed" path), the
 /// sneak-peek/HiddenScore rules, and member bet-history sheets.
-final class GroupDetailE2ETests: BettyUITestCase {
+class GroupDetailE2EBase: BettyUITestCase {
 
     // MARK: - Shared flows
 
     /// Home → tap a group card → group detail (hero shows the uppercased name).
     @discardableResult
-    private func openGroup(named name: String, ended: Bool = false) -> GroupDetailScreen {
+    func openGroup(named name: String, ended: Bool = false) -> GroupDetailScreen {
         let home = HomeScreen(app: app)
         waitFor(home.navigationBar, timeout: 30)
         if ended {
@@ -23,14 +23,14 @@ final class GroupDetailE2ETests: BettyUITestCase {
     }
 
     @discardableResult
-    private func openSundayLegends() -> GroupDetailScreen {
+    func openSundayLegends() -> GroupDetailScreen {
         openGroup(named: "Sunday Legends")
     }
 
     /// Finds a schedule card searching BOTH directions — the Games tab auto-anchors
     /// to the next-upcoming day, so earlier days sit above the viewport.
     @discardableResult
-    private func locateGameCard(_ gameID: Int, via screen: GroupDetailScreen,
+    func locateGameCard(_ gameID: Int, via screen: GroupDetailScreen,
                                 file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let card = screen.gameCard(gameID)
         if card.waitForExistence(timeout: 3), card.isHittable { return card }
@@ -47,7 +47,7 @@ final class GroupDetailE2ETests: BettyUITestCase {
     }
 
     /// Games tab → tap the game card → BetSheet.
-    private func openBetSheet(forGame gameID: Int, via screen: GroupDetailScreen) -> BetSheetScreen {
+    func openBetSheet(forGame gameID: Int, via screen: GroupDetailScreen) -> BetSheetScreen {
         scrollTo(screen.gamesTab).tap()
         locateGameCard(gameID, via: screen).tap()
         let sheet = BetSheetScreen(app: app)
@@ -58,7 +58,7 @@ final class GroupDetailE2ETests: BettyUITestCase {
     /// Mirror of `scrollTo` that swipes DOWN (content above the viewport — the games
     /// tab auto-anchors past earlier days).
     @discardableResult
-    private func scrollUpTo(_ element: XCUIElement, maxSwipes: Int = 6,
+    func scrollUpTo(_ element: XCUIElement, maxSwipes: Int = 6,
                             file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return element }
@@ -70,7 +70,7 @@ final class GroupDetailE2ETests: BettyUITestCase {
         return element
     }
 
-    private func waitForLabel(_ element: XCUIElement, contains fragment: String,
+    func waitForLabel(_ element: XCUIElement, contains fragment: String,
                               timeout: TimeInterval = 12,
                               file: StaticString = #filePath, line: UInt = #line) {
         let predicate = NSPredicate(format: "label CONTAINS %@", fragment)
@@ -81,19 +81,22 @@ final class GroupDetailE2ETests: BettyUITestCase {
         }
     }
 
-    private func assertLabel(_ element: XCUIElement, contains fragment: String,
+    func assertLabel(_ element: XCUIElement, contains fragment: String,
                              file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(element.label.contains(fragment),
                       "Expected label to contain '\(fragment)', got '\(element.label)'",
                       file: file, line: line)
     }
 
-    private func assertLabel(_ element: XCUIElement, notContains fragment: String,
+    func assertLabel(_ element: XCUIElement, notContains fragment: String,
                              file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertFalse(element.label.contains(fragment),
                        "Expected label NOT to contain '\(fragment)', got '\(element.label)'",
                        file: file, line: line)
     }
+}
+
+final class GroupDetailLeaderboardE2ETests: GroupDetailE2EBase {
 
     // MARK: - Group tab anatomy
 
@@ -246,6 +249,9 @@ final class GroupDetailE2ETests: BettyUITestCase {
         assertLabel(row1, notContains: "+")          // unprocessed → points pending
         assertLabel(row1, notContains: "0P")
     }
+}
+
+final class GroupDetailGamesE2ETests: GroupDetailE2EBase {
 
     // MARK: - Games tab
 
@@ -300,6 +306,40 @@ final class GroupDetailE2ETests: BettyUITestCase {
         // Finished game day (pool "Semi-final", always exactly 2 calendar days back).
         scrollUpTo(app.staticTexts["SEMI-FINAL - 2 DAYS AGO"], maxSwipes: 8)
     }
+
+    // MARK: - Live updates
+
+    /// `evaluate_game` WS push forces a tournament reload: the live card flips to
+    /// FINISHED with the final score without any user interaction.
+    func testEvaluateGameWebSocketPushRefreshesSchedule() {
+        launchApp()
+        let screen = openSundayLegends()
+        scrollTo(screen.gamesTab).tap()
+
+        let card = locateGameCard(DefaultScenario.liveGameID, via: screen)
+        assertLabel(card, contains: "LIVE")
+
+        waitForWebSocketClient()
+        withScenario {
+            $0.updateGame(DefaultScenario.liveGameID) { game in
+                game.status = 1
+                game.homeTeamScore = 3
+                game.awayTeamScore = 2
+            }
+        }
+        pushWS(type: "evaluate_game", message: [
+            "game_id": DefaultScenario.liveGameID,
+            "home_team_score": 3,
+            "away_team_score": 2,
+        ])
+
+        waitForLabel(screen.gameCard(DefaultScenario.liveGameID), contains: "FINISHED", timeout: 15)
+        assertLabel(screen.gameCard(DefaultScenario.liveGameID), contains: "3")
+        assertLabel(screen.gameCard(DefaultScenario.liveGameID), notContains: "LIVE")
+    }
+}
+
+final class GroupDetailE2ETests: GroupDetailE2EBase {
 
     // MARK: - Bet sheet: placing & editing
 
@@ -639,36 +679,5 @@ final class GroupDetailE2ETests: BettyUITestCase {
         XCTAssertTrue(sheet.yourBetTab.exists)                // upcoming → input available
         sheet.closeButton.tap()
         waitForDisappearance(sheet.header)
-    }
-
-    // MARK: - Live updates
-
-    /// `evaluate_game` WS push forces a tournament reload: the live card flips to
-    /// FINISHED with the final score without any user interaction.
-    func testEvaluateGameWebSocketPushRefreshesSchedule() {
-        launchApp()
-        let screen = openSundayLegends()
-        scrollTo(screen.gamesTab).tap()
-
-        let card = locateGameCard(DefaultScenario.liveGameID, via: screen)
-        assertLabel(card, contains: "LIVE")
-
-        waitForWebSocketClient()
-        withScenario {
-            $0.updateGame(DefaultScenario.liveGameID) { game in
-                game.status = 1
-                game.homeTeamScore = 3
-                game.awayTeamScore = 2
-            }
-        }
-        pushWS(type: "evaluate_game", message: [
-            "game_id": DefaultScenario.liveGameID,
-            "home_team_score": 3,
-            "away_team_score": 2,
-        ])
-
-        waitForLabel(screen.gameCard(DefaultScenario.liveGameID), contains: "FINISHED", timeout: 15)
-        assertLabel(screen.gameCard(DefaultScenario.liveGameID), contains: "3")
-        assertLabel(screen.gameCard(DefaultScenario.liveGameID), notContains: "LIVE")
     }
 }
