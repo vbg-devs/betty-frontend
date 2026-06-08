@@ -36,6 +36,29 @@ Android — not just one.**
   missing mobile counterpart passes CI green. Parity is enforced here, in review
   — not by the pipeline.
 
+## Secrets — this is a PUBLIC, open-source repo
+
+**NEVER commit a real secret.** Before pushing, sanity-check:
+`git grep -nE 'BEGIN .*PRIVATE KEY|"private_key"|client_secret'` must be empty, and
+never `git add` a `*.jks`/`*.keystore`/service-account `*.json`/`google-services.json`
+with real values (all are gitignored — keep it that way).
+
+- **Public-by-design client identifiers that ARE in the repo (NOT secrets, do not
+  "redact" them):** the Firebase **Web API key** (`AppConfig.FIREBASE_API_KEY` and the
+  web config — it identifies the project and is gated by Firebase Auth/Security Rules +
+  App Check, *not* by secrecy), the Giphy client search key, and the Google OAuth
+  **client ID** (the *secret* would be the client *secret*, which mobile OAuth clients
+  don't have). These intentionally ship in every client (web/iOS/Android).
+- **Real secrets — only in gitignored files locally + CI secrets, never in git:**
+  - Android upload keystore + passwords, Play service-account JSON →
+    `android/.playstore-secrets/` (gitignored; back the keystore up OFFLINE — losing it
+    means a Play-support reset). Apple ASC key (`.p8`) likewise.
+  - CI: GitHub Actions secrets in the protected `release` environment
+    (`PLAY_SERVICE_ACCOUNT_JSON`, `ANDROID_KEYSTORE_*`, `APP_STORE_CONNECT_*`).
+- The mock-backend fixtures use a fake password (`secret123`) — hermetic test data, not a
+  credential. Don't vendor SDKs/tooling into the repo (e.g. `google-cloud-sdk/`) — install
+  them system-wide.
+
 ## Build & test
 
 Web (root): `npm ci && npx nuxt prepare`, then
