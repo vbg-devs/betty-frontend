@@ -191,12 +191,15 @@ jobs:
   # Rebalance the matrix when a class grows materially — serial within a shard, the
   # wall-clock is the SUM of its classes' durations, so the slowest shard is the
   # floor. Shards are balanced by measured duration; keep the heavy WebSocket classes
-  # (LiveE2ETests, TournamentsDetailE2ETests) on separate shards. Gated to iOS
-  # changes; workflow_dispatch with run_ios_e2e=false skips e2e (build+unit only).
+  # (LiveE2ETests, TournamentsDetailE2ETests) on separate shards. RUN ON DEMAND ONLY:
+  # the e2e suite runs solely via workflow_dispatch (run_ios_e2e), not on push/PR —
+  # macOS runners drain the shards ~serially, so auto-running them stalled every merge.
+  # push/PR still get the build + unit tests + shard-coverage guard; trigger the full
+  # e2e suite manually (Actions > CI > Run workflow) before merging risky iOS changes.
   ios-e2e:
     name: iOS e2e ${{ matrix.name }}
     needs: [ios-changes, ios-build]
-    if: needs.ios-changes.outputs.ios == 'true' && (github.event_name != 'workflow_dispatch' || inputs.run_ios_e2e)
+    if: needs.ios-changes.outputs.ios == 'true' && github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e
     runs-on: macos-26
     timeout-minutes: 35
     strategy:
