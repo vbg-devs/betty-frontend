@@ -5,7 +5,8 @@ contract, same Firebase-REST auth, same hermetic in-process mock-backend e2e. Th
 platform-neutral specs in `docs/mobile/` (api-contract, screens, components, data-layer,
 design) are the source of truth.
 
-- **Package:** `social.betty` (debug builds use the `.debug` suffix)
+- **applicationId:** `social.betty.app` (matches the existing Play/Firebase app; debug
+  builds use the `.debug` suffix). Code/namespace package is `social.betty`.
 - **Stack:** Kotlin 2.1, Jetpack Compose (BOM 2025.05), AGP 8.11, Gradle 8.14
 - **SDK:** `compileSdk`/`targetSdk` 36, `minSdk` 26
 - **Deps (lean):** Compose, coroutines, kotlinx-serialization, OkHttp (REST + WebSocket),
@@ -76,7 +77,7 @@ only (`workflow_dispatch` → `run_android_e2e`), sharded across 4 emulator jobs
 
 ### What you need to provide (one-time)
 
-1. **Play Console app** for package `social.betty`. The *first* upload to a track must be
+1. **Play Console app** `social.betty.app` (already exists, linked to Firebase `betty-f676d`). The *first* upload to a track must be
    done manually in the Console (accept the developer agreement). Enroll in **Play App
    Signing** — the keystore below is then the *upload* key.
 2. **Play Developer API service account** (Google Cloud, *Google Play Android Developer
@@ -129,7 +130,7 @@ PROJECT=<gcp-project-id> android/scripts/get-play-service-account.sh
 Email/password sign-in works out of the box. **Google sign-in** needs an Android OAuth
 client in the Firebase project `betty-f676d`:
 
-1. Add an Android OAuth client (package `social.betty` + the signing SHA-1 of the
+1. Add an Android OAuth client (package `social.betty.app` + the signing SHA-1 of the
    debug, upload, and Play-managed keys).
 2. Put the client id in `AppConfig.GOOGLE_OAUTH_CLIENT_ID`.
 3. Add an intent-filter for the reversed-client-id scheme
