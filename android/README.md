@@ -102,6 +102,15 @@ It generates the upload keystore (gitignored under `android/.playstore-secrets/`
 base64-encodes it, computes the signing SHA-1 (for the Google OAuth client), and sets
 the GitHub secrets in the `release` environment after a confirmation prompt.
 
+For the `PLAY_SERVICE_ACCOUNT_JSON` itself, `android/scripts/get-play-service-account.sh`
+uses `gcloud` to enable the Play Developer API, create a `play-publisher` service account,
+and download its JSON key (the Play Console linking + permission grant remains a manual UI
+step, printed at the end):
+
+```
+PROJECT=<gcp-project-id> android/scripts/get-play-service-account.sh
+```
+
 ### GitHub secrets (in the `release` environment)
 
 | Secret | Value |
