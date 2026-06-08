@@ -79,8 +79,8 @@ cmd_check() {
   done
   echo
   bold "Manual (one-time, not scriptable)"
-  echo "  • Play Console app for 'social.betty.app' (first upload is manual; enroll in Play App Signing)"
-  echo "  • Google sign-in: register an Android OAuth client (package social.betty.app) with these SHA-1s:"
+  echo "  • Play Console app for 'social.betty.android' (first upload is manual; enroll in Play App Signing)"
+  echo "  • Google sign-in: register an Android OAuth client (package social.betty.android) with these SHA-1s:"
   echo "      debug:  $(debug_sha1)"
   [ -f "$KEYSTORE" ] && echo "      upload: $(keystore_sha1 "${KEYSTORE_PASSWORD:-}" 2>/dev/null || echo '(run: setup, then re-check with KEYSTORE_PASSWORD set)')"
   echo "    then set AppConfig.GOOGLE_OAUTH_CLIENT_ID."
@@ -156,9 +156,9 @@ cmd_setup() {
 
   echo
   bold "Remaining manual steps"
-  echo "  1. Create the Play Console app for 'social.betty.app' and upload one AAB by hand (accept the"
+  echo "  1. Create the Play Console app for 'social.betty.android' and upload one AAB by hand (accept the"
   echo "     developer agreement, enroll in Play App Signing). After that the workflow publishes."
-  echo "  2. Register an Android OAuth client (package social.betty.app) with SHA-1:"
+  echo "  2. Register an Android OAuth client (package social.betty.android) with SHA-1:"
   echo "       upload: $(keystore_sha1 "$store_pw")"
   echo "       debug:  $(debug_sha1)"
   echo "     then set AppConfig.GOOGLE_OAUTH_CLIENT_ID (only needed for Google sign-in)."
