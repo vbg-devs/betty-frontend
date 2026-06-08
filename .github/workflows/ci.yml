@@ -10,6 +10,10 @@ on:
         description: "Run the full iOS e2e suite"
         type: boolean
         default: true
+      run_android_e2e:
+        description: "Run the full Android e2e suite (emulator)"
+        type: boolean
+        default: true
 
 # Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
 concurrency:
@@ -127,7 +131,9 @@ jobs:
           declared=$(for f in BettyUITests/*.swift; do
             awk '/^[[:space:]]*(final )?class [A-Za-z0-9_]+[[:space:]]*:/{c=$0;sub(/.*class /,"",c);sub(/[[:space:]:].*/,"",c);cls=c;n[cls]=n[cls]+0} /^[[:space:]]*func test/{if(cls)n[cls]++} END{for(k in n)if(n[k]>0)print k}' "$f"
           done | sort -u)
-          assigned=$(grep -E '^[[:space:]]*classes:' ../.github/workflows/ci.yml | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          # Only the iOS shards (everything before the android-changes job); the Android
+          # shards below also use `classes:` keys and must not be conflated.
+          assigned=$(awk '/^  android-changes:/{exit} 1' ../.github/workflows/ci.yml | grep -E '^[[:space:]]*classes:' | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
           missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
           unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
           if [ -n "$missing" ]; then echo "::error::UITest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
@@ -266,3 +272,150 @@ jobs:
             -default-test-execution-time-allowance 240 \
             -maximum-test-execution-time-allowance 420 \
             $ARGS
+
+  # Android runs entirely on Linux (no 10x macOS billing), so build + lint + unit
+  # tests run on every Android-touching PR. Only the emulator e2e job is gated.
+  android-changes:
+    name: Check for Android changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      android: ${{ steps.diff.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Diff for android/ changes
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "android=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$EVENT" = "pull_request" ]; then
+            FILES=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
+          else
+            FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
+          if grep -qE '^(android/|\.github/workflows/(ci|android-playstore)\.yml)' <<<"$FILES"; then
+            echo "android=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Android changes; skipping Android jobs."
+            echo "android=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  android-build:
+    name: Android build, lint & unit tests
+    needs: android-changes
+    if: needs.android-changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      # Guard against silently-skipped tests: every @Test-bearing androidTest class
+      # must be assigned to exactly one e2e shard (mirrors the iOS shard guard).
+      - name: Verify android e2e shard coverage
+        run: |
+          set -euo pipefail
+          declared=$(for f in $(find app/src/androidTest -name '*.kt' 2>/dev/null); do
+            if grep -q '@Test' "$f"; then
+              grep -oE '(class|object) [A-Za-z0-9_]+' "$f" | head -1 | awk '{print $2}'
+            fi
+          done | sort -u)
+          # Only the android-e2e job's shard `classes:` lines (skip the iOS shards above it).
+          assigned=$(awk '/^  android-e2e:/,0' ../.github/workflows/ci.yml \
+            | grep -E '^[[:space:]]*classes:' \
+            | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
+          unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
+          if [ -n "$missing" ]; then echo "::error::androidTest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
+          if [ -n "$unknown" ]; then echo "::error::android e2e shard references unknown classes:"; echo "$unknown"; exit 1; fi
+          echo "All $(echo "$declared" | grep -c .) androidTest classes are covered by the e2e shards."
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint (non-blocking)
+        continue-on-error: true
+        run: ./gradlew :app:lintDebug --no-daemon
+
+      - name: Unit tests (JVM)
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+  # Hermetic Android e2e (in-process mock backend) on an emulator, sharded and
+  # gated on demand (emulator runs are slow). Mirrors the iOS ios-e2e policy.
+  android-e2e:
+    name: Android e2e ${{ matrix.name }}
+    needs: [android-changes, android-build]
+    if: needs.android-changes.outputs.android == 'true' && github.event_name == 'workflow_dispatch' && inputs.run_android_e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: shard1
+            classes: SmokeTest AuthE2ETest
+          - name: shard2
+            classes: HomeE2ETest BrowseJoinE2ETest
+          - name: shard3
+            classes: GroupDetailE2ETest BetSheetE2ETest
+          - name: shard4
+            classes: ChatE2ETest ProfileE2ETest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run e2e shard on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          CLASSES: ${{ matrix.classes }}
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: android
+          script: |
+            ARGS=$(echo "$CLASSES" | tr ' ' '\n' | sed 's/^/social.betty.e2e./' | paste -sd, -)
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon \
+              -Pandroid.testInstrumentationRunnerArguments.class="$ARGS"

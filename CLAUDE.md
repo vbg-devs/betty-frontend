@@ -4,29 +4,37 @@ Betty.social — social betting with friends. One repo, every client:
 
 - `app/` — Nuxt 4 / Vue web app (SPA, `ssr: false`)
 - `ios/` — native SwiftUI app (iOS 17+, XcodeGen, zero third-party deps)
-- `android/` — future native app
+- `android/` — native Kotlin / Jetpack Compose app (minSdk 26, Gradle), a
+  faithful 1:1 port of iOS: same Core/DesignSystem/Features layout, Firebase-REST
+  auth, hermetic in-process mock-backend e2e.
 - `docs/mobile/` — **platform-neutral specs**: API wire contract, screens,
-  component behavior, data layer, design system. Source of truth for mobile
-  clients (and the blueprint for `android/`).
+  component behavior, data layer, design system. Source of truth for **all three
+  native/web clients** (the spec docs are titled "iOS" for historical reasons but
+  govern `android/` identically).
 - Backend lives in a separate repo (`betty-api`, Go/Gin); prod is
   `https://api.betty.social/api/v1`, WebSocket `wss://api.betty.social/ws`.
 
 ## Cross-platform parity — the rule
 
-**Every user-facing change ships on all client platforms, not just one.**
+**Every user-facing change ships on ALL THREE client platforms — web, iOS, and
+Android — not just one.**
 
-- A web feature/fix PR must include the matching `ios/` change (and `android/`
-  once it exists) — or explicitly create a follow-up task and say so in the PR
-  description. Silently shipping one platform is never OK.
+- A feature/fix PR on any platform must include the matching change on the other
+  two (`app/`, `ios/`, `android/`) — or explicitly create a follow-up task per
+  missing platform and say so in the PR description. Silently shipping one
+  platform is never OK.
 - API/wire-contract changes flow through `docs/mobile/api-contract.md` FIRST,
-  then: web types (`app/types/index.ts`), iOS models (`ios/Betty/Core/Models/`),
-  **and the e2e mock backend** (`ios/BettyUITests/Mock/`) — the hermetic UI
-  tests must keep speaking the real wire format.
+  then ALL of: web types (`app/types/index.ts`), iOS models
+  (`ios/Betty/Core/Models/`), Android models (`android/app/src/main/java/social/
+  betty/core/model/`), **and BOTH e2e mock backends** (`ios/BettyUITests/Mock/`
+  + `android/app/src/androidTest/java/social/betty/mock/`) — the hermetic UI
+  tests on each platform must keep speaking the real wire format.
 - Spec docs in `docs/mobile/` are living documents — update them with the
   change, not after.
-- ⚠️ CI will NOT remind you: web-only diffs deliberately skip the iOS job
-  (macOS minutes bill 10x), so a missing iOS counterpart passes CI green.
-  Parity is enforced here, in review — not by the pipeline.
+- ⚠️ CI will NOT remind you: web-only diffs deliberately skip the iOS **and**
+  Android jobs (macOS minutes bill 10x; Android emulator e2e is on-demand), so a
+  missing mobile counterpart passes CI green. Parity is enforced here, in review
+  — not by the pipeline.
 
 ## Build & test
 
@@ -63,6 +71,32 @@ iOS (`ios/`): `xcodegen generate`, then
   securetoken, Keychain persistence. Google sign-in's iOS OAuth client ID is
   set in project.yml (`GoogleOAuthClientID`).
 
+Android (`android/`): Kotlin + Jetpack Compose, applicationId `social.betty.app`
+(code/namespace `social.betty`),
+AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
+8.14). Needs `local.properties` with `sdk.dir` (or `ANDROID_HOME`).
+- Build: `./gradlew :app:assembleDebug` · Lint: `./gradlew :app:lintDebug`
+- Unit (JVM/Robolectric): `./gradlew :app:testDebugUnitTest`
+- E2E: `./gradlew :app:connectedDebugAndroidTest` (Compose/Espresso/UiAutomator
+  against the in-process mock backend — hermetic, no network; see
+  `android/app/src/androidTest/java/social/betty/mock/`). Needs a running
+  emulator; in CI it runs on-demand as a sharded `android-emulator-runner`
+  matrix (like iOS e2e), gated by `workflow_dispatch`.
+  ⚠️ A new UITest class MUST be added to a shard's `classes` list in
+  `.github/workflows/ci.yml` — the `Verify android e2e shard coverage` step
+  fails CI if a class is unassigned (otherwise it would silently never run).
+- Architecture mirrors iOS 1:1: `core/{model,net,auth,ws,store,logic}`,
+  `designsystem/{,components}`, `navigation/`, `features/<area>/`. Same
+  Firebase-REST auth (Identity Toolkit + securetoken, EncryptedSharedPreferences
+  token store). Google OAuth client id is `AppConfig.GOOGLE_OAUTH_CLIENT_ID`
+  (placeholder until provisioned).
+- The wire model `Group` collides with nothing in Compose (unlike SwiftUI), but
+  keep model names in `core.model`.
+- DEBUG-only `LaunchOverrides` redirect every network edge at the loopback mock
+  backend; the instrumentation test sets them in-process before launching
+  `MainActivity` (the Android analogue of the iOS launch-environment keys).
+- The Compose BOM / AGP / Kotlin versions live in `android/gradle/libs.versions.toml`.
+
 ## Deploy (iOS)
 
 - `.github/workflows/ios-testflight.yml` uploads to TestFlight after CI
@@ -73,6 +107,21 @@ iOS (`ios/`): `xcodegen generate`, then
 - Build numbers are `100 + run_number` (TestFlight history already reaches 28
   from the previous pipeline); never reuse/decrease.
 - Internal testers (group "Betty") get builds automatically after processing.
+
+## Deploy (Android)
+
+- `.github/workflows/android-playstore.yml` builds a signed AAB and uploads to
+  the Play **internal** track after CI succeeds on `main` (gated on iOS-style
+  path filtering for `android/` changes).
+- Required GitHub secrets (in the `release` environment): `PLAY_SERVICE_ACCOUNT_JSON`
+  (Play Developer API service account), `ANDROID_KEYSTORE_BASE64`,
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+  The first upload to a track must be done once manually in Play Console.
+- `versionName` comes from the workflow env; `versionCode` is `100 + run_number`
+  (never reuse/decrease), passed via `-PversionCode/-PversionName`.
+- applicationId `social.betty.app` (the existing Play/Firebase app; debug uses the
+  `.debug` suffix; namespace/code package is `social.betty`). Enroll in Play
+  App Signing; the keystore above is the upload key.
 
 ## Wire-contract gotchas (verified against betty-api)
 
