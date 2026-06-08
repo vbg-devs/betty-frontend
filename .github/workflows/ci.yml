@@ -361,6 +361,13 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --no-daemon
 
+      # Release-only path: runs R8/minify + resource shrinking, which assembleDebug skips.
+      # Catches proguard/keep-rule regressions (e.g. Tink via security-crypto) that would
+      # otherwise only surface in the Play publish build. Falls back to debug signing here
+      # (no release secrets on PRs).
+      - name: Assemble release (R8 / minify smoke check)
+        run: ./gradlew :app:assembleRelease --no-daemon
+
   # Hermetic Android e2e (in-process mock backend) on an emulator, sharded and
   # gated on demand (emulator runs are slow). Mirrors the iOS ios-e2e policy.
   android-e2e:
