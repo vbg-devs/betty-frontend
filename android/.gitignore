@@ -10,3 +10,8 @@
 local.properties
 /app/build/
 /.kotlin/
+
+# Signing material + Play secrets — never commit
+/.playstore-secrets/
+*.jks
+*.keystore

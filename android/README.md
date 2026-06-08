@@ -88,6 +88,20 @@ only (`workflow_dispatch` → `run_android_e2e`), sharded across 4 emulator jobs
    base64 -i upload.jks | tr -d '\n' | pbcopy   # → ANDROID_KEYSTORE_BASE64
    ```
 
+### Bootstrap script
+
+`android/scripts/setup-playstore.sh` automates the keystore + secrets:
+
+```
+android/scripts/setup-playstore.sh check    # report what's set / still missing
+KEYSTORE_PASSWORD='…' SA_JSON=path/to/sa.json \
+  android/scripts/setup-playstore.sh setup  # generate keystore + push the 5 secrets
+```
+
+It generates the upload keystore (gitignored under `android/.playstore-secrets/`),
+base64-encodes it, computes the signing SHA-1 (for the Google OAuth client), and sets
+the GitHub secrets in the `release` environment after a confirmation prompt.
+
 ### GitHub secrets (in the `release` environment)
 
 | Secret | Value |
