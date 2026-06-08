@@ -44,9 +44,12 @@ iOS (`ios/`): `xcodegen generate`, then
 - E2E: `… test -only-testing:BettyUITests` (XCUITest against the in-process
   mock backend — hermetic, no network; see `ios/BettyUITests/Mock/`). Locally,
   add `-parallel-testing-enabled YES -parallel-testing-worker-count 8` to run the
-  full suite in ~8 min. In CI it runs as a **7-shard matrix** (`ios-e2e`) over one
-  prebuilt bundle — Xcode parallelizes per test CLASS, so suites are split into
-  ≤~12-test classes via shared `*E2EBase`/`*TestCase` bases to keep shards balanced.
+  full suite in ~8 min. In CI it runs as a **6-shard matrix** (`ios-e2e`) over one
+  prebuilt bundle, each shard **serial** (`-parallel-testing-enabled NO` — 2 sim
+  clones starve the Free plan's 3-vCPU runners, which also cap macOS jobs at ~6
+  concurrent) — ~15 min for the full suite. Xcode parallelizes per test CLASS, so
+  suites are split into ≤~12-test classes via shared `*E2EBase`/`*TestCase` bases;
+  shards are balanced by measured duration.
   ⚠️ A new UITest class MUST be added to a shard's `classes:` list in
   `.github/workflows/ci.yml` — the `Verify e2e shard coverage` step fails CI if a
   test class isn't assigned to any shard (otherwise it would silently never run).

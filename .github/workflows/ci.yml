@@ -179,39 +179,45 @@ jobs:
 
   # The hermetic e2e suite (in-process mock backend on ephemeral loopback ports, no
   # network) sharded across parallel runners. Each shard downloads the prebuilt
-  # bundle and runs a test-count-balanced subset SERIALLY: the 7-way matrix is the
-  # parallelism, and a second in-runner simulator clone over-subscribes the 3-vCPU
-  # macos-26 runner — app launches get starved and hit the per-test time allowance
-  # (the shard1/2/3 hangs that made this necessary). Wall-clock per shard is ~6 min,
-  # so the whole e2e stage finishes in ~8 min instead of the old ~60 min serial run.
+  # bundle and runs its subset SERIALLY (-parallel-testing-enabled NO): the matrix
+  # is the parallelism, and a second in-runner simulator clone over-subscribes the
+  # 3-vCPU macos-26 runner — app launches get starved and hit the per-test time
+  # allowance (the hangs that made this necessary). The GitHub Free plan caps macOS
+  # jobs at ~6 concurrent and offers no larger runners, so the suite is split into
+  # 6 shards that run in a single wave; the full suite lands at ~15 min (down from
+  # ~60 serial). Reaching ~10 min would need a paid plan's larger runners / more
+  # concurrency.
   #
-  # Rebalance the matrix when a class grows materially — the slowest shard is the
-  # floor. Gated to iOS changes; a workflow_dispatch with run_ios_e2e=false skips
-  # e2e for a build-and-unit-only check.
+  # Rebalance the matrix when a class grows materially — serial within a shard, the
+  # wall-clock is the SUM of its classes' durations, so the slowest shard is the
+  # floor. Shards are balanced by measured duration; keep the heavy WebSocket classes
+  # (LiveE2ETests, TournamentsDetailE2ETests) on separate shards. Gated to iOS
+  # changes; workflow_dispatch with run_ios_e2e=false skips e2e (build+unit only).
   ios-e2e:
     name: iOS e2e ${{ matrix.name }}
     needs: [ios-changes, ios-build]
     if: needs.ios-changes.outputs.ios == 'true' && (github.event_name != 'workflow_dispatch' || inputs.run_ios_e2e)
     runs-on: macos-26
-    timeout-minutes: 25
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
+        # 6 shards (= the Free-plan macOS concurrency cap, so all run in one wave)
+        # balanced by measured per-class duration; the two heavy WebSocket classes
+        # (LiveE2ETests, TournamentsDetailE2ETests) are isolated on shards 1 and 2.
         include:
           - name: shard1
-            classes: HomeE2ETests GroupSettingsE2ETests GroupDetailLeaderboardE2ETests
+            classes: LiveE2ETests GroupJoinInviteE2ETests CompleteProfileE2ETests GroupDetailMoreE2ETests AuthBootFailureE2ETests
           - name: shard2
-            classes: LiveE2ETests TournamentsDetailE2ETests GroupJoinInviteE2ETests SmokeTests
+            classes: TournamentsDetailE2ETests TournamentsAdminE2ETests GroupDetailLeaderboardE2ETests GroupDetailNonAuthorCoverE2ETests ProfileAdminE2ETests
           - name: shard3
-            classes: GroupDetailE2ETests TournamentsAdminE2ETests ProfileLeaderboardE2ETests AuthDeepLinkE2ETests GroupDetailMoreE2ETests
+            classes: ChatMoreE2ETests HomeE2ETests AuthSignInValidationE2ETests AuthSessionE2ETests GroupDetailGamesE2ETests GroupCreateE2ETests
           - name: shard4
-            classes: ChatReactionsE2ETests ChatActivityE2ETests CompleteProfileE2ETests GroupCreateE2ETests GroupDetailNonAuthorCoverE2ETests
+            classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests
           - name: shard5
-            classes: TournamentsE2ETests ProfileE2ETests ChatMoreE2ETests AuthSessionE2ETests
+            classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests
           - name: shard6
-            classes: GroupBrowseE2ETests ProfileAccountE2ETests HomeNavigationE2ETests LiveConnectionE2ETests AuthBootFailureE2ETests
-          - name: shard7
-            classes: AuthSignInValidationE2ETests ChatE2ETests AuthLandingE2ETests GroupDetailGamesE2ETests ProfileAdminE2ETests
+            classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests
     env:
       XCODE_VERSION: "26.5"
       SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
@@ -244,11 +250,13 @@ jobs:
           ARGS=""
           for c in $CLASSES; do ARGS="$ARGS -only-testing:BettyUITests/$c"; done
           # Serial within the shard (parallel clones starve the runner — see above).
+          # Generous allowances: the slower-but-fine WebSocket tests must not trip
+          # the per-test timeout at the single-clone pace.
           xcodebuild test-without-building \
             -xctestrun "$XCTESTRUN" \
             -destination "$SIMULATOR_DESTINATION" \
             -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 240 \
+            -default-test-execution-time-allowance 240 \
+            -maximum-test-execution-time-allowance 420 \
             $ARGS
