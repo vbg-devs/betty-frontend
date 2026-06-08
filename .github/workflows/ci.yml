@@ -131,7 +131,9 @@ jobs:
           declared=$(for f in BettyUITests/*.swift; do
             awk '/^[[:space:]]*(final )?class [A-Za-z0-9_]+[[:space:]]*:/{c=$0;sub(/.*class /,"",c);sub(/[[:space:]:].*/,"",c);cls=c;n[cls]=n[cls]+0} /^[[:space:]]*func test/{if(cls)n[cls]++} END{for(k in n)if(n[k]>0)print k}' "$f"
           done | sort -u)
-          assigned=$(grep -E '^[[:space:]]*classes:' ../.github/workflows/ci.yml | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          # Only the iOS shards (everything before the android-changes job); the Android
+          # shards below also use `classes:` keys and must not be conflated.
+          assigned=$(awk '/^  android-changes:/{exit} 1' ../.github/workflows/ci.yml | grep -E '^[[:space:]]*classes:' | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
           missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
           unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
           if [ -n "$missing" ]; then echo "::error::UITest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
