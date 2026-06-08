@@ -205,6 +205,9 @@ jobs:
         # 6 shards (= the Free-plan macOS concurrency cap, so all run in one wave)
         # balanced by measured per-class duration; the two heavy WebSocket classes
         # (LiveE2ETests, TournamentsDetailE2ETests) are isolated on shards 1 and 2.
+        # AppStoreScreenshots is the gated screenshot generator (XCTSkipUnless on
+        # BETTY_SCREENSHOTS) — it skips instantly in CI but must still be assigned to a
+        # shard to satisfy the coverage guard above.
         include:
           - name: shard1
             classes: LiveE2ETests GroupJoinInviteE2ETests CompleteProfileE2ETests GroupDetailMoreE2ETests AuthBootFailureE2ETests
@@ -215,7 +218,7 @@ jobs:
           - name: shard4
             classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests
           - name: shard5
-            classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests
+            classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests AppStoreScreenshots
           - name: shard6
             classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests
     env:
