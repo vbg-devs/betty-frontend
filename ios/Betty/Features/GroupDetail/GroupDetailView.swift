@@ -168,6 +168,10 @@ struct GroupDetailView: View {
                 .font(.bettyDisplayL)
                 .displayKerning(40)
                 .foregroundStyle(heroTextPrimary(group))
+                .lineLimit(3)
+                .minimumScaleFactor(0.5)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: Space.xs) {
                 Text("\(group.members.count) MEMBERS")
