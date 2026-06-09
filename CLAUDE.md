@@ -111,8 +111,9 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
 - Architecture mirrors iOS 1:1: `core/{model,net,auth,ws,store,logic}`,
   `designsystem/{,components}`, `navigation/`, `features/<area>/`. Same
   Firebase-REST auth (Identity Toolkit + securetoken, EncryptedSharedPreferences
-  token store). Google OAuth client id is `AppConfig.GOOGLE_OAUTH_CLIENT_ID`
-  (placeholder until provisioned).
+  token store). Google sign-in works via Custom Tabs PKCE reusing the iOS Firebase
+  OAuth client (`AppConfig.GOOGLE_OAUTH_CLIENT_ID`); the reversed-client-id redirect is
+  an intent-filter on `MainActivity`, completed by `GoogleSignInCoordinator`.
 - The wire model `Group` collides with nothing in Compose (unlike SwiftUI), but
   keep model names in `core.model`.
 - DEBUG-only `LaunchOverrides` redirect every network edge at the loopback mock

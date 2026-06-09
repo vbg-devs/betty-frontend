@@ -43,6 +43,15 @@
                     android:host="betty.social"
                     android:pathPrefix="/dashboard/groups/join" />
             </intent-filter>
+
+            <!-- Google sign-in OAuth redirect (reversed client id of AppConfig.GOOGLE_OAUTH_CLIENT_ID).
+                 Keep this scheme in sync with AppConfig.googleOAuthRedirectScheme. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.googleusercontent.apps.812539187075-1ijbvedesug3dl8mtbvfnoh0rrvcblpe" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

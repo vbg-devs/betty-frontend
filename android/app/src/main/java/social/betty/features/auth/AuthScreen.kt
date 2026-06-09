@@ -111,15 +111,14 @@ fun AuthScreen() {
                         color = BettyTheme.colors.textPrimary,
                     )
 
-                    // Google sign-in — opens a Custom Tab with the PKCE auth URL.
-                    // TODO: Completing the redirect requires an intent-filter for the
-                    //  reversed-client-id scheme (e.g. com.googleusercontent.apps.<id>)
-                    //  in AndroidManifest.xml pointing to MainActivity — that's out of scope
-                    //  here. Email is the fully working auth path in this build.
+                    // Google sign-in: PKCE in a Custom Tab; the reversed-client-id redirect
+                    // re-enters MainActivity, which completes it via GoogleSignInCoordinator.
                     BettyButton(
                         text = copy.googleTitle,
                         onClick = {
+                            errorMessage = null
                             val pending = GoogleOAuth.begin(social.betty.app.AppConfig.GOOGLE_OAUTH_CLIENT_ID)
+                            social.betty.app.GoogleSignInCoordinator.begin(pending)
                             runCatching {
                                 CustomTabsIntent.Builder().build()
                                     .launchUrl(context, pending.authUrl.toUri())

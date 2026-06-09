@@ -11,9 +11,16 @@ object AppConfig {
     const val FIREBASE_API_KEY = "AIzaSyCK7EQZtS0JGRnS9WXdx3Ja4Sdl4914zpg"
     const val FIREBASE_PROJECT_ID = "betty-f676d"
 
-    // Android OAuth client id for Google sign-in (Web/Android client configured in the
-    // Firebase console). Placeholder — replace before shipping Google sign-in.
-    const val GOOGLE_OAUTH_CLIENT_ID = "REPLACE_WITH_ANDROID_OAUTH_CLIENT_ID"
+    // Google sign-in via Custom Tabs PKCE (same flow + same Firebase project OAuth client as
+    // iOS — `ios/project.yml` GoogleOAuthClientID). The reversed-client-id scheme is the
+    // redirect; it MUST also be declared as an intent-filter on MainActivity in the manifest.
+    const val GOOGLE_OAUTH_CLIENT_ID =
+        "812539187075-1ijbvedesug3dl8mtbvfnoh0rrvcblpe.apps.googleusercontent.com"
+
+    /** Reversed-client-id custom scheme used for the OAuth redirect (matches the manifest). */
+    val googleOAuthRedirectScheme: String
+        get() = "com.googleusercontent.apps." +
+            GOOGLE_OAUTH_CLIENT_ID.removeSuffix(".apps.googleusercontent.com")
 
     private const val PROD_API = "https://api.betty.social/api/v1"
     private const val PROD_IDENTITY = "https://identitytoolkit.googleapis.com"
