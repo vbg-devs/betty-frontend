@@ -128,16 +128,12 @@ PROJECT=<gcp-project-id> android/scripts/get-play-service-account.sh
 
 ## Google sign-in
 
-Email/password sign-in works out of the box. **Google sign-in** needs an Android OAuth
-client in the Firebase project `betty-f676d`:
-
-1. Add an Android OAuth client (package `social.betty.android` + the signing SHA-1 of the
-   debug, upload, and Play-managed keys).
-2. Put the client id in `AppConfig.GOOGLE_OAUTH_CLIENT_ID`.
-3. Add an intent-filter for the reversed-client-id scheme
-   (`com.googleusercontent.apps.<id>`) to `MainActivity` so the Custom Tab redirect
-   returns to the app. (The PKCE flow + token exchange are already implemented in
-   `core/auth/GoogleOAuth.kt`.)
+Wired and working: a Custom Tabs PKCE flow against the **same Firebase OAuth client as
+iOS** (`AppConfig.GOOGLE_OAUTH_CLIENT_ID`, project `betty-f676d`). The reversed-client-id
+redirect (`com.googleusercontent.apps.<id>`) is declared as an intent-filter on
+`MainActivity`; `GoogleSignInCoordinator` holds the PKCE state across the round-trip and,
+on redirect, exchanges the code (`core/auth/GoogleOAuth.kt`) and signs in via Firebase
+`signInWithIdp`. Keep the manifest scheme in sync with `AppConfig.googleOAuthRedirectScheme`.
 
 Apple sign-in is not offered on Android (no platform requirement); the button is a
 placeholder.

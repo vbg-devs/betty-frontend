@@ -37,7 +37,7 @@ class AppContainer(context: Context) {
     val preferences = Preferences(appContext)
     val notify = NotifyCenter()
 
-    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+    val httpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
