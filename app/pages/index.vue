@@ -148,7 +148,16 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">BETTY.SOCIAL · EST. 2021 · VARBERG</footer>
+    <footer class="footer">
+      <nav class="footer__links" aria-label="Tournaments">
+        <a href="/world-cup-2026">World Cup 2026</a>
+        <span aria-hidden="true">·</span>
+        <a href="/womens-world-cup-2027">Women's World Cup 2027</a>
+        <span aria-hidden="true">·</span>
+        <a href="/euro-2028">Euro 2028</a>
+      </nav>
+      <div class="footer__brand">BETTY.SOCIAL · EST. 2021 · VARBERG</div>
+    </footer>
 
     <!-- Auth modal -->
     <div class="modal" :class="{ 'modal--show': showModal }">
@@ -1079,7 +1088,25 @@ async function submitEmailAuth() {
   font-weight: 600;
   color: var(--muted);
   padding: 24px 56px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
+.footer__links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted-strong);
+}
+.footer__links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.footer__links a:hover { color: var(--cream); }
+.footer__links span { color: var(--muted); }
 
 /* ===== Modal (existing auth, restyled to match the design) ===== */
 .modal {
