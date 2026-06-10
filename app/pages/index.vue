@@ -10,7 +10,7 @@
               <img src="~/assets/images/logo.svg" alt="Betty" />
             </a>
             <div class="nav__actions">
-              <a href="/about" class="nav__link">About</a>
+              <a href="/about" class="nav__link">About Betty</a>
               <button class="btn btn--orange btn--small" @click="openAuth(false)">Sign in</button>
             </div>
           </header>
@@ -151,7 +151,7 @@
     <!-- Footer -->
     <footer class="footer">
       <nav class="footer__links" aria-label="Site">
-        <a href="/about">About</a>
+        <a href="/about">About Betty</a>
       </nav>
       <nav class="footer__links" aria-label="Tournaments">
         <a href="/world-cup-2026">World Cup 2026</a>

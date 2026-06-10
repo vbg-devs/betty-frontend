@@ -152,7 +152,7 @@ describe('landing page', () => {
       expect(wrapper.find('.final-cta .btn').text()).toBe('Sign in →');
       const footerText = wrapper.find('.footer').text();
       expect(footerText).toContain('BETTY.SOCIAL · EST. 2021 · VARBERG');
-      expect(footerText).toContain('About');
+      expect(footerText).toContain('About Betty');
       expect(footerText).toContain('World Cup 2026');
     });
   });
