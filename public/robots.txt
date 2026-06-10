@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /new
+
+Sitemap: https://betty.social/sitemap.xml

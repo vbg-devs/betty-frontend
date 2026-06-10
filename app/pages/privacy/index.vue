@@ -374,7 +374,18 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+useSeoMeta({
+  title: 'Privacy Policy · Betty.social',
+  description:
+    'How Betty.social collects, uses, and protects your personal data when you use the service.',
+  ogTitle: 'Privacy Policy · Betty.social',
+  ogDescription:
+    'How Betty.social collects, uses, and protects your personal data when you use the service.',
+  ogUrl: 'https://betty.social/privacy',
+});
+useHead({ link: [{ rel: 'canonical', href: 'https://betty.social/privacy' }] });
+</script>
 
 <style scoped>
 .privacy-page {

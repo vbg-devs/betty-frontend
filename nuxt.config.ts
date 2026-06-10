@@ -1,6 +1,15 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
-  ssr: false,
+  // Hybrid rendering: public marketing pages are prerendered to real HTML for
+  // SEO; everything else stays a pure client-side SPA (ssr: false catch-all).
+  ssr: true,
+
+  routeRules: {
+    '/': { prerender: true, ssr: true },
+    '/privacy': { prerender: true, ssr: true },
+    '/support': { prerender: true, ssr: true },
+    '/**': { ssr: false },
+  },
 
   modules: ['@pinia/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
 

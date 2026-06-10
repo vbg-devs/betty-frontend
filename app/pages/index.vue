@@ -336,6 +336,39 @@ useHead({
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
     },
+    { rel: 'canonical', href: 'https://betty.social/' },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            name: 'Betty.social',
+            url: 'https://betty.social',
+            logo: 'https://betty.social/logo.png',
+            email: 'support@betty.social',
+          },
+          {
+            '@type': 'WebSite',
+            name: 'Betty.social',
+            url: 'https://betty.social',
+            description:
+              'Place friendly bets with your friends on any sport, track every score, and crown a champion.',
+          },
+          {
+            '@type': 'WebApplication',
+            name: 'Betty',
+            url: 'https://betty.social',
+            applicationCategory: 'GameApplication',
+            operatingSystem: 'Web, iOS, Android',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          },
+        ],
+      }),
+    },
   ],
   style: [
     {

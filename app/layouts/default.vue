@@ -102,13 +102,15 @@ const { alert } = useNotify();
 
 const user = ref<UserProfile | null>(null);
 const showNotifications = ref(false);
-const loading = ref(true);
 const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {
   const name = route.name as string;
   return ['privacy', 'support'].includes(name);
 });
+
+// Open pages skip the auth loader so they render real content when prerendered.
+const loading = ref(!isOpenPage.value);
 
 function setUser(u: UserProfile | null) {
   user.value = u;
