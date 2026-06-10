@@ -108,8 +108,16 @@ describe('CreateGroupModal', () => {
     expect(options[1]!.text()).toBe('Running Cup');
   });
 
+  it('shows the description field only when the group is public', async () => {
+    const wrapper = await mountModal();
+    expect(wrapper.findAll('textarea')).toHaveLength(1);
+    await wrapper.findAll('.check__input')[1]!.setValue(true);
+    expect(wrapper.findAll('textarea')).toHaveLength(2);
+  });
+
   it('updates the description counter and flags the limit at max length', async () => {
     const wrapper = await mountModal();
+    await wrapper.findAll('.check__input')[1]!.setValue(true);
     const counter = () => wrapper.find('.field__count');
     expect(counter().text()).toBe('0 / 1000');
     expect(counter().classes()).not.toContain('field__count--limit');
@@ -128,6 +136,9 @@ describe('CreateGroupModal', () => {
     const wrapper = await mountModal();
     expect(createBtn(wrapper).attributes('disabled')).toBeDefined();
     expect(createBtn(wrapper).classes()).toContain('btn--disabled');
+    expect(wrapper.find('.modal__footer-btn-wrap').attributes('aria-label')).toBe(
+      'All mandatory fields must be filled in',
+    );
 
     await wrapper.find('select').setValue('1');
     expect(createBtn(wrapper).attributes('disabled')).toBeDefined();
@@ -142,9 +153,10 @@ describe('CreateGroupModal', () => {
     await numbers[1]!.setValue('4');
     expect(createBtn(wrapper).attributes('disabled')).toBeUndefined();
     expect(createBtn(wrapper).classes()).not.toContain('btn--disabled');
+    expect(wrapper.find('.modal__footer-btn-wrap').attributes('aria-label')).toBeUndefined();
   });
 
-  it('posts the payload with defaults: sneak peek on, private, null description', async () => {
+  it('posts the payload with defaults: sneak peek off, private, null description', async () => {
     authFetch.mockImplementation((url: string) =>
       url === '/group' ? Promise.resolve({ group_id: 5 }) : Promise.resolve([makeGroup(5)]),
     );
@@ -160,7 +172,7 @@ describe('CreateGroupModal', () => {
         tournament_id: 1,
         correct_team_points: 2,
         exact_result_points: 4,
-        allow_sneak_peek: true,
+        allow_sneak_peek: false,
         group_play_deadline: '2026-06-11T00:00:00Z',
         welcome_message: '',
         description: null,
@@ -176,12 +188,12 @@ describe('CreateGroupModal', () => {
     );
     const wrapper = await mountModal();
     await fillForm(wrapper);
+    const checks = wrapper.findAll('.check__input');
+    await checks[0]!.setValue(true);
+    await checks[1]!.setValue(true);
     const textareas = wrapper.findAll('textarea');
     await textareas[0]!.setValue('The smack-talk starts here');
     await textareas[1]!.setValue('  Pitch for the board  ');
-    const checks = wrapper.findAll('.check__input');
-    await checks[0]!.setValue(false);
-    await checks[1]!.setValue(true);
     await createBtn(wrapper).trigger('click');
     await flushPromises();
 
@@ -189,7 +201,7 @@ describe('CreateGroupModal', () => {
       '/group',
       expect.objectContaining({
         body: expect.objectContaining({
-          allow_sneak_peek: false,
+          allow_sneak_peek: true,
           is_public: true,
           welcome_message: 'The smack-talk starts here',
           description: 'Pitch for the board',

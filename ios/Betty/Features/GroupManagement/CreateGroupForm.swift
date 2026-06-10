@@ -13,7 +13,7 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
     var description = ""
     var winPoints = ""
     var exactPoints = ""
-    var allowSneakPeek = true   // default ON
+    var allowSneakPeek = false  // default OFF
     var isPublic = false        // default OFF
 
     func selectedTournament(in running: [Tournament]) -> Tournament? {

@@ -105,19 +105,19 @@ describe('pages/dashboard/groups/create', () => {
 
       const textInputs = wrapper.findAll('input[type="text"]');
       expect(textInputs.map((i) => i.attributes('placeholder'))).toEqual([
-        'Name of the group',
+        'Name of the group *',
         'Welcome message',
       ]);
 
       const numberInputs = wrapper.findAll('input[type="number"]');
       expect(numberInputs.map((i) => i.attributes('placeholder'))).toEqual([
-        'Points for winning team',
-        'Points for exact score',
+        'Points for winning team *',
+        'Points for exact score *',
       ]);
       expect(numberInputs.map((i) => i.attributes('min'))).toEqual(['0', '0']);
 
       const checkbox = wrapper.find('input[type="checkbox"]');
-      expect((checkbox.element as HTMLInputElement).checked).toBe(true);
+      expect((checkbox.element as HTMLInputElement).checked).toBe(false);
 
       // The button starts disabled because the name and point fields are empty.
       const button = wrapper.find('button');

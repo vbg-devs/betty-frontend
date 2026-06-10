@@ -23,8 +23,8 @@ class CreateGroupFormState {
     var winPoints: String by mutableStateOf("")
     var exactPoints: String by mutableStateOf("")
 
-    /** Default ON — components.md §4.2. */
-    var allowSneakPeek: Boolean by mutableStateOf(true)
+    /** Default OFF — components.md §4.2. */
+    var allowSneakPeek: Boolean by mutableStateOf(false)
 
     /** Default OFF — components.md §4.2. */
     var isPublic: Boolean by mutableStateOf(false)

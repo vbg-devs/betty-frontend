@@ -319,7 +319,7 @@ final class GroupCreateE2ETests: GroupMgmtTestCase {
         // keyboard with a content-band drag before scrolling on.
         dismissKeyboardIfPresent()
         scrollTo(create.sneakPeekToggle, maxSwipes: 6)
-        tapToggle(create.sneakPeekToggle)              // default ON → off
+        tapToggle(create.sneakPeekToggle)              // default OFF → on
         scrollTo(create.publicToggle, maxSwipes: 4)
         tapToggle(create.publicToggle)                 // default OFF → on
 
@@ -338,7 +338,7 @@ final class GroupCreateE2ETests: GroupMgmtTestCase {
         XCTAssertEqual(body["tournament_id"] as? Int, DefaultScenario.runningTournamentID)
         XCTAssertEqual(body["correct_team_points"] as? Int, 2)
         XCTAssertEqual(body["exact_result_points"] as? Int, 4)
-        XCTAssertEqual(body["allow_sneak_peek"] as? Bool, false)
+        XCTAssertEqual(body["allow_sneak_peek"] as? Bool, true)
         XCTAssertEqual(body["is_public"] as? Bool, true)
         XCTAssertEqual(body["mode"] as? Int, 0)
         XCTAssertEqual(body["welcome_message"] as? String, "Bring snacks.")

@@ -35,7 +35,7 @@
         <template v-if="group === null">
           <form @submit.prevent>
             <label class="field">
-              <span class="field__label">Tournament</span>
+              <span class="field__label field__label--required">Tournament</span>
               <select v-model="tournamentId" class="field__input field__input--select">
                 <option :value="null" disabled>Select tournament</option>
                 <option
@@ -49,7 +49,7 @@
             </label>
 
             <label class="field">
-              <span class="field__label">Group name</span>
+              <span class="field__label field__label--required">Group name</span>
               <input
                 v-model="name"
                 type="text"
@@ -68,26 +68,9 @@
               ></textarea>
             </label>
 
-            <label class="field">
-              <span class="field__label">Description</span>
-              <textarea
-                v-model="description"
-                rows="2"
-                :maxlength="MAX_DESCRIPTION_LEN"
-                placeholder="Shown on the public board. Pitch your group in a sentence or two…"
-                class="field__input field__input--textarea"
-              ></textarea>
-              <span
-                class="field__count"
-                :class="{ 'field__count--limit': description.length >= MAX_DESCRIPTION_LEN }"
-              >
-                {{ description.length }} / {{ MAX_DESCRIPTION_LEN }}
-              </span>
-            </label>
-
             <div class="field__row">
               <label class="field">
-                <span class="field__label">Winning team pts</span>
+                <span class="field__label field__label--required">Winning team pts</span>
                 <input
                   v-model="winPoints"
                   type="number"
@@ -97,7 +80,7 @@
                 />
               </label>
               <label class="field">
-                <span class="field__label">Exact score pts</span>
+                <span class="field__label field__label--required">Exact score pts</span>
                 <input
                   v-model="exactScorePoints"
                   type="number"
@@ -159,6 +142,23 @@
                 >
               </span>
             </label>
+
+            <label v-if="isPublic" class="field">
+              <span class="field__label">Description</span>
+              <textarea
+                v-model="description"
+                rows="2"
+                :maxlength="MAX_DESCRIPTION_LEN"
+                placeholder="Shown on the public board. Pitch your group in a sentence or two…"
+                class="field__input field__input--textarea"
+              ></textarea>
+              <span
+                class="field__count"
+                :class="{ 'field__count--limit': description.length >= MAX_DESCRIPTION_LEN }"
+              >
+                {{ description.length }} / {{ MAX_DESCRIPTION_LEN }}
+              </span>
+            </label>
           </form>
         </template>
 
@@ -174,14 +174,21 @@
       </section>
 
       <footer v-if="group === null" class="modal__footer">
-        <button
-          class="btn btn--orange btn--block"
-          :disabled="loading || !canSave"
-          :class="{ 'btn--disabled': !canSave || loading }"
-          @click="create"
+        <!-- Tooltip lives on the wrapper: disabled buttons swallow hover events. -->
+        <div
+          class="modal__footer-btn-wrap"
+          :aria-label="!canSave && !loading ? 'All mandatory fields must be filled in' : undefined"
+          :data-balloon-pos="!canSave && !loading ? 'up' : undefined"
         >
-          {{ loading ? 'CREATING…' : 'CREATE GROUP' }}
-        </button>
+          <button
+            class="btn btn--orange btn--block"
+            :disabled="loading || !canSave"
+            :class="{ 'btn--disabled': !canSave || loading }"
+            @click="create"
+          >
+            {{ loading ? 'CREATING…' : 'CREATE GROUP' }}
+          </button>
+        </div>
       </footer>
     </section>
   </div>
@@ -203,7 +210,7 @@ const description = ref('');
 const isPublic = ref(false);
 const winPoints = ref('');
 const exactScorePoints = ref('');
-const peak = ref(true);
+const peak = ref(false);
 const tournamentId = ref<number | null>(null);
 const loading = ref(false);
 const group = ref<Record<string, any> | null>(null);
@@ -256,7 +263,7 @@ async function create() {
     allow_sneak_peek: peak.value,
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
-    description: trimmedDescription || null,
+    description: isPublic.value ? trimmedDescription || null : null,
     is_public: isPublic.value,
     mode: 0,
   };
@@ -430,6 +437,10 @@ async function create() {
   cursor: pointer;
 }
 
+.check + .field {
+  margin-top: 18px;
+}
+
 .field__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -453,6 +464,11 @@ async function create() {
   margin-bottom: 8px;
 }
 
+.field__label--required::after {
+  content: ' *';
+  color: var(--orange);
+}
+
 .field__input {
   width: 100%;
   background: var(--surface-overlay-06);
@@ -469,7 +485,7 @@ async function create() {
 }
 
 .field__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .field__input:focus {
