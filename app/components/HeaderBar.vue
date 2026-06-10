@@ -43,14 +43,14 @@
         >
           Leaderboard
         </NuxtLink>
-        <NuxtLink
-          to="/about"
+        <a
+          href="/about"
           class="nav-link"
           :class="{ 'nav-link--active': isActive('/about') }"
           @click="showMobileMenu = false"
         >
           About
-        </NuxtLink>
+        </a>
       </nav>
 
       <div class="header-bar__item header-bar__item--right">

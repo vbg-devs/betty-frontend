@@ -107,7 +107,7 @@ const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {
   const name = route.name as string;
-  return ['privacy', 'support', 'about'].includes(name);
+  return ['privacy', 'support'].includes(name);
 });
 
 function setUser(u: UserProfile | null) {

@@ -159,7 +159,7 @@ describe('default layout', () => {
   });
 
   describe('open pages', () => {
-    it.each(['/privacy', '/support', '/about'])(
+    it.each(['/privacy', '/support'])(
       'shows %s content immediately without waiting for auth',
       async (route) => {
         const wrapper = await mountLayout(route);

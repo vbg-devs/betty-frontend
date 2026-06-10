@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+    <title>About Betty — Free social tournament predictions with friends · Betty</title>
+    <meta
+      name="description"
+      content="Betty is a free social predictions game for World Cup, Euros, Premier League and more. Make a group, bet exact scores with friends, climb the leaderboard. No money, no spreadsheets — just bragging rights."
+    />
+    <link rel="canonical" href="https://betty.social/about" />
+
+    <meta property="og:title" content="About Betty — Free social tournament predictions with friends" />
+    <meta
+      property="og:description"
+      content="Make a group, bet exact scores, climb the leaderboard. Betty is the free social predictions game for football tournaments — World Cup, Euros, Women's World Cup and more."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://betty.social/about" />
+    <meta property="og:image" content="https://betty.social/shareimage.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="About Betty — Free social tournament predictions with friends" />
+    <meta
+      name="twitter:description"
+      content="Make a group, bet exact scores, climb the leaderboard. Free, social, no money on the line."
+    />
+    <meta name="twitter:image" content="https://betty.social/shareimage.jpg" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Betty",
+        "alternateName": "Betty.social",
+        "url": "https://betty.social",
+        "logo": "https://betty.social/logo.png",
+        "foundingDate": "2021",
+        "foundingLocation": { "@type": "Place", "name": "Varberg, Sweden" },
+        "description": "Betty is a free social predictions game for football tournaments. Create a group with friends, bet exact scores, climb the leaderboard."
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I create a group on Betty?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sign in, hit '+ New Group', pick a tournament, set your house rules, and share the invite link. The whole thing takes about thirty seconds."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Betty free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Betty is free. No subscriptions, no premium tier, no money on the line. Bragging rights are the whole prize."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How are points calculated?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Each group sets its own points-per-correct. A typical setup: 3 points for an exact-score bet, 1 point for getting the result right (winner or draw). The group admin picks the values before the first match kicks off."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "When do bets lock?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "At kickoff. The moment the first whistle blows, the bet is final — no edits, no excuses."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which tournaments can I bet on?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Major football tournaments — World Cup, Euros, Women's World Cup, Copa America, AFCON — plus selected league seasons like the Premier League and Allsvenskan. We add new tournaments as they kick off."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I delete my account?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Account settings → Delete account. Everything goes — bets, points, group memberships — and we'll send a confirmation email when it's done."
+            }
+          }
+        ]
+      }
+    </script>
+
+    <style>
+      :root {
+        --indigo: #434f8e;
+        --indigo-dark: #1f2752;
+        --indigo-deep: #141938;
+        --cream: #fffaeb;
+        --cream-soft: #fff5e4;
+        --orange: #ff5a3a;
+        --green: #9bff3d;
+        --yellow: #ffd84a;
+        --ink: #0d0e15;
+        --muted: rgba(255, 250, 235, 0.5);
+        --muted-strong: rgba(255, 250, 235, 0.78);
+        --body-muted: #cdd1e5;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; overflow-x: hidden; }
+      body {
+        background: var(--indigo);
+        color: var(--cream);
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+      }
+
+      .wrap { max-width: 1280px; margin: 0 auto; }
+
+      a { color: inherit; text-decoration: none; }
+
+      /* ===== Hero ===== */
+      .hero { width: 100vw; margin-left: calc(50% - 50vw); }
+      .hero__card {
+        background: var(--indigo-dark);
+        position: relative;
+        overflow: hidden;
+        border-radius: 2px;
+      }
+      .hero__card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+          45deg,
+          transparent 0,
+          transparent 32px,
+          rgba(255, 255, 255, 0.04) 32px,
+          rgba(255, 255, 255, 0.04) 33px
+        );
+        pointer-events: none;
+      }
+      .hero__card-inner {
+        position: relative;
+        padding: 25px 56px 56px;
+        z-index: 1;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        margin-bottom: 48px;
+      }
+      .nav__logo img { display: block; height: 55px; width: auto; }
+      .nav__actions { display: flex; gap: 12px; align-items: center; }
+
+      .hero__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 56px;
+        align-items: center;
+        margin: 32px 0;
+      }
+      .hero__copy { min-width: 0; }
+      .hero__meta { margin-bottom: 16px; }
+      .hero__title {
+        font-size: clamp(56px, 10vw, 124px);
+        line-height: 0.9;
+        letter-spacing: -0.035em;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin: 0 0 24px;
+        color: var(--cream);
+      }
+      .hero__lede {
+        font-size: 19px;
+        line-height: 1.55;
+        color: var(--muted-strong);
+        max-width: 620px;
+        margin: 0 0 28px;
+      }
+      .hero__cta { display: flex; gap: 12px; flex-wrap: wrap; max-width: 560px; }
+
+      .hero__media {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+        justify-self: end;
+        aspect-ratio: 1 / 1;
+      }
+      .hero__video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--cream);
+        box-shadow:
+          0 0 0 12px var(--indigo-dark),
+          0 30px 60px -20px rgba(0, 0, 0, 0.4);
+      }
+      .hero__badge {
+        position: absolute;
+        bottom: 8%;
+        right: -8px;
+        background: var(--orange);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        padding: 8px 14px;
+        transform: rotate(-3deg);
+        white-space: nowrap;
+        border-radius: 2px;
+      }
+
+      @media (max-width: 900px) {
+        .hero__card-inner { padding: 24px 20px 32px; }
+        .nav { margin-bottom: 28px; }
+        .hero__grid {
+          grid-template-columns: 1fr;
+          gap: 28px;
+          margin: 24px 0 28px;
+        }
+        .hero__lede { font-size: 16px; }
+        .hero__cta { flex-direction: column; }
+        .hero__media { justify-self: start; max-width: 280px; }
+        .hero__video {
+          box-shadow:
+            0 0 0 8px var(--indigo-dark),
+            0 20px 40px -20px rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      /* ===== Buttons ===== */
+      .btn {
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s ease, filter 0.15s ease;
+        text-decoration: none;
+      }
+      .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+      .btn--orange {
+        background: var(--orange);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 12px 22px;
+        border-radius: 2px;
+      }
+      .btn--orange.btn--block {
+        font-size: 16px;
+        letter-spacing: 0.8px;
+        padding: 18px 24px;
+      }
+      .btn--outline {
+        background: transparent;
+        color: var(--cream);
+        border: 1px solid rgba(255, 250, 235, 0.25);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 18px 24px;
+        border-radius: 2px;
+      }
+      .btn--outline:hover { border-color: rgba(255, 250, 235, 0.5); }
+      .btn--block { flex: 1 1 220px; }
+      .btn--small { padding: 10px 18px; }
+      .btn--dark {
+        background: var(--ink);
+        color: var(--cream);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 18px 32px;
+        border-radius: 2px;
+      }
+
+      /* ===== Kickers ===== */
+      .kicker {
+        font-size: 11px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        font-weight: 800;
+        display: inline-block;
+      }
+      .kicker--accent { color: var(--orange); }
+      .kicker--green { color: var(--green); }
+      .kicker--yellow { color: var(--yellow); }
+      .kicker--muted-light { color: rgba(255, 250, 235, 0.78); }
+      .kicker--dark-bold { color: var(--ink); font-weight: 800; }
+      .t-orange { color: var(--orange); }
+      .t-green { color: var(--green); }
+
+      /* ===== Info cards (WHAT / WHO) ===== */
+      .cards {
+        max-width: 1180px;
+        margin: 28px auto 0;
+        padding: 0 8px;
+      }
+      .cards__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .info-card {
+        background: var(--indigo-dark);
+        padding: 32px 36px 34px;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border-left: 3px solid var(--orange);
+      }
+      .info-card--green { border-left-color: var(--green); }
+      .info-card__title {
+        font-size: clamp(26px, 3.6vw, 38px);
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        line-height: 1;
+        margin: 4px 0 4px;
+        text-transform: uppercase;
+      }
+      .info-card__copy {
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--muted-strong);
+        margin: 0;
+      }
+      @media (max-width: 900px) {
+        .cards__row { grid-template-columns: 1fr; }
+        .info-card { padding: 26px 22px 28px; }
+      }
+
+      /* ===== How it works ===== */
+      .how { max-width: 1180px; margin: 56px auto 0; padding: 0 8px; }
+      .how__head { margin-bottom: 22px; }
+      .how__title {
+        font-size: clamp(32px, 5vw, 56px);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        line-height: 0.95;
+        margin: 8px 0 0;
+        text-transform: uppercase;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .step {
+        background: var(--indigo-dark);
+        padding: 26px 24px 28px;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .step__number {
+        font-size: 56px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: var(--muted-strong);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        margin: 6px 0 2px;
+      }
+      .step__title {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin: 0;
+        color: var(--cream);
+      }
+      .step__copy {
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--muted-strong);
+        margin: 0;
+      }
+
+      /* ===== Why Betty ===== */
+      .why { max-width: 1180px; margin: 64px auto 0; padding: 0 8px; }
+      .why__head { margin-bottom: 24px; max-width: 720px; }
+      .why__title {
+        font-size: clamp(32px, 5vw, 56px);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        line-height: 0.95;
+        margin: 10px 0 12px;
+        text-transform: uppercase;
+      }
+      .why__lede {
+        font-size: 17px;
+        line-height: 1.55;
+        color: var(--body-muted);
+        margin: 0;
+        max-width: 640px;
+      }
+      .why__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 14px;
+      }
+      .why-card {
+        background: var(--indigo-dark);
+        padding: 24px 22px 26px;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 3px solid var(--orange);
+      }
+      .why-card:nth-child(2) { border-top-color: var(--green); }
+      .why-card:nth-child(3) { border-top-color: var(--yellow); }
+      .why-card:nth-child(4) { border-top-color: var(--orange); }
+      .why-card:nth-child(5) { border-top-color: var(--green); }
+      .why-card:nth-child(6) { border-top-color: var(--yellow); }
+      .why-card__title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin: 4px 0 0;
+        color: var(--cream);
+        text-transform: uppercase;
+      }
+      .why-card__copy {
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--muted-strong);
+        margin: 0;
+      }
+
+      /* ===== FAQ ===== */
+      .faq { max-width: 980px; margin: 72px auto 0; padding: 0 8px; }
+      .faq__head { margin-bottom: 28px; max-width: 720px; }
+      .faq__title {
+        font-size: clamp(36px, 5.5vw, 64px);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 0.95;
+        margin: 10px 0 12px;
+        text-transform: uppercase;
+      }
+      .faq__lede {
+        font-size: 17px;
+        line-height: 1.55;
+        color: var(--body-muted);
+        margin: 0;
+      }
+      .faq__category {
+        margin-top: 32px;
+      }
+      .faq__category-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 250, 235, 0.15);
+      }
+      .faq__category-title {
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin: 0;
+        text-transform: uppercase;
+        color: var(--cream);
+      }
+      .faq__category-count {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--muted-strong);
+      }
+      .faq__item {
+        background: var(--indigo-dark);
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+        border-left: 3px solid transparent;
+        transition: border-color 0.15s ease;
+      }
+      .faq__item[open] { border-left-color: var(--orange); }
+      .faq__q {
+        list-style: none;
+        cursor: pointer;
+        padding: 18px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.005em;
+        color: var(--cream);
+        user-select: none;
+      }
+      .faq__q::-webkit-details-marker { display: none; }
+      .faq__q::after {
+        content: '+';
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--orange);
+        background: rgba(255, 90, 58, 0.12);
+        border-radius: 2px;
+        transition: transform 0.18s ease, background 0.18s ease;
+      }
+      .faq__item[open] .faq__q::after {
+        content: '–';
+        transform: rotate(180deg);
+        background: rgba(255, 90, 58, 0.2);
+      }
+      .faq__q:hover { color: var(--cream); background: rgba(255, 255, 255, 0.02); }
+      .faq__a {
+        padding: 0 22px 22px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--muted-strong);
+      }
+      .faq__a p { margin: 0; }
+      .faq__a p + p { margin-top: 10px; }
+      .faq__a strong { color: var(--cream); font-weight: 800; }
+
+      /* ===== Tips ===== */
+      .tips-section { max-width: 1180px; margin: 64px auto 0; padding: 0 8px; }
+      .tips {
+        background: var(--indigo-dark);
+        padding: 32px 36px 34px;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        border-left: 3px solid var(--yellow);
+      }
+      .tips__title {
+        font-size: clamp(28px, 4vw, 40px);
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        line-height: 1;
+        margin: 4px 0 4px;
+        text-transform: uppercase;
+      }
+      .tips__list {
+        list-style: none;
+        padding: 0;
+        margin: 4px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .tips__list li {
+        font-size: 15px;
+        line-height: 1.55;
+        color: var(--muted-strong);
+        padding-left: 22px;
+        position: relative;
+      }
+      .tips__list li::before {
+        content: '★';
+        color: var(--orange);
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-weight: 800;
+      }
+      .tips__list strong { color: var(--cream); font-weight: 800; }
+      @media (max-width: 800px) {
+        .tips { padding: 26px 22px 28px; }
+      }
+
+      /* ===== Final CTA ===== */
+      .final-cta { padding: 56px 8px 24px; max-width: 1280px; margin: 0 auto; }
+      .final-cta__inner {
+        background: var(--green);
+        color: var(--ink);
+        text-align: center;
+        padding: 72px 32px;
+        border-radius: 2px;
+      }
+      .final-cta__title {
+        font-size: clamp(44px, 9vw, 96px);
+        line-height: 0.92;
+        letter-spacing: -0.035em;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin: 16px 0 18px;
+      }
+      .final-cta__title-indigo { color: var(--indigo-dark); }
+      .final-cta__lede {
+        font-size: 17px;
+        line-height: 1.55;
+        max-width: 580px;
+        margin: 0 auto 28px;
+        color: rgba(13, 14, 21, 0.78);
+      }
+      @media (max-width: 900px) {
+        .final-cta { padding: 32px 20px 24px; }
+        .final-cta__inner { padding: 48px 20px; }
+      }
+
+      /* ===== Footer ===== */
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 24px 24px 48px;
+      }
+      .footer__links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        margin-bottom: 14px;
+      }
+      .footer__links a { color: var(--muted-strong); transition: color 0.15s ease; }
+      .footer__links a:hover { color: var(--cream); }
+      .footer__brand { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- ===== Hero ===== -->
+      <section class="hero">
+        <div class="hero__card">
+          <div class="hero__card-inner">
+            <header class="nav">
+              <a href="/" class="nav__logo" aria-label="Betty">
+                <img src="/logo.svg" alt="Betty" />
+              </a>
+              <div class="nav__actions">
+                <a href="/" class="btn btn--orange btn--small">Start a group →</a>
+              </div>
+            </header>
+
+            <div class="hero__meta">
+              <span class="kicker kicker--accent">★ ABOUT BETTY</span>
+            </div>
+
+            <div class="hero__grid">
+              <div class="hero__copy">
+                <h1 class="hero__title">
+                  HI, I'M<br />
+                  <span class="t-green">BETTY.</span>
+                </h1>
+                <p class="hero__lede">
+                  I run the bets, count the points, and keep the receipts for tournament
+                  predictions between you and your friends. Pick a cup, gather your crew, and
+                  let the leaderboard sort out who actually knows their football.
+                </p>
+                <div class="hero__cta">
+                  <a href="/" class="btn btn--orange btn--block">START YOUR GROUP →</a>
+                  <a href="#faq" class="btn btn--outline btn--block">JUMP TO FAQ</a>
+                </div>
+              </div>
+              <div class="hero__media">
+                <video
+                  class="hero__video"
+                  poster="/poster--new.jpg"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                >
+                  <source src="/betty-alive--new.mp4" type="video/mp4" />
+                </video>
+                <span class="hero__badge">★ HI, I'M BETTY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== WHAT / WHO ===== -->
+      <section class="cards">
+        <div class="cards__row">
+          <article class="info-card">
+            <span class="kicker kicker--accent">★ WHAT</span>
+            <h2 class="info-card__title">A SOCIAL PREDICTIONS GAME.</h2>
+            <p class="info-card__copy">
+              Betty is a free game for tournament predictions. Each group sets its own house
+              rules, everyone bets on exact match results, and points roll in as games go final.
+              No money, no spreadsheets — just bragging rights, settled in public.
+            </p>
+          </article>
+          <article class="info-card info-card--green">
+            <span class="kicker kicker--green">● WHO</span>
+            <h2 class="info-card__title">YOUR SCOREKEEPER.</h2>
+            <p class="info-card__copy">
+              Betty was born in Varberg in 2021, out of one too many half-broken Excel sheets and
+              a group chat that wouldn't stop arguing about whether Anna's bet "really counted."
+              She's the bookkeeper, the timekeeper, and the receipts. She handles the math. You
+              handle the banter.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===== How it works ===== -->
+      <section class="how">
+        <div class="how__head">
+          <span class="kicker kicker--accent">★ HOW IT WORKS</span>
+          <h2 class="how__title">THREE STEPS. NO FINE PRINT.</h2>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <span class="kicker kicker--accent">★ SET</span>
+            <div class="step__number">01</div>
+            <h3 class="step__title">Make a group</h3>
+            <p class="step__copy">
+              Pick a tournament, set your points-per-correct, share one invite link. Thirty
+              seconds, tops.
+            </p>
+          </article>
+          <article class="step">
+            <span class="kicker kicker--green">● BET</span>
+            <div class="step__number">02</div>
+            <h3 class="step__title">Lock the bets</h3>
+            <p class="step__copy">
+              Predict exact scores for every match. Bets close at kickoff — no refunds, no edits,
+              no excuses.
+            </p>
+          </article>
+          <article class="step">
+            <span class="kicker kicker--yellow">★ WIN</span>
+            <div class="step__number">03</div>
+            <h3 class="step__title">Climb the board</h3>
+            <p class="step__copy">
+              Live standings, group chat, a podium for the winner — and a permanent record once
+              the tournament wraps.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===== Why Betty ===== -->
+      <section class="why">
+        <div class="why__head">
+          <span class="kicker kicker--accent">★ WHY BETTY</span>
+          <h2 class="why__title">
+            EVERYTHING YOU NEED.<br />
+            <span class="t-orange">NOTHING YOU DON'T.</span>
+          </h2>
+          <p class="why__lede">
+            Built by football fans, for football fans. Free forever, no ads, no money on the
+            line — just the bits that make tournament season more fun with your crew.
+          </p>
+        </div>
+        <div class="why__grid">
+          <article class="why-card">
+            <span class="kicker kicker--accent">★ FREE FOREVER</span>
+            <h3 class="why-card__title">No subscriptions</h3>
+            <p class="why-card__copy">
+              No paywalls, no premium tiers, no in-app purchases. Every feature, every
+              tournament, every group — free.
+            </p>
+          </article>
+          <article class="why-card">
+            <span class="kicker kicker--green">● ALL PLATFORMS</span>
+            <h3 class="why-card__title">Web, iOS &amp; Android</h3>
+            <p class="why-card__copy">
+              Bet from your phone on the train, the desk at work, or the couch on matchday.
+              Same group, same points, every device.
+            </p>
+          </article>
+          <article class="why-card">
+            <span class="kicker kicker--yellow">★ REAL-TIME</span>
+            <h3 class="why-card__title">Live leaderboards</h3>
+            <p class="why-card__copy">
+              Points update the second a match goes final. Your group's standings — and the
+              global leaderboard — refresh in real time.
+            </p>
+          </article>
+          <article class="why-card">
+            <span class="kicker kicker--accent">★ GROUP CHAT</span>
+            <h3 class="why-card__title">Smack-talk built in</h3>
+            <p class="why-card__copy">
+              Every group ships with a chat. React to bets, taunt the leader, screenshot
+              receipts. Betty doesn't moderate the banter.
+            </p>
+          </article>
+          <article class="why-card">
+            <span class="kicker kicker--green">● HOUSE RULES</span>
+            <h3 class="why-card__title">Your scoring, your call</h3>
+            <p class="why-card__copy">
+              Bigger exact-score bonuses for chaos, smaller for a steady race. The admin sets
+              the points before kickoff.
+            </p>
+          </article>
+          <article class="why-card">
+            <span class="kicker kicker--yellow">★ PRIVATE BY DEFAULT</span>
+            <h3 class="why-card__title">Invite-only groups</h3>
+            <p class="why-card__copy">
+              Only people with the invite link join. Flip a group to public if you want a wider
+              field — your call, never ours.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===== FAQ ===== -->
+      <section id="faq" class="faq">
+        <div class="faq__head">
+          <span class="kicker kicker--accent">★ FAQ</span>
+          <h2 class="faq__title">QUESTIONS, ANSWERED.</h2>
+          <p class="faq__lede">
+            Everything you might want to know before you start a group — and the small print
+            that comes up once you have. Still stuck? Email
+            <a href="mailto:support@betty.social" style="color: var(--orange); font-weight: 700"
+              >support@betty.social</a
+            >.
+          </p>
+        </div>
+
+        <!-- Category: Getting started & groups -->
+        <div class="faq__category">
+          <header class="faq__category-head">
+            <h3 class="faq__category-title">Getting started &amp; groups</h3>
+            <span class="faq__category-count">8 questions</span>
+          </header>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I create a group?</summary>
+            <div class="faq__a">
+              <p>
+                Sign in, hit <strong>+ New Group</strong>, pick a tournament, set your house
+                rules, and share the invite link. The whole thing takes about thirty seconds.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I invite friends?</summary>
+            <div class="faq__a">
+              <p>
+                Every group has a single shareable invite link and a short join code. Drop the
+                link in your group chat, your WhatsApp, your Slack — anyone with the link can
+                join. No accounts needed in advance; sign-up happens on first click.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Is Betty free?</summary>
+            <div class="faq__a">
+              <p>
+                Yes. <strong>Betty is free.</strong> No subscriptions, no premium tier, no
+                money on the line. Bragging rights are the whole prize.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How many people can be in one group?</summary>
+            <div class="faq__a">
+              <p>
+                There's no hard cap. We've seen groups with three friends and groups with two
+                hundred coworkers — both work fine. Performance is the same either way.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Can I be in more than one group?</summary>
+            <div class="faq__a">
+              <p>
+                Yes. Make a group with friends, another with coworkers, another with the
+                in-laws. They're fully independent — your bets and points don't mix between
+                groups.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Are groups private?</summary>
+            <div class="faq__a">
+              <p>
+                By default, <strong>yes</strong>. Only people with the invite link can join.
+                You can also flip a group to <em>public</em> — anyone can browse and join from
+                the Public Groups page — handy for office leagues and big tournaments.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Can I leave a group?</summary>
+            <div class="faq__a">
+              <p>
+                Yes, any time. Open the group, scroll to settings, leave. Your existing bets
+                stay in the record so the leaderboard is honest, but you stop accruing points
+                from that moment.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Who can change the house rules?</summary>
+            <div class="faq__a">
+              <p>
+                The group admin — whoever created the group. Points-per-correct and other
+                house rules can be edited up until the first match kicks off. Once the first
+                whistle blows, rules are locked for fairness.
+              </p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Category: Bets, scoring & points -->
+        <div class="faq__category">
+          <header class="faq__category-head">
+            <h3 class="faq__category-title">Bets, scoring &amp; points</h3>
+            <span class="faq__category-count">7 questions</span>
+          </header>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I place a bet?</summary>
+            <div class="faq__a">
+              <p>
+                Open a match in your group, type the exact score you predict (e.g. 2–1),
+                confirm. You can keep editing your bet right up until kickoff.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">When do bets lock?</summary>
+            <div class="faq__a">
+              <p>
+                <strong>At kickoff.</strong> The moment the first whistle blows, the bet is
+                final — no edits, no refunds, no excuses. If you didn't bet in time, that
+                match awards you zero points.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How are points calculated?</summary>
+            <div class="faq__a">
+              <p>
+                Each group sets its own points-per-correct. A typical setup:
+              </p>
+              <p>
+                <strong>3 points</strong> for the exact score (e.g. you bet 2–1, it ends 2–1).
+                <strong>1 point</strong> for getting the result right (winner or draw) but not
+                the score. <strong>0 points</strong> for anything else.
+              </p>
+              <p>
+                Bigger exact-score bonuses make for chaos and big comebacks. Smaller bonuses
+                keep the race steady. The admin picks the values.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">What about extra time and penalties?</summary>
+            <div class="faq__a">
+              <p>
+                Bets are scored on the result at <strong>full time</strong> (90 minutes plus
+                stoppage). Extra time and penalty shootouts don't change the bet — same as
+                bookmakers' standard.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">What if a match is postponed or cancelled?</summary>
+            <div class="faq__a">
+              <p>
+                Postponed matches stay open until the new kickoff time, then lock as normal.
+                Cancelled matches award no points to anyone and aren't counted toward the
+                leaderboard.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do tiebreakers work?</summary>
+            <div class="faq__a">
+              <p>
+                If two players are level on points, Betty ranks by total exact-score bets —
+                most exact-score hits wins. If you're still tied after that, the group chat
+                usually settles the rest.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Can I see other people's bets before kickoff?</summary>
+            <div class="faq__a">
+              <p>
+                By default, no. Other players' bets stay hidden until kickoff, when they all
+                reveal at once.
+              </p>
+              <p>
+                Groups can flip on <strong>sneak peek</strong> in settings — when enabled,
+                everyone can see each other's bets before the match starts. Handy for groups
+                that want to argue about predictions in advance instead of after. The admin
+                sets it; it applies to the whole group.
+              </p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Category: Tournaments supported -->
+        <div class="faq__category">
+          <header class="faq__category-head">
+            <h3 class="faq__category-title">Tournaments supported</h3>
+            <span class="faq__category-count">5 questions</span>
+          </header>
+
+          <details class="faq__item">
+            <summary class="faq__q">Which tournaments can I bet on?</summary>
+            <div class="faq__a">
+              <p>
+                Major football tournaments —
+                <a href="/world-cup-2026" style="color: var(--orange); font-weight: 700"
+                  >World Cup 2026</a
+                >,
+                <a href="/euro-2028" style="color: var(--orange); font-weight: 700"
+                  >Euro 2028</a
+                >,
+                <a
+                  href="/womens-world-cup-2027"
+                  style="color: var(--orange); font-weight: 700"
+                  >Women's World Cup 2027</a
+                >, Copa America, AFCON — plus selected league seasons like the Premier League
+                and Allsvenskan. We add new tournaments as they kick off.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">When are new tournaments added?</summary>
+            <div class="faq__a">
+              <p>
+                Fixtures and brackets get loaded a few weeks before kickoff, once the draws are
+                final. Group setup opens immediately after — beat the rush and you'll have
+                more people locked in by the opening match.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Do you cover women's football?</summary>
+            <div class="faq__a">
+              <p>
+                Yes. We've run groups for the Women's World Cup 2023, Women's Euro 2025, and
+                we're already set up for the Women's World Cup 2027. Same mechanics, same
+                free, same Betty.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">What about leagues — Premier League, Allsvenskan?</summary>
+            <div class="faq__a">
+              <p>
+                Yes. League seasons run a bracket-free format: bet matchweek by matchweek, and
+                the leaderboard runs across the whole season. Same scoring, just a longer
+                race.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Can I request a tournament?</summary>
+            <div class="faq__a">
+              <p>
+                Yes. Email <a href="mailto:support@betty.social" style="color: var(--orange); font-weight: 700">support@betty.social</a> or use the
+                feature request form on the support page. We've added Floorball World Cups,
+                Women's Euros, and more from user requests.
+              </p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Category: Account, data & privacy -->
+        <div class="faq__category">
+          <header class="faq__category-head">
+            <h3 class="faq__category-title">Account, data &amp; privacy</h3>
+            <span class="faq__category-count">5 questions</span>
+          </header>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I sign up?</summary>
+            <div class="faq__a">
+              <p>
+                Sign in with <strong>Google</strong>, <strong>Apple</strong>, or
+                <strong>email + password</strong>. Takes about ten seconds. Betty never asks
+                for your phone number or payment info — there's no money involved.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">What data does Betty store?</summary>
+            <div class="faq__a">
+              <p>
+                Your name, email, profile picture (if you add one), and the bets you place.
+                That's it. We don't sell it, don't share it with advertisers, and don't
+                surface it outside your groups.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">Will other players see my email?</summary>
+            <div class="faq__a">
+              <p>
+                No. Group members see your name and profile picture, never your email or any
+                personal contact info. Your inbox stays yours.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I delete my account?</summary>
+            <div class="faq__a">
+              <p>
+                Account settings → <strong>Delete account</strong>. Everything goes — bets,
+                points, group memberships — and we send a confirmation email when it's done.
+                GDPR-compliant, no follow-up emails, no "are you sure" loops.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">How do I contact support?</summary>
+            <div class="faq__a">
+              <p>
+                Email <a href="mailto:support@betty.social" style="color: var(--orange); font-weight: 700">support@betty.social</a> or use the
+                <a href="/support" style="color: var(--orange); font-weight: 700">support page</a>.
+                A real human reads everything — usually replies within a day.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===== Tips ===== -->
+      <section class="tips-section">
+        <article class="tips">
+          <span class="kicker kicker--yellow">★ TIPS</span>
+          <h2 class="tips__title">GETTING THE MOST OUT OF BETTY.</h2>
+          <ul class="tips__list">
+            <li>
+              <strong>Invite early.</strong> Bets lock at kickoff, so the sooner the group is
+              full, the more matches everyone gets to bet on.
+            </li>
+            <li>
+              <strong>Set points that match the vibe.</strong> Bigger exact-score bonuses =
+              more chaos and bigger comebacks. Lower bonuses = a slower, steadier race.
+            </li>
+            <li>
+              <strong>Use the group chat.</strong> The smack-talk is half the point. Betty
+              doesn't judge.
+            </li>
+            <li>
+              <strong>Check the global leaderboard.</strong> Curious how you stack up beyond
+              your own crew? It's right in the menu.
+            </li>
+            <li>
+              <strong>Don't sleep on the opening match.</strong> First bet of the tournament
+              sets the tone — and skipping it is the most common way to fall behind.
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <!-- ===== Final CTA ===== -->
+      <section class="final-cta">
+        <div class="final-cta__inner">
+          <span class="kicker kicker--dark-bold">★ FREE · 30 SECONDS</span>
+          <h2 class="final-cta__title">
+            YOUR GROUP.<br />
+            YOUR <span class="final-cta__title-indigo">HOUSE RULES.</span>
+          </h2>
+          <p class="final-cta__lede">
+            Pick a tournament, set the points, share one link. Betty handles the math and the
+            standings — you handle the smack talk.
+          </p>
+          <a href="/" class="btn btn--dark">START A GROUP →</a>
+        </div>
+      </section>
+
+      <!-- ===== Footer ===== -->
+      <footer class="footer">
+        <nav class="footer__links" aria-label="Tournaments">
+          <a href="/world-cup-2026">World Cup 2026</a>
+          <span aria-hidden="true">·</span>
+          <a href="/womens-world-cup-2027">Women's World Cup 2027</a>
+          <span aria-hidden="true">·</span>
+          <a href="/euro-2028">Euro 2028</a>
+        </nav>
+        <div class="footer__brand">BETTY.SOCIAL · EST. 2021 · VARBERG</div>
+      </footer>
+    </div>
+  </body>
+</html>
