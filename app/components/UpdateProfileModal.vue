@@ -577,7 +577,7 @@ async function save() {
 }
 
 .field__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .field__input:focus {

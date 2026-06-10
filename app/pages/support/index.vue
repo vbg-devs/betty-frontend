@@ -251,7 +251,7 @@ async function submit() {
 }
 
 .form__textarea::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .form__textarea:focus {

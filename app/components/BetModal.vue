@@ -497,7 +497,7 @@ async function placeBet() {
 }
 
 .score-input__field::placeholder {
-  color: var(--muted-strong);
+  color: var(--placeholder);
 }
 
 .score-input__field::-webkit-outer-spin-button,

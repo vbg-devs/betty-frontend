@@ -256,7 +256,7 @@ nonisolated struct CreateGroupRequest: Encodable, Sendable {
     var tournamentID: Int
     var correctTeamPoints: Int
     var exactResultPoints: Int
-    var allowSneakPeek: Bool = true
+    var allowSneakPeek: Bool = false
     var groupPlayDeadline: Date?
     var welcomeMessage: String?
     var description: String?

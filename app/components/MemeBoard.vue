@@ -688,7 +688,7 @@ async function sendMessage() {
 }
 
 .meme-board__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .meme-board__input:focus {

@@ -1372,7 +1372,7 @@ async function submitEmailAuth() {
 }
 
 .email-form__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .email-form__input:focus {

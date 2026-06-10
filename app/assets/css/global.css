@@ -10,6 +10,7 @@
   --ink: #0d0e15;
   --muted: rgba(255, 250, 235, 0.5);
   --muted-strong: rgba(255, 250, 235, 0.78);
+  --placeholder: rgba(255, 250, 235, 0.22);
   --body-muted: #cdd1e5;
 
   --surface-overlay-04: rgba(255, 255, 255, 0.04);
@@ -29,6 +30,7 @@
   --green: #434f8e !important;
   --muted: rgba(20, 25, 56, 0.55) !important;
   --muted-strong: rgba(20, 25, 56, 0.82) !important;
+  --placeholder: rgba(20, 25, 56, 0.28) !important;
   --body-muted: #525874 !important;
 
   --surface-overlay-04: rgba(20, 25, 56, 0.04) !important;

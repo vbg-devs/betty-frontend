@@ -1334,7 +1334,7 @@ onBeforeUnmount(() => {
 }
 
 .nickname__input::placeholder {
-  color: rgba(255, 250, 235, 0.4);
+  color: var(--placeholder);
   font-weight: 500;
 }
 

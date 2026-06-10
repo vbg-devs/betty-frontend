@@ -21,7 +21,7 @@
             <input
               v-model="name"
               type="text"
-              placeholder="Name of the group"
+              placeholder="Name of the group *"
               class="form-input form-input--with-icon icon--tag"
             />
           </div>
@@ -38,7 +38,7 @@
               v-model="winPoints"
               type="number"
               min="0"
-              placeholder="Points for winning team"
+              placeholder="Points for winning team *"
               class="form-input form-input--with-icon icon--award"
             />
           </div>
@@ -47,7 +47,7 @@
               v-model="exactScorePoints"
               type="number"
               min="0"
-              placeholder="Points for exact score"
+              placeholder="Points for exact score *"
               class="form-input form-input--with-icon icon--target"
             />
           </div>
@@ -83,7 +83,7 @@ const name = ref('');
 const message = ref('');
 const winPoints = ref('');
 const exactScorePoints = ref('');
-const peak = ref(true);
+const peak = ref(false);
 const selectedTournament = ref<Tournament | null>(null);
 const loading = ref(false);
 

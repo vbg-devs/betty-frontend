@@ -407,7 +407,7 @@ Form fields & defaults:
 - Group name (text), Welcome message (multiline), Description (multiline, **max 1000** chars
   with live `N / 1000` counter that highlights at ≥1000).
 - Winning team pts / Exact score pts (numeric strings).
-- "Allow sneak peek" checkbox — **default ON**. Sub-copy: "Members can see each other's bets
+- "Allow sneak peek" checkbox — **default OFF**. Sub-copy: "Members can see each other's bets
   before the game starts."
 - "Make this group public" checkbox — default OFF.
 
