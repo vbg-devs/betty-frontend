@@ -150,7 +150,10 @@ describe('landing page', () => {
       expect(cta).toContain('START');
       expect(cta).toContain('TONIGHT.');
       expect(wrapper.find('.final-cta .btn').text()).toBe('Sign in →');
-      expect(wrapper.find('.footer').text()).toBe('BETTY.SOCIAL · EST. 2021 · VARBERG');
+      const footerText = wrapper.find('.footer').text();
+      expect(footerText).toContain('BETTY.SOCIAL · EST. 2021 · VARBERG');
+      expect(footerText).toContain('About');
+      expect(footerText).toContain('World Cup 2026');
     });
   });
 

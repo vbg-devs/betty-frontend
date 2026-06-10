@@ -10,6 +10,7 @@
               <img src="~/assets/images/logo.svg" alt="Betty" />
             </a>
             <div class="nav__actions">
+              <a href="/about" class="nav__link">About</a>
               <button class="btn btn--orange btn--small" @click="openAuth(false)">Sign in</button>
             </div>
           </header>
@@ -149,6 +150,9 @@
 
     <!-- Footer -->
     <footer class="footer">
+      <nav class="footer__links" aria-label="Site">
+        <a href="/about">About</a>
+      </nav>
       <nav class="footer__links" aria-label="Tournaments">
         <a href="/world-cup-2026">World Cup 2026</a>
         <span aria-hidden="true">·</span>
@@ -494,8 +498,23 @@ async function submitEmailAuth() {
 
 .nav__actions {
   display: flex;
-  gap: 12px;
+  gap: 18px;
   align-items: center;
+}
+
+.nav__link {
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 6px 4px;
+  transition: color 0.15s ease;
+}
+
+.nav__link:hover {
+  color: var(--orange);
 }
 
 @media (max-width: 900px) {
