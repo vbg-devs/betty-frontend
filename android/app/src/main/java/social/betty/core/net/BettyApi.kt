@@ -109,6 +109,8 @@ class BettyApi(val client: ApiClient) {
         welcomeMessage: String?,
         description: String?,
         isPublic: Boolean,
+        boostCount: Int = 0,
+        boostMultiplier: Int = 2,
     ): Int {
         val body = buildJsonObject {
             put("name", name)
@@ -121,6 +123,8 @@ class BettyApi(val client: ApiClient) {
             put("description", description)
             put("is_public", isPublic)
             put("mode", 0)
+            put("boost_count", boostCount)
+            put("boost_multiplier", boostMultiplier)
         }
         return decode<GroupIdResponse>(client.execute("POST", "/group", jsonBody = body.toString())).groupId
     }
@@ -163,6 +167,8 @@ class BettyApi(val client: ApiClient) {
         correctTeamPoints: Int,
         exactResultPoints: Int,
         allowSneakPeek: Boolean,
+        boostCount: Int? = null,
+        boostMultiplier: Int? = null,
     ): Group {
         val body = buildJsonObject {
             put("welcome_message", welcomeMessage)
@@ -170,6 +176,9 @@ class BettyApi(val client: ApiClient) {
             put("correct_team_points", correctTeamPoints)
             put("exact_result_points", exactResultPoints)
             put("allow_sneak_peek", allowSneakPeek)
+            // Partial-update pattern: only emit when caller passed a non-null value.
+            if (boostCount != null) put("boost_count", boostCount)
+            if (boostMultiplier != null) put("boost_multiplier", boostMultiplier)
         }
         return decode(client.execute("PUT", "/group/$id/settings", jsonBody = body.toString()))
     }
@@ -204,21 +213,30 @@ class BettyApi(val client: ApiClient) {
     suspend fun getBetsByGame(gameId: Int, groupId: Int): List<Bet> =
         decode<List<Bet>>(client.execute("GET", "/bets/bygame/$gameId/$groupId")).distinctBy { it.id }
 
-    suspend fun placeBet(gameId: Int, groupId: Int, home: Int, away: Int, isUniversal: Boolean): Bet {
+    suspend fun placeBet(
+        gameId: Int,
+        groupId: Int,
+        home: Int,
+        away: Int,
+        isUniversal: Boolean,
+        boosted: Boolean = false,
+    ): Bet {
         val body = buildJsonObject {
             put("game_id", gameId)
             put("group_id", groupId)
             put("home_team_score", home)
             put("away_team_score", away)
             put("is_universal", isUniversal)
+            put("boosted", boosted)
         }
         return decode(client.execute("POST", "/bet", jsonBody = body.toString()))
     }
 
-    suspend fun updateBet(id: Int, home: Int, away: Int): Bet {
+    suspend fun updateBet(id: Int, home: Int, away: Int, boosted: Boolean = false): Bet {
         val body = buildJsonObject {
             put("home_team_score", home)
             put("away_team_score", away)
+            put("boosted", boosted)
         }
         return decode(client.execute("PUT", "/bet/$id", jsonBody = body.toString()))
     }

@@ -1,5 +1,6 @@
 package social.betty.core.model
 
+import kotlinx.serialization.json.decodeFromJsonElement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -144,5 +145,23 @@ class WireDecodingTest {
         val empty = BettyJson.decodeFromString<PublicGroupListResponse>("""{"items":null,"next_cursor":""}""")
         assertTrue(empty.items.isEmpty())
         assertEquals("", empty.nextCursor)
+    }
+
+    @Test
+    fun `websocket envelope round-trips booster_applied with a Bet payload`() {
+        // booster_applied: payload is the updated Bet (echo shape).
+        val envelope = BettyJson.decodeFromString<WebSocketEnvelope>(
+            """{"type":"booster_applied","message":{
+                "id":42,"user_id":"alex","game_id":11,"group_id":1,
+                "home_team_score":2,"away_team_score":1,
+                "is_universal":false,"boosted":true,
+                "user_points":null,"processed_at":null}}""",
+        )
+        assertEquals(WebSocketEventType.BOOSTER_APPLIED, envelope.type)
+        // The message decodes as a Bet with the boosted flag set.
+        val bet = BettyJson.decodeFromJsonElement<Bet>(envelope.message!!)
+        assertEquals(42, bet.id)
+        assertTrue(bet.boosted)
+        assertEquals(11, bet.gameId)
     }
 }

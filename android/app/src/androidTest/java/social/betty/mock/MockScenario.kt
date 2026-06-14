@@ -46,6 +46,10 @@ data class MockGroup(
     var allowSneakPeek: Boolean = true,
     var groupPlayDeadline: Instant? = null,
     var mode: Int = 0,
+    /** Booster cap per user — 0 = boosters disabled (Boosters spec §1.1). Default 0. */
+    var boostCount: Int = 0,
+    /** Booster multiplier — ignored when [boostCount] == 0. Default 2. */
+    var boostMultiplier: Int = 2,
     var publicAt: Instant? = null,
     var createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now(),
@@ -108,6 +112,8 @@ data class MockBet(
     var userPoints: Int? = null,
     var homeTeamScore: Int,
     var awayTeamScore: Int,
+    /** Booster flag (Boosters spec §1.2). Defaults to false. */
+    var boosted: Boolean = false,
     var processedAt: Instant? = null,
     var createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now(),
@@ -229,12 +235,24 @@ class MockScenario {
         group(groupId)?.member(userId)?.let(change)
     }
 
-    /** Upserts a bet (the DB unique key is user+game+group). Returns the stored bet. */
-    fun upsertBet(userId: String, gameId: Int, groupId: Int, home: Int, away: Int): MockBet {
+    /**
+     * Upserts a bet (the DB unique key is user+game+group). The `boosted` flag is written
+     * verbatim; the route layer is responsible for spec §1.2 validation (boosters off,
+     * capacity) before calling here.
+     */
+    fun upsertBet(
+        userId: String,
+        gameId: Int,
+        groupId: Int,
+        home: Int,
+        away: Int,
+        boosted: Boolean = false,
+    ): MockBet {
         val existing = bets.firstOrNull { it.userId == userId && it.gameId == gameId && it.groupId == groupId }
         if (existing != null) {
             existing.homeTeamScore = home
             existing.awayTeamScore = away
+            existing.boosted = boosted
             existing.updatedAt = Instant.now()
             return existing
         }
@@ -246,11 +264,22 @@ class MockScenario {
             userPoints = null,
             homeTeamScore = home,
             awayTeamScore = away,
+            boosted = boosted,
         )
         nextBetId += 1
         bets.add(bet)
         return bet
     }
+
+    /**
+     * Spec §1.6 helper — count the user's already-boosted bets in [groupId] *excluding*
+     * [excludingBetId] (so a no-op true→true write never trips the cap).
+     */
+    fun boostersUsed(userId: String, groupId: Int, excludingBetId: Int? = null): Int =
+        bets.count { bet ->
+            bet.userId == userId && bet.groupId == groupId && bet.boosted &&
+                (excludingBetId == null || bet.id != excludingBetId)
+        }
 }
 
 /**
@@ -419,6 +448,8 @@ object DefaultScenario {
                 id = GROUP_SUNDAY_LEGENDS_ID, name = "Sunday Legends",
                 tournamentId = RUNNING_TOURNAMENT_ID, inviteCode = "SUNLEG",
                 welcomeMessage = "Bring your A-game.", description = "The original crew.",
+                // Boosters ON: count=2, multiplier=2 (Boosters spec §4.1 default fixture).
+                boostCount = 2, boostMultiplier = 2,
                 createdAt = now.minusSeconds(6 * DAY),
                 members = mutableListOf(
                     MockMember(userId = CURRENT_USER_ID, score = 5, normalizedScore = 5.0, accessLevel = 0),
@@ -432,6 +463,8 @@ object DefaultScenario {
                 id = GROUP_OFFICE_ROYALE_ID, name = "Office Royale",
                 tournamentId = RUNNING_TOURNAMENT_ID, inviteCode = "OFFICE",
                 correctTeamPoints = 2, exactResultPoints = 5,
+                // Boosters OFF: count=0 (Boosters spec §4.1).
+                boostCount = 0, boostMultiplier = 2,
                 createdAt = now.minusSeconds(5 * DAY),
                 members = mutableListOf(
                     MockMember(userId = FRIEND_USER_ID, score = 4, normalizedScore = 4.0, accessLevel = 0),

@@ -21,6 +21,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,11 +87,15 @@ fun BetSheet(gameId: Int, groupId: Int, onDismiss: () -> Unit) {
     val awayTeam = game?.let { teamBy(it.awayTeamId) }
 
     var gameBets by remember { mutableStateOf<List<Bet>>(emptyList()) }
+    // All bets in the group (used for the booster-cap calculation — spec §1.6 sums the
+    // user's bets where boosted == true across the WHOLE group, not just this game).
+    var groupBets by remember { mutableStateOf<List<Bet>>(emptyList()) }
     val myBet = gameBets.firstOrNull { it.userId == myId }
 
     var homeScore by remember { mutableStateOf("") }
     var awayScore by remember { mutableStateOf("") }
     var placeInAllGroups by remember { mutableStateOf(true) } // default ON (web pin)
+    var boosted by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) } // 0 = Your bet, 1 = Placed bets
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -105,6 +111,11 @@ fun BetSheet(gameId: Int, groupId: Int, onDismiss: () -> Unit) {
             .onSuccess { gameBets = it }
     }
 
+    suspend fun reloadGroupBets() {
+        runCatching { container.api.getBetsByGroup(groupId) }
+            .onSuccess { groupBets = it }
+    }
+
     // Load game detail + bets once.
     LaunchedEffect(gameId, groupId) {
         if (game == null && group != null) {
@@ -112,16 +123,45 @@ fun BetSheet(gameId: Int, groupId: Int, onDismiss: () -> Unit) {
         }
         if (teams.isEmpty()) runCatching { container.teamStore.load() }
         reloadGameBets()
+        reloadGroupBets()
     }
 
     // Reactive prefill from my existing bet (value-equality so polling doesn't clobber edits).
-    LaunchedEffect(myBet?.id, myBet?.homeTeamScore, myBet?.awayTeamScore) {
+    LaunchedEffect(myBet?.id, myBet?.homeTeamScore, myBet?.awayTeamScore, myBet?.boosted) {
         val bet = myBet ?: return@LaunchedEffect
         if (prefilledForBetId != bet.id) {
             homeScore = bet.homeTeamScore.toString()
             awayScore = bet.awayTeamScore.toString()
+            boosted = bet.boosted
             prefilledForBetId = bet.id
         }
+    }
+
+    // Booster derivations (spec §1.6, §3.3). Reads the GROUP's current config + the LIVE
+    // toggle state so "X of N remaining" updates as the user flips the switch.
+    val boostersEnabled = (group?.boostCount ?: 0) > 0
+    val boostMultiplierValue = group?.boostMultiplier ?: 2
+    // Count user's other boosted bets in this group (excluding current bet — no-op-write rule).
+    val boostersUsedExcludingCurrent = if (myId != null && group != null) {
+        groupBets.count { b ->
+            b.userId == myId && b.groupId == groupId && b.boosted &&
+                (myBet == null || b.id != myBet.id)
+        }
+    } else {
+        0
+    }
+    val boostCap = group?.boostCount ?: 0
+    // Reflects LIVE toggle state (matches web's Task 2 fix): freed slot shows immediately.
+    val effectiveUsed = boostersUsedExcludingCurrent + if (boosted) 1 else 0
+    val remainingBoosters = maxOf(0, boostCap - effectiveUsed)
+    val myBetIsBoosted = myBet?.boosted == true
+    val boosterDisabled = boostersEnabled && !myBetIsBoosted &&
+        (boostCap - boostersUsedExcludingCurrent) <= 0
+    val boosterHelpText: String = when {
+        !boostersEnabled -> ""
+        boosterDisabled -> "No boosters remaining in this group"
+        boosted -> "This bet's points will be ×$boostMultiplierValue"
+        else -> "${boostMultiplierValue}× multiplier — $remainingBoosters of $boostCap remaining"
     }
 
     fun submit() {
@@ -129,17 +169,22 @@ fun BetSheet(gameId: Int, groupId: Int, onDismiss: () -> Unit) {
         val away = awayScore.toIntOrNull() ?: return
         if (isSaving) return
         val route = GroupBetLogic.submitRoute(myBet, placeInAllGroups)
+        // Spec §2.6 invariant: when boosters are disabled in the group (`boost_count == 0`)
+        // but the existing bet still has `boosted: true`, preserve it. Equivalent to web's
+        // `boostersEnabled ? boosted : (existing?.boosted ?? false)`.
+        val outgoingBoosted = if (boostersEnabled) boosted else (myBet?.boosted ?: false)
         isSaving = true
         errorMessage = null
         scope.launch {
             try {
                 when (route) {
                     is GroupBetLogic.SubmitRoute.Update ->
-                        container.betStore.update(route.betId, home, away)
+                        container.betStore.update(route.betId, home, away, outgoingBoosted)
                     is GroupBetLogic.SubmitRoute.Place ->
-                        container.betStore.place(gameId, groupId, home, away, route.isUniversal)
+                        container.betStore.place(gameId, groupId, home, away, route.isUniversal, outgoingBoosted)
                 }
                 reloadGameBets()
+                reloadGroupBets()
                 isSaving = false
                 onDismiss()
             } catch (e: ApiError.Status) {
@@ -220,6 +265,12 @@ fun BetSheet(gameId: Int, groupId: Int, onDismiss: () -> Unit) {
                     onHome = { homeScore = it },
                     onAway = { awayScore = it },
                     errorMessage = errorMessage,
+                    boostersEnabled = boostersEnabled,
+                    boosted = boosted,
+                    onBoostedChange = { boosted = it },
+                    boosterDisabled = boosterDisabled,
+                    boosterHelpText = boosterHelpText,
+                    showUniversalCaveat = placeInAllGroups && boosted,
                 )
             } else {
                 PlacedBetsTab(
@@ -301,6 +352,12 @@ private fun YourBetTab(
     onHome: (String) -> Unit,
     onAway: (String) -> Unit,
     errorMessage: String?,
+    boostersEnabled: Boolean,
+    boosted: Boolean,
+    onBoostedChange: (Boolean) -> Unit,
+    boosterDisabled: Boolean,
+    boosterHelpText: String,
+    showUniversalCaveat: Boolean,
 ) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
@@ -336,6 +393,16 @@ private fun YourBetTab(
                 modifier = Modifier.weight(1f),
             )
         }
+        // Booster row (spec §3.3). Hidden entirely when boost_count == 0.
+        if (boostersEnabled) {
+            BoosterRow(
+                boosted = boosted,
+                onBoostedChange = onBoostedChange,
+                disabled = boosterDisabled,
+                helpText = boosterHelpText,
+                showUniversalCaveat = showUniversalCaveat,
+            )
+        }
         if (errorMessage != null) {
             Row(
                 modifier = Modifier
@@ -353,6 +420,68 @@ private fun YourBetTab(
                     modifier = Modifier.padding(Space.m),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Booster row (spec §3.3). Rocket + label + switch row, optional helper text underneath,
+ * universal-bet caveat shown only when both universal AND boosted toggles are on.
+ */
+@Composable
+private fun BoosterRow(
+    boosted: Boolean,
+    onBoostedChange: (Boolean) -> Unit,
+    disabled: Boolean,
+    helpText: String,
+    showUniversalCaveat: Boolean,
+) {
+    val colors = BettyTheme.colors
+    val type = BettyTheme.type
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(Radius.sharp)
+            .background(colors.overlay06)
+            .border(1.dp, colors.overlay10, Radius.sharp)
+            .padding(Space.s)
+            .testTag("bet-booster-row"),
+        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("🚀", style = type.body, modifier = Modifier.padding(end = Space.xs))
+            Text(
+                text = "Apply booster",
+                style = type.subhead,
+                color = colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = boosted,
+                onCheckedChange = onBoostedChange,
+                enabled = !disabled,
+                colors = SwitchDefaults.colors(checkedTrackColor = Palette.orange),
+                modifier = Modifier.testTag("bet-booster-toggle"),
+            )
+        }
+        if (helpText.isNotEmpty()) {
+            Text(
+                text = helpText,
+                style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                color = colors.textSecondary,
+                modifier = Modifier.testTag("bet-booster-help"),
+            )
+        }
+        if (showUniversalCaveat) {
+            Text(
+                text = "Booster applies to this group only — the bet's copies in your other groups aren't boosted.",
+                style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                color = Palette.orange,
+                modifier = Modifier.testTag("bet-booster-universal-caveat"),
+            )
         }
     }
 }
@@ -499,6 +628,24 @@ private fun PlacedBetsTab(
                                     points == 1 -> Palette.yellow
                                     else -> colors.textSecondary
                                 },
+                            )
+                            // Post-evaluation rocket — only when the bet earned > 0 points
+                            // (spec §2.5 suppression).
+                            if (bet.boosted && points > 0) {
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "🚀",
+                                    style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                                    modifier = Modifier.testTag("bet-row-rocket"),
+                                )
+                            }
+                        } else if (bet.boosted) {
+                            // Pre-kickoff standalone rocket next to the score, no point value yet.
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "🚀",
+                                style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                                modifier = Modifier.testTag("bet-row-rocket"),
                             )
                         }
                     } else {

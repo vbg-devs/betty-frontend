@@ -206,6 +206,7 @@ private fun NeedActionStrip(
                 placedHome = ownBet?.homeTeamScore ?: 0,
                 placedAway = ownBet?.awayTeamScore ?: 0,
                 awardedPoints = GroupGameCardLogic.awardedPoints(game, bets, myId),
+                awardedBoosted = GroupGameCardLogic.awardedBoosted(game, bets, myId),
                 betCount = betCount(bets, game.id),
                 onTap = { onOpenBet(game.id) },
                 now = now,

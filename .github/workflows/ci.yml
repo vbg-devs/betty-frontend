@@ -387,7 +387,7 @@ jobs:
           - name: shard3
             classes: GroupDetailE2ETest BetSheetE2ETest
           - name: shard4
-            classes: ChatE2ETest ProfileE2ETest
+            classes: ChatE2ETest ProfileE2ETest BoosterE2ETest
     defaults:
       run:
         working-directory: android

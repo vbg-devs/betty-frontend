@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
@@ -49,6 +50,8 @@ fun GroupGameCard(
     placedHome: Int,
     placedAway: Int,
     awardedPoints: Int?,
+    /** Append 🚀 next to the awarded points (spec §3.4). Only honored when [awardedPoints] > 0. */
+    awardedBoosted: Boolean = false,
     /** null hides the chip (web `showBets == false`). */
     betCount: Int?,
     onTap: () -> Unit,
@@ -101,6 +104,15 @@ fun GroupGameCard(
                         style = type.kicker,
                         color = if (awardedPoints > 0) colors.accentPositive else colors.textSecondary,
                     )
+                    // Post-evaluation rocket — only when boosted AND scored > 0 (spec §2.5).
+                    if (awardedBoosted && awardedPoints > 0) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "🚀",
+                            style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                            modifier = Modifier.testTag("group-game-card-rocket"),
+                        )
+                    }
                 }
             }
 

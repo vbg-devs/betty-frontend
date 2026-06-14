@@ -198,6 +198,36 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                 }
             }
 
+            // Booster fields (Boosters spec §3.2). Defaults 0 / 2 — boosters OFF on new groups.
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                FormField(label = "Boosters per user", modifier = Modifier.weight(1f)) {
+                    BettyTextField(
+                        value = form.boostCount,
+                        onValueChange = { form.boostCount = it.filter { c -> c.isDigit() } },
+                        placeholder = "0",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.testTag("create-group-boost-count"),
+                    )
+                }
+                FormField(label = "Booster multiplier", modifier = Modifier.weight(1f)) {
+                    val multiplierEnabled = (form.boostCount.toIntOrNull() ?: 0) > 0
+                    BettyTextField(
+                        value = form.boostMultiplier,
+                        onValueChange = { form.boostMultiplier = it.filter { c -> c.isDigit() } },
+                        placeholder = "2",
+                        keyboardType = KeyboardType.Number,
+                        enabled = multiplierEnabled,
+                        modifier = Modifier.testTag("create-group-boost-multiplier"),
+                    )
+                }
+            }
+            Text(
+                text = "Members can apply a booster to multiply a single bet's points. Set count to 0 to disable.",
+                style = BettyTheme.type.bodyRegular.copy(fontSize = BettyTheme.type.caption.fontSize),
+                color = BettyTheme.colors.textSecondary,
+                modifier = Modifier.testTag("create-group-boost-help"),
+            )
+
             // Sneak-peek toggle (default ON)
             CheckRow(
                 title = "Allow sneak peek",
@@ -225,6 +255,8 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                     val trimmedDescription =
                         form.description.trim().takeIf { it.isNotEmpty() }
 
+                    val boostCount = form.boostCount.toIntOrNull() ?: 0
+                    val boostMultiplier = form.boostMultiplier.toIntOrNull() ?: 2
                     isCreating = true
                     scope.launch {
                         try {
@@ -238,6 +270,8 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                                 welcomeMessage = form.welcomeMessage.takeIf { it.isNotEmpty() },
                                 description = trimmedDescription,
                                 isPublic = form.isPublic,
+                                boostCount = boostCount,
+                                boostMultiplier = boostMultiplier,
                             )
                             // Reload so byId() can find the new group.
                             container.groupStore.load()
@@ -342,11 +376,13 @@ private fun BettyTextField(
     minLines: Int = 1,
     maxLines: Int = 1,
     keyboardType: KeyboardType = KeyboardType.Text,
+    enabled: Boolean = true,
 ) {
     val colors = BettyTheme.colors
     TextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         placeholder = {
             Text(
                 placeholder,
@@ -370,6 +406,7 @@ private fun BettyTextField(
             disabledIndicatorColor = Color.Transparent,
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
+            disabledTextColor = colors.textMuted,
         ),
         shape = Radius.sharp,
         modifier = modifier
