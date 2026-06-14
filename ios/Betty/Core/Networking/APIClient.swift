@@ -247,9 +247,13 @@ final class APIClient {
     }
 
     /// `PUT /bet/:id` — single-bet score edit; 404 unknown id, 423 game started,
-    /// 401 someone else's bet, 500 if already processed.
-    func updateBet(id: Int, homeTeamScore: Int, awayTeamScore: Int) async throws -> Bet {
-        let body = UpdateBetRequest(id: id, homeTeamScore: homeTeamScore, awayTeamScore: awayTeamScore)
+    /// 401 someone else's bet, 500 if already processed. `boosted` is forwarded
+    /// verbatim — server returns 400 `"boosters not enabled"` or `"no boosters
+    /// remaining"` per spec §1.2 when invalid.
+    func updateBet(id: Int, homeTeamScore: Int, awayTeamScore: Int,
+                   boosted: Bool = false) async throws -> Bet {
+        let body = UpdateBetRequest(id: id, homeTeamScore: homeTeamScore,
+                                    awayTeamScore: awayTeamScore, boosted: boosted)
         return try await request(.updateBet(id: id, encode(body)))
     }
 

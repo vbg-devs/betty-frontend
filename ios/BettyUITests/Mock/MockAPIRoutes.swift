@@ -130,6 +130,12 @@ extension BettyMockBackend {
             if let description = body["description"] as? String, description.count > 1000 {
                 return .empty(400)
             }
+            // Spec §1.1: boost_count >= 0, boost_multiplier >= 1.
+            let boostCount = body["boost_count"] as? Int ?? 0
+            let boostMultiplier = body["boost_multiplier"] as? Int ?? 2
+            guard boostCount >= 0, boostMultiplier >= 1 else {
+                return .json(["error": "invalid booster config"], status: 400)
+            }
             let id = scenario.nextGroupID
             scenario.nextGroupID += 1
             scenario.groups.append(MockGroup(
@@ -141,6 +147,7 @@ extension BettyMockBackend {
                 allowSneakPeek: body["allow_sneak_peek"] as? Bool ?? false,
                 groupPlayDeadline: MockWire.parseTime(body["group_play_deadline"]),
                 mode: body["mode"] as? Int ?? 0,
+                boostCount: boostCount, boostMultiplier: boostMultiplier,
                 publicAt: (body["is_public"] as? Bool ?? false) ? Date() : nil,
                 members: [MockMember(userID: uid, accessLevel: 0)]
             ))
@@ -219,6 +226,14 @@ extension BettyMockBackend {
             if let description = body["description"] as? String, description.count > 1000 {
                 return .empty(400)
             }
+            // Spec §1.1: validate booster fields BEFORE persisting anything else, so a
+            // bad request leaves all state intact (matches betty-api behavior).
+            if let boostCount = body["boost_count"] as? Int, boostCount < 0 {
+                return .json(["error": "invalid booster config"], status: 400)
+            }
+            if let boostMultiplier = body["boost_multiplier"] as? Int, boostMultiplier < 1 {
+                return .json(["error": "invalid booster config"], status: 400)
+            }
             // Partial update: only PRESENT keys are written; explicit null clears the
             // two nullable ones.
             scenario.updateGroup(id) { group in
@@ -236,6 +251,12 @@ extension BettyMockBackend {
                 }
                 if let peek = body["allow_sneak_peek"] as? Bool {
                     group.allowSneakPeek = peek
+                }
+                if let boostCount = body["boost_count"] as? Int, boostCount >= 0 {
+                    group.boostCount = boostCount
+                }
+                if let boostMultiplier = body["boost_multiplier"] as? Int, boostMultiplier >= 1 {
+                    group.boostMultiplier = boostMultiplier
                 }
                 group.updatedAt = Date()
             }
@@ -358,23 +379,70 @@ extension BettyMockBackend {
             let home = body["home_team_score"] as? Int ?? 0
             let away = body["away_team_score"] as? Int ?? 0
             let isUniversal = body["is_universal"] as? Bool ?? false
+            let boosted = body["boosted"] as? Bool ?? false
             guard let game = scenario.game(gameID) else { return .empty(500) } // unknown game → 500
             guard game.startDate > Date() else { return .empty(423) }          // already started
+
+            // Spec §1.2 booster validation against the bet's TARGET group (the row that
+            // will be marked boosted). For universal bets the target is `group_id`; the
+            // sibling rows in other groups are written `boosted: false` regardless.
+            if boosted {
+                guard let targetGroup = scenario.group(groupID) else { return .empty(401) }
+                guard targetGroup.boostCount > 0 else {
+                    return .json(["error": "boosters not enabled"], status: 400)
+                }
+                // For a no-op re-place keep the existing-boost exemption — usage count
+                // EXCLUDES this user's existing bet on this game in this group.
+                let existing = scenario.bets.first {
+                    $0.userID == uid && $0.gameID == gameID && $0.groupID == groupID
+                }
+                let used = scenario.boostersUsed(userID: uid, groupID: groupID,
+                                                 excludingBetID: existing?.id)
+                if used >= targetGroup.boostCount {
+                    return .json(["error": "no boosters remaining"], status: 400)
+                }
+            }
+
+            // Track false→true transitions for the booster_applied emit.
+            var transitionedBet: MockBet?
             if isUniversal {
                 // Upsert into EVERY group of the caller in the game's tournament.
+                // Only the row whose group_id matches request.group_id is `boosted`
+                // (spec §2.3); siblings stay false even if `boosted: true`.
                 for group in scenario.groups
                 where group.tournamentID == game.tournamentID && group.isActiveMember(uid) {
-                    scenario.upsertBet(userID: uid, gameID: gameID, groupID: group.id, home: home, away: away)
+                    let rowBoosted = (group.id == groupID) ? boosted : false
+                    let previous = scenario.bets.first {
+                        $0.userID == uid && $0.gameID == gameID && $0.groupID == group.id
+                    }
+                    let stored = scenario.upsertBet(userID: uid, gameID: gameID,
+                                                   groupID: group.id, home: home, away: away,
+                                                   boosted: rowBoosted)
+                    if rowBoosted && !(previous?.boosted ?? false) {
+                        transitionedBet = stored
+                    }
                 }
             } else {
                 guard let group = scenario.group(groupID), group.isActiveMember(uid) else {
                     return .empty(401)
                 }
-                scenario.upsertBet(userID: uid, gameID: gameID, groupID: groupID, home: home, away: away)
+                let previous = scenario.bets.first {
+                    $0.userID == uid && $0.gameID == gameID && $0.groupID == groupID
+                }
+                let stored = scenario.upsertBet(userID: uid, gameID: gameID, groupID: groupID,
+                                                home: home, away: away, boosted: boosted)
+                if boosted && !(previous?.boosted ?? false) {
+                    transitionedBet = stored
+                }
+                _ = group
             }
             let echo = MockWire.betEcho(userID: uid, gameID: gameID, groupID: groupID,
-                                        home: home, away: away, isUniversal: isUniversal)
+                                        home: home, away: away, isUniversal: isUniversal,
+                                        boosted: boosted)
             self?.pushEvent(type: "bet_placed", message: echo)
+            if let transitionedBet {
+                self?.pushEvent(type: "booster_applied", message: MockWire.bet(transitionedBet))
+            }
             // 200 (NOT 201) — echo with id 0 and zero timestamps.
             return .json(echo)
         }
@@ -389,10 +457,30 @@ extension BettyMockBackend {
             }
             guard bet.processedAt == nil else { return .empty(500) } // already evaluated
             let body = request.bodyJSON ?? [:]
+            let requestedBoosted = body["boosted"] as? Bool ?? false
+
+            // Spec §1.2 validation when flipping on (no-op true→true never fails).
+            if requestedBoosted, requestedBoosted != bet.boosted {
+                guard let targetGroup = scenario.group(bet.groupID) else { return .empty(401) }
+                guard targetGroup.boostCount > 0 else {
+                    return .json(["error": "boosters not enabled"], status: 400)
+                }
+                let used = scenario.boostersUsed(userID: uid, groupID: bet.groupID,
+                                                 excludingBetID: bet.id)
+                if used >= targetGroup.boostCount {
+                    return .json(["error": "no boosters remaining"], status: 400)
+                }
+            }
+
+            let previousBoosted = bet.boosted
             scenario.bets[index].homeTeamScore = body["home_team_score"] as? Int ?? bet.homeTeamScore
             scenario.bets[index].awayTeamScore = body["away_team_score"] as? Int ?? bet.awayTeamScore
+            scenario.bets[index].boosted = requestedBoosted
             scenario.bets[index].updatedAt = Date()
             self?.pushEvent(type: "bet_updated", message: MockWire.bet(scenario.bets[index]))
+            if requestedBoosted && !previousBoosted {
+                self?.pushEvent(type: "booster_applied", message: MockWire.bet(scenario.bets[index]))
+            }
             return .json(MockWire.bet(scenario.bets[index])) // the DB row, real id/timestamps
         }
     }
@@ -483,8 +571,19 @@ extension BettyMockBackend {
                 let exact = bet.homeTeamScore == home && bet.awayTeamScore == away
                 let correctSide = (bet.homeTeamScore > bet.awayTeamScore) == (home > away)
                     && ((bet.homeTeamScore == bet.awayTeamScore) == (home == away))
-                let points = exact ? (group?.exactResultPoints ?? 3)
+                let basePoints = exact ? (group?.exactResultPoints ?? 3)
                     : (correctSide ? (group?.correctTeamPoints ?? 1) : 0)
+                // Spec §1.3 live-config-wins: multiply by current `boost_multiplier`
+                // iff the bet is boosted AND boosters are still enabled in the group
+                // (count > 0). Disabling count to 0 mid-tournament silently neutralizes
+                // existing boosts (`× 1`).
+                let multiplier: Int
+                if bet.boosted, let group, group.boostCount > 0 {
+                    multiplier = group.boostMultiplier
+                } else {
+                    multiplier = 1
+                }
+                let points = basePoints * multiplier
                 scenario.bets[index].userPoints = points
                 scenario.bets[index].processedAt = Date()
                 scenario.updateMember(groupID: bet.groupID, userID: bet.userID) {

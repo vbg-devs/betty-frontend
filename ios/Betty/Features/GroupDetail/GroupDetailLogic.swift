@@ -73,6 +73,14 @@ nonisolated enum GroupGameCardLogic {
         return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.userPoints
     }
 
+    /// True iff the user's own bet on this finished game has `boosted == true`. The
+    /// rocket-suppression check (`points > 0`) is left to the view (where the count is
+    /// already in hand) so this helper doesn't have to re-derive it.
+    static func awardedBoosted(game: Game, bets: [Bet], userID: String?) -> Bool {
+        guard game.isFinished else { return false }
+        return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.boosted ?? false
+    }
+
     /// Web `differenceInHours` truncated-hour urgency: urgent when 0 < h <= 24,
     /// danger when 0 < h <= 12 (same orange today; both pinned).
     static func isUrgent(game: Game, at now: Date = Date()) -> Bool {

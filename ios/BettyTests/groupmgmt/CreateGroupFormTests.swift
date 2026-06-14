@@ -86,4 +86,49 @@ import Testing
 
         #expect(form.payload(running: [tournament]) == nil)
     }
+
+    // MARK: - Boosters (spec §3.2 / §1.1)
+
+    @Test func boosterDefaultsAreCountZeroMultiplierTwo() {
+        let form = CreateGroupForm()
+        #expect(form.boostCount == "0")
+        #expect(form.boostMultiplier == "2")
+        #expect(form.isMultiplierDisabled) // count == 0 → multiplier disabled
+    }
+
+    @Test func canSaveRejectsInvalidBoosterValues() throws {
+        let running = [try GroupMgmtFixtures.tournament(id: 5)]
+        var form = CreateGroupForm()
+        form.tournamentID = 5
+        form.name = "G"
+        form.winPoints = "1"
+        form.exactPoints = "3"
+
+        #expect(form.canSave(running: running))
+
+        form.boostCount = "-1"
+        #expect(!form.canSave(running: running))
+
+        form.boostCount = "2"
+        form.boostMultiplier = "0"
+        #expect(!form.canSave(running: running))
+
+        form.boostMultiplier = "1"
+        #expect(form.canSave(running: running))
+    }
+
+    @Test func payloadCarriesBoosterFields() throws {
+        let tournament = try GroupMgmtFixtures.tournament(id: 5)
+        var form = CreateGroupForm()
+        form.tournamentID = 5
+        form.name = "G"
+        form.winPoints = "1"
+        form.exactPoints = "3"
+        form.boostCount = "2"
+        form.boostMultiplier = "3"
+
+        let payload = try #require(form.payload(running: [tournament]))
+        #expect(payload.boostCount == 2)
+        #expect(payload.boostMultiplier == 3)
+    }
 }

@@ -494,6 +494,11 @@ struct GroupDetailView: View {
                             bets: bets,
                             userID: env.userStore.id
                         ),
+                        awardedBoosted: GroupGameCardLogic.awardedBoosted(
+                            game: entry.game,
+                            bets: bets,
+                            userID: env.userStore.id
+                        ),
                         betCount: BetOwnership.betCount(in: bets, gameID: entry.game.id),
                         onTap: { openBetSheet(for: entry.game) }
                     )

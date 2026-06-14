@@ -16,6 +16,7 @@ struct BetSheet: View {
     @State private var homeScore = ""
     @State private var awayScore = ""
     @State private var placeInAllGroups = true // default ON (web pin)
+    @State private var boosted = false
     @State private var selectedTab: Tab = .yourBet
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -60,6 +61,63 @@ struct BetSheet: View {
 
     private var currentTab: Tab { lockInput ? .placed : selectedTab }
 
+    // MARK: - Boosters
+
+    /// Group has boosters turned on (`boost_count > 0`).
+    private var boostersEnabled: Bool {
+        (group?.boostCount ?? 0) > 0
+    }
+
+    private var boostMultiplier: Int {
+        group?.boostMultiplier ?? 2
+    }
+
+    /// Spec §1.6: `remaining = max(0, boost_count - usage)` where `usage` counts the
+    /// user's boosted bets in this group EXCLUDING the bet currently being edited
+    /// (so toggling off-then-on doesn't drain capacity — matches `BetModal.vue:213-249`).
+    private var boostersUsedExcludingCurrent: Int {
+        guard let me = env.userStore.id else { return 0 }
+        return env.betStore.bets.count { bet in
+            bet.userID == me
+                && bet.groupID == groupID
+                && bet.boosted
+                && bet.gameID != gameID
+        }
+    }
+
+    private var remainingBoosters: Int {
+        let cap = group?.boostCount ?? 0
+        return max(0, cap - boostersUsedExcludingCurrent)
+    }
+
+    /// True iff this user's current bet for this game in this group is already boosted.
+    /// Lets us keep the un-boost path open even when remaining=0.
+    private var myBetIsBoosted: Bool {
+        guard let me = env.userStore.id else { return false }
+        return env.betStore.bets.contains {
+            $0.userID == me && $0.groupID == groupID && $0.gameID == gameID && $0.boosted
+        }
+    }
+
+    /// Disabled when boosters enabled AND remaining=0 AND bet isn't already boosted.
+    /// (We never disable when myBetIsBoosted — un-boost must always be available.)
+    private var boosterDisabled: Bool {
+        guard boostersEnabled else { return false }
+        if myBetIsBoosted { return false }
+        return remainingBoosters <= 0
+    }
+
+    private var boosterHelpText: String {
+        guard boostersEnabled else { return "" }
+        let cap = group?.boostCount ?? 0
+        if boosterDisabled { return "No boosters remaining in this group" }
+        if boosted { return "This bet's points will be ×\(boostMultiplier)" }
+        // Show "N of M remaining" when off (the toggle is on/off but no capacity used yet).
+        let used = boostersUsedExcludingCurrent
+        let left = max(0, cap - used)
+        return "\(boostMultiplier)× multiplier — \(left) of \(cap) remaining"
+    }
+
     var body: some View {
         // Web `.modal__inner` sits on the surface token, not the page background.
         ZStack(alignment: .topTrailing) {
@@ -101,6 +159,7 @@ struct BetSheet: View {
             if let bet {
                 homeScore = String(bet.homeTeamScore)
                 awayScore = String(bet.awayTeamScore)
+                boosted = bet.boosted
             }
         }
     }
@@ -192,6 +251,9 @@ struct BetSheet: View {
                     .padding(.bottom, 18)
                 scoreInput("AWAY", id: "away", text: $awayScore)
             }
+            if boostersEnabled {
+                boosterRow
+            }
             if let errorMessage {
                 BettyInsetPanel(accent: Palette.alertRed) {
                     Text(errorMessage)
@@ -202,6 +264,48 @@ struct BetSheet: View {
             }
         }
         .padding(Space.xl)
+    }
+
+    /// Spec §3.3 booster row. Hidden entirely when `boost_count == 0` (caller gates).
+    /// Visible & disabled when remaining=0 and bet not already boosted (un-boost is
+    /// always allowed). Universal-bet caveat shows when the universal toggle AND the
+    /// booster switch are both on.
+    private var boosterRow: some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Toggle(isOn: $boosted) {
+                HStack(spacing: Space.xs) {
+                    Text("🚀")
+                        .font(.betty(16, .regular))
+                    Text("Apply booster")
+                        .font(.betty(13, .bold))
+                        .foregroundStyle(theme.colors.textPrimary)
+                }
+            }
+            .tint(Palette.orange)
+            .disabled(boosterDisabled)
+            .opacity(boosterDisabled ? 0.55 : 1)
+            .accessibilityIdentifier("groupDetail.betSheet.boostToggle")
+
+            Text(boosterHelpText)
+                .font(.betty(12, .regular))
+                .foregroundStyle(theme.colors.textSecondary)
+                .lineSpacing(2)
+                .accessibilityIdentifier("groupDetail.betSheet.boostHelp")
+
+            if placeInAllGroups && boosted {
+                Text("Booster applies to this group only — the bet's copies in your other groups aren't boosted.")
+                    .font(.betty(12, .regular))
+                    .foregroundStyle(Palette.orange)
+                    .lineSpacing(2)
+                    .accessibilityIdentifier("groupDetail.betSheet.boostUniversalCaveat")
+            }
+        }
+        .padding(Space.s)
+        .background(theme.colors.overlay06, in: RoundedRectangle(cornerRadius: Radius.sharp))
+        .overlay {
+            RoundedRectangle(cornerRadius: Radius.sharp)
+                .strokeBorder(theme.colors.overlay10, lineWidth: 1)
+        }
     }
 
     private func scoreInput(_ label: String, id: String, text: Binding<String>) -> some View {
@@ -297,6 +401,19 @@ struct BetSheet: View {
                                     : points == 1 ? Palette.yellow
                                     : theme.colors.textSecondary
                             )
+                        // Post-evaluation rocket: only show when the bet scored > 0
+                        // (spec §2.5 suppression rule).
+                        if bet.boosted && points > 0 {
+                            Text("🚀")
+                                .font(.betty(13, .regular))
+                                .accessibilityLabel("Boosted")
+                        }
+                    } else if bet.boosted {
+                        // Pre-kickoff own-bet (or sneak-peek visible) rocket: standalone
+                        // indicator next to the score, no point value yet.
+                        Text("🚀")
+                            .font(.betty(13, .regular))
+                            .accessibilityLabel("Boosted")
                     }
                 } else {
                     HiddenScoreView()
@@ -351,7 +468,12 @@ struct BetSheet: View {
 
     private func submit() {
         guard let home = Int(homeScore), let away = Int(awayScore), !isSaving else { return }
-        let route = GroupBetLogic.submitRoute(existing: myBet, placeInAllGroups: placeInAllGroups)
+        let existing = myBet
+        let route = GroupBetLogic.submitRoute(existing: existing, placeInAllGroups: placeInAllGroups)
+        // Spec §2.6 invariant: when the group has boosters disabled (`boost_count == 0`)
+        // but the existing bet has `boosted: true`, preserve it. Matches web
+        // BetModal.vue:344 — `boostersEnabled ? boosted : !!existing?.boosted`.
+        let outgoingBoosted = boostersEnabled ? boosted : (existing?.boosted ?? false)
         isSaving = true
         errorMessage = nil
         Task {
@@ -359,7 +481,8 @@ struct BetSheet: View {
             do {
                 switch route {
                 case .update(let betID):
-                    try await env.betStore.update(betID: betID, homeTeamScore: home, awayTeamScore: away)
+                    try await env.betStore.update(betID: betID, homeTeamScore: home,
+                                                  awayTeamScore: away, boosted: outgoingBoosted)
                     try? await env.betStore.load(groupID: groupID)
                 case .place(let isUniversal):
                     try await env.betStore.place(
@@ -367,7 +490,8 @@ struct BetSheet: View {
                         groupID: groupID,
                         homeTeamScore: home,
                         awayTeamScore: away,
-                        isUniversal: isUniversal
+                        isUniversal: isUniversal,
+                        boosted: outgoingBoosted
                     )
                 }
                 successCount += 1

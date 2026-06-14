@@ -38,6 +38,11 @@ struct GroupGameSchedule: View {
                                     bets: bets,
                                     userID: userID
                                 ),
+                                awardedBoosted: GroupGameCardLogic.awardedBoosted(
+                                    game: entry.game,
+                                    bets: bets,
+                                    userID: userID
+                                ),
                                 betCount: showBets ? BetOwnership.betCount(in: bets, gameID: entry.game.id) : nil,
                                 onTap: { onGameTap(entry.game) }
                             )

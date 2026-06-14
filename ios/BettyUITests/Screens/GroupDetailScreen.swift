@@ -48,6 +48,26 @@ struct BetSheetScreen {
         return toggle.exists ? toggle : element(app, id: "groupDetail.betSheet.universalToggle")
     }
 
+    /// Booster row toggle (spec §3.3); only visible when `boost_count > 0`.
+    var boostToggle: XCUIElement {
+        let toggle = app.switches["groupDetail.betSheet.boostToggle"]
+        return toggle.exists ? toggle : element(app, id: "groupDetail.betSheet.boostToggle")
+    }
+    var boostHelp: XCUIElement { element(app, id: "groupDetail.betSheet.boostHelp") }
+    var boostUniversalCaveat: XCUIElement {
+        element(app, id: "groupDetail.betSheet.boostUniversalCaveat")
+    }
+
+    /// Flips the booster switch (mirrors `tapUniversalToggle`).
+    func tapBoostToggle() {
+        let control = boostToggle.switches.firstMatch
+        if control.exists, control.isHittable {
+            control.tap()
+        } else {
+            boostToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        }
+    }
+
     /// Flips the toggle. SwiftUI exposes a Toggle as one full-row Switch whose center
     /// is the LABEL — taps there don't reach the control, so aim at the nested switch
     /// (or the trailing edge when it isn't exposed separately).

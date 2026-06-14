@@ -77,6 +77,8 @@ enum MockWire {
             "allow_sneak_peek": g.allowSneakPeek,
             "group_play_deadline": time(g.groupPlayDeadline),
             "mode": g.mode,
+            "boost_count": g.boostCount,
+            "boost_multiplier": g.boostMultiplier,
             "is_public": false, // db:"-" — ALWAYS false on reads; derive from public_at
             "public_at": time(g.publicAt),
             "created_at": time(g.createdAt),
@@ -122,6 +124,8 @@ enum MockWire {
             "allow_sneak_peek": g.allowSneakPeek,
             "bet_mode": g.mode,
             "group_play_deadline": time(g.groupPlayDeadline),
+            "boost_count": g.boostCount,
+            "boost_multiplier": g.boostMultiplier,
             "public_at": time(g.publicAt ?? Date()),
             "created_at": time(g.createdAt),
             "member_count": g.members.filter { $0.status == .active }.count,
@@ -155,6 +159,7 @@ enum MockWire {
             "home_team_score": b.homeTeamScore,
             "away_team_score": b.awayTeamScore,
             "is_universal": false, // request-only flag — never stored
+            "boosted": b.boosted,
             "processed_at": time(b.processedAt),
             "created_at": time(b.createdAt),
             "updated_at": time(b.updatedAt),
@@ -163,7 +168,7 @@ enum MockWire {
 
     /// The `POST /bet` 200 body: a request echo with `id: 0` and zero timestamps.
     static func betEcho(userID: String, gameID: Int, groupID: Int,
-                        home: Int, away: Int, isUniversal: Bool) -> [String: Any] {
+                        home: Int, away: Int, isUniversal: Bool, boosted: Bool = false) -> [String: Any] {
         [
             "id": 0,
             "user_id": userID,
@@ -173,6 +178,7 @@ enum MockWire {
             "home_team_score": home,
             "away_team_score": away,
             "is_universal": isUniversal,
+            "boosted": boosted,
             "processed_at": NSNull(),
             "created_at": zeroTime,
             "updated_at": zeroTime,

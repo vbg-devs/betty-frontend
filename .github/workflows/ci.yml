@@ -225,7 +225,7 @@ jobs:
           - name: shard3
             classes: ChatMoreE2ETests HomeE2ETests AuthSignInValidationE2ETests AuthSessionE2ETests GroupDetailGamesE2ETests GroupCreateE2ETests
           - name: shard4
-            classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests
+            classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests BoosterE2ETests
           - name: shard5
             classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests AppStoreScreenshots
           - name: shard6

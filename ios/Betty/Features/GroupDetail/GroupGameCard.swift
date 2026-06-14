@@ -9,6 +9,9 @@ struct GroupGameCard: View {
     let placedHome: Int
     let placedAway: Int
     let awardedPoints: Int?
+    /// True iff the user's own bet on this game is `boosted` AND scored > 0 (spec §2.5
+    /// suppression). Set by the caller from `GroupGameCardLogic.awardedBoosted(...)`.
+    var awardedBoosted: Bool = false
     /// nil hides the chip (web `showBets == false`).
     let betCount: Int?
     var onTap: () -> Void
@@ -71,8 +74,16 @@ struct GroupGameCard: View {
             }
             Spacer()
             if let awardedPoints {
-                Text("\(awardedPoints)P")
-                    .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                HStack(spacing: 4) {
+                    Text("\(awardedPoints)P")
+                        .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                    if awardedBoosted && awardedPoints > 0 {
+                        // Post-eval rocket (spec §3.4, §2.5 — suppress on 0-point bets).
+                        Text("🚀")
+                            .font(.betty(12, .regular))
+                            .accessibilityLabel("Boosted")
+                    }
+                }
             }
         }
     }
