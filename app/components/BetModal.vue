@@ -254,7 +254,7 @@ const boosterHelpText = computed(() => {
   const mult = group.value?.boost_multiplier ?? 2;
   if (boosterDisabled.value) return 'No boosters remaining in this group';
   if (boosted.value) return `This bet's points will be ×${mult}`;
-  const used = boostersUsedByMe.value + (myBetIsBoosted.value ? 1 : 0);
+  const used = boostersUsedByMe.value + (boosted.value ? 1 : 0);
   const left = Math.max(0, cap - used);
   return `${mult}× multiplier — ${left} of ${cap} remaining`;
 });

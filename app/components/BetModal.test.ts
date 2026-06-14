@@ -566,6 +566,45 @@ describe('BetModal', () => {
       );
     });
 
+    // Spec §2.6: an admin lowering boost_count to 0 mid-tournament must not strip the
+    // existing boosted flag from bets that were placed while boosters were enabled —
+    // the scoring formula just multiplies by 1×. Re-saving such a bet (with the row
+    // hidden, so the user can't toggle anything) must preserve the existing boosted
+    // value on the outgoing payload.
+    it('preserves the existing boosted flag when the group has disabled boosters mid-tournament', async () => {
+      useGroupStore().groups = [makeGroup({ boost_count: 0, boost_multiplier: 2 })];
+      authFetch.mockResolvedValue(makeBet({ id: 99 }));
+      useUserStore().user = makeUser('uid-42');
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          bets: [
+            makeBet({
+              id: 99,
+              user_id: 'uid-42',
+              home_team_score: 3,
+              away_team_score: 2,
+              boosted: true,
+            }),
+          ],
+        },
+      });
+      await wrapper.vm.$nextTick();
+
+      // Booster row must be hidden when the group has disabled boosters.
+      expect(wrapper.find('.booster').exists()).toBe(false);
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({
+          body: expect.objectContaining({ boosted: true, is_universal: true }),
+        }),
+      );
+    });
+
     it('re-POSTs with is_universal true when editing with the all-groups box checked', async () => {
       authFetch.mockResolvedValue(makeBet({ id: 99 }));
       const wrapper = await mountSuspended(BetModal, {
