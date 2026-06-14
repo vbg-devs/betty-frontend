@@ -44,7 +44,12 @@
           class="awarded-points"
           :class="{ 'awarded-points--win': awardedScore > 0 }"
         >
-          {{ awardedScore }}P
+          {{ awardedScore }}P<span
+            v-if="awardedBoosted && awardedScore > 0"
+            class="awarded-points__rocket"
+            aria-label="Boosted"
+            >🚀</span
+          >
         </span>
       </div>
       <div class="teams">
@@ -117,14 +122,19 @@ const teamStore = useTeamStore();
 
 const userId = computed(() => userStore.id);
 
-const awardedScore = computed(() => {
+const myFinishedBet = computed(() => {
   if (game.status !== 1) return null;
-  const filteredBets = bets
-    .filter((bet) => bet.user_id === userId.value)
-    .filter((bet) => bet.game_id === game.id);
-
-  return filteredBets.length > 0 ? filteredBets[0].user_points : null;
+  return (
+    bets.find((bet) => bet.user_id === userId.value && bet.game_id === game.id) ?? null
+  );
 });
+
+const awardedScore = computed(() => {
+  const b = myFinishedBet.value;
+  return b ? b.user_points : null;
+});
+
+const awardedBoosted = computed(() => !!myFinishedBet.value?.boosted);
 
 const timeToBet = computed(() => {
   return differenceInHours(new Date(game.start_date), new Date());
@@ -218,6 +228,12 @@ const isLive = computed(() => {
 
 .awarded-points--win {
   color: var(--green);
+}
+
+.awarded-points__rocket {
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .teams {

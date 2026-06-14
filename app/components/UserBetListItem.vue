@@ -18,6 +18,15 @@
     <div class="bet-row__points">
       <template v-if="showScore && isProcessed">
         <span class="bet-row__pts">{{ bet.user_points > 0 ? `+${bet.user_points}P` : '0P' }}</span>
+        <span
+          v-if="bet.boosted && bet.user_points > 0"
+          class="bet-row__rocket"
+          aria-label="Boosted"
+          >🚀</span
+        >
+      </template>
+      <template v-else-if="(showScore || isMyScore) && bet.boosted">
+        <span class="bet-row__rocket" aria-label="Boosted">🚀</span>
       </template>
       <template v-else>
         <span class="bet-row__pending">·</span>
@@ -159,6 +168,14 @@ const resultClass = computed(() => {
   color: var(--muted-strong);
   font-size: 18px;
   font-weight: 800;
+}
+
+.bet-row__rocket {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 13px;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 /* HiddenScore icon: dark theme */
