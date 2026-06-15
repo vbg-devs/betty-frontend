@@ -135,32 +135,35 @@ tab. The header "+ NEW GROUP" button is a toolbar `+` on Home (and the empty-sta
 - **Data**: group store (`GET /groups`, loaded at boot) joined client-side with the
   tournament store (`GET /tournaments`). Pull-to-refresh should re-fetch both.
 - **Sections** (web order):
-  1. **Feedback banner** linking to Support ("Got feedback? Betty's listening" →
-     SupportView).
-  2. **Hero**: headline = `"N GROUPS. ONE CHAMPION."` (singular "GROUP." when 1), or
-     `"NO RUNNING/ENDED GROUPS."` when the active tab is empty but other groups exist,
-     or `"NO GROUPS YET."` when none at all. Plus:
+  1. **Feedback pill** — small right-aligned capsule with a green dot, "Feedback?
+     Betty's listening →", linking to SupportView. Quieter entry point than the old
+     full-width banner so the dashboard leads with content.
+  2. **Tabs Running / Ended** with counts. A group is *ended* when its tournament is
+     missing **or** `end_date < now`; *recentlyEnded* = ended < 28 days ago and still
+     counts as Running with a yellow "JUST ENDED" badge. Unparseable end dates count as
+     running.
+  3. **Grouped / List toggle** (persisted; web `localStorage["betty:show-grouped"]`,
+     default list → iOS `@AppStorage("showGrouped")`). Grouped mode buckets groups that
+     share a tournament into one stacked card (tournament image + rows of groups);
+     groups with a custom `header_image_url`, without a tournament, or alone in their
+     bucket stay as single cards.
+  4. **Group cards**: image = `header_image_url` (with small circular tournament icon
+     overlay) else `tournament.image_url`; tournament-name kicker; group name; member
+     count; ACTIVE/ENDED state; PUBLIC badge when `public_at != nil`; CTA "OPEN GROUP →"
+     / "SEE RESULTS →". Tap → push GroupDetailView.
+  5. **Hero** (below the list, only when at least one group exists): headline =
+     `"N GROUPS. ONE CHAMPION."` (singular "GROUP." when 1), or
+     `"NO RUNNING/ENDED GROUPS."` when the active tab is empty but other groups exist.
+     Plus:
      - **First-kickoff countdown** (DD:HH:MM:SS, ticks every second): earliest
        `tournament.start_date` strictly in the future across *running* groups; hidden
        once every running tournament has kicked off; ignores future start dates of
        already-ended tournaments; shows the tournament name. (All pinned by tests.)
      - **+ NEW GROUP** button → CreateGroupSheet; "OR BROWSE PUBLIC GROUPS →" link →
        Browse tab.
-  3. **Tabs Running / Ended** with counts. A group is *ended* when its tournament is
-     missing **or** `end_date < now`; *recentlyEnded* = ended < 28 days ago and still
-     counts as Running with a yellow "JUST ENDED" badge. Unparseable end dates count as
-     running.
-  4. **Grouped / List toggle** (persisted; web `localStorage["betty:show-grouped"]`,
-     default list → iOS `@AppStorage("showGrouped")`). Grouped mode buckets groups that
-     share a tournament into one stacked card (tournament image + rows of groups);
-     groups with a custom `header_image_url`, without a tournament, or alone in their
-     bucket stay as single cards.
-  5. **Group cards**: image = `header_image_url` (with small circular tournament icon
-     overlay) else `tournament.image_url`; tournament-name kicker; group name; member
-     count; ACTIVE/ENDED state; PUBLIC badge when `public_at != nil`; CTA "OPEN GROUP →"
-     / "SEE RESULTS →". Tap → push GroupDetailView.
 - **Empty state** (no groups at all): "SIX FRIENDS. ONE GROUP." card with
-  "+ START A GROUP" → CreateGroupSheet.
+  "+ START A GROUP" → CreateGroupSheet. The hero is **not** shown — the empty card is
+  the only surface.
 - **Per-tab empty copy**: Running: "No active tournaments right now. Check the Ended
   tab…"; Ended: "No tournaments have wrapped up yet. Recently-ended groups stay in
   Running for four weeks."

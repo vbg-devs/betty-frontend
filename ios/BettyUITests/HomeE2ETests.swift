@@ -279,8 +279,7 @@ final class HomeE2ETests: HomeE2EBase {
         XCTAssertTrue(home.emptyHeadline.label.contains("ONE GROUP."))
         XCTAssertTrue(home.emptyStartGroupButton.exists)
         XCTAssertTrue(home.emptyJoinPublicButton.exists)
-        XCTAssertTrue(home.heroHeadline.label.contains("NO GROUPS"))
-        XCTAssertTrue(home.heroHeadline.label.contains("YET."))
+        XCTAssertFalse(home.heroHeadline.exists)
         XCTAssertFalse(home.runningTabButton.exists)
         XCTAssertFalse(home.needActionHeader.exists)
     }
@@ -355,10 +354,10 @@ final class HomeNavigationE2ETests: HomeE2EBase {
         XCTAssertTrue(staticText(containing: "SUNDAY LEGENDS").exists) // hero shows the name uppercased
     }
 
-    func testFeedbackBannerOpensSupport() {
+    func testFeedbackPillOpensSupport() {
         launchToHome()
-        waitFor(home.feedbackBanner)
-        home.feedbackBanner.tap()
+        waitFor(home.feedbackPill)
+        home.feedbackPill.tap()
         waitFor(home.text(containingIgnoringCase: "need a hand"))
     }
 

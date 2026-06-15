@@ -11,9 +11,9 @@ extension HomeScreen {
     var heroNewGroupButton: XCUIElement { element(app, id: "home.hero.newGroup") }
     var heroBrowseButton: XCUIElement { element(app, id: "home.hero.browsePublic") }
 
-    // MARK: Feedback banner
+    // MARK: Feedback pill
 
-    var feedbackBanner: XCUIElement { element(app, id: "home.feedback.banner") }
+    var feedbackPill: XCUIElement { element(app, id: "home.feedback.pill") }
 
     // MARK: Need-action banner
 
