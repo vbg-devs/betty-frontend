@@ -79,39 +79,4 @@ struct GroupGameCardLogicTests {
         #expect(GroupGameCardLogic.awardedPoints(game: finished, bets: [first, second], userID: "me") == 0)
     }
 
-    @Test func urgencyBorders() {
-        func game(hoursAway: Double) -> Game {
-            GroupDetailFixtures.game(start: now.addingTimeInterval(hoursAway * 3600))
-        }
-        // Exactly 24h -> urgent only.
-        #expect(GroupGameCardLogic.isUrgent(game: game(hoursAway: 24), at: now))
-        #expect(!GroupGameCardLogic.isDanger(game: game(hoursAway: 24), at: now))
-        // 13h -> urgent only.
-        #expect(GroupGameCardLogic.isUrgent(game: game(hoursAway: 13), at: now))
-        #expect(!GroupGameCardLogic.isDanger(game: game(hoursAway: 13), at: now))
-        // Exactly 12h -> urgent + danger.
-        #expect(GroupGameCardLogic.isUrgent(game: game(hoursAway: 12), at: now))
-        #expect(GroupGameCardLogic.isDanger(game: game(hoursAway: 12), at: now))
-        // 25h -> neither.
-        #expect(!GroupGameCardLogic.isUrgent(game: game(hoursAway: 25), at: now))
-        // Past -> neither.
-        #expect(!GroupGameCardLogic.isUrgent(game: game(hoursAway: -1), at: now))
-        // 24.5h -> truncates to 24 -> urgent (differenceInHours truncation pin).
-        #expect(GroupGameCardLogic.isUrgent(game: game(hoursAway: 24.5), at: now))
-    }
-
-    @Test func urgentWindowOverridesBetDoneBorder() {
-        let urgent = GroupDetailFixtures.game(start: now.addingTimeInterval(3600))
-        #expect(GroupGameCardLogic.border(game: urgent, betted: true, at: now) == .urgent)
-    }
-
-    @Test func bettedGameOutsideUrgencyShowsBetDone() {
-        let far = GroupDetailFixtures.game(start: now.addingTimeInterval(48 * 3600))
-        #expect(GroupGameCardLogic.border(game: far, betted: true, at: now) == .betDone)
-        #expect(GroupGameCardLogic.border(game: far, betted: false, at: now) == .none)
-    }
-
-    @Test func finishedBettedGameKeepsGreenBorder() {
-        #expect(GroupGameCardLogic.border(game: finished, betted: true, at: now) == .betDone)
-    }
 }

@@ -66,33 +66,12 @@ nonisolated enum GroupGameDateLabel {
 // MARK: - Game card derived state (Game.vue)
 
 nonisolated enum GroupGameCardLogic {
-    /// Top-right awarded points: only for finished games, from the FIRST own bet in array
-    /// order; hidden (nil) when unfinished, no own bet, unevaluated bet, or logged out.
+    /// Awarded points (below the placed-bet chip): only for finished games, from the FIRST
+    /// own bet in array order; hidden (nil) when unfinished, no own bet, unevaluated bet,
+    /// or logged out.
     static func awardedPoints(game: Game, bets: [Bet], userID: String?) -> Int? {
         guard game.isFinished else { return nil }
         return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.userPoints
-    }
-
-    /// Web `differenceInHours` truncated-hour urgency: urgent when 0 < h <= 24,
-    /// danger when 0 < h <= 12 (same orange today; both pinned).
-    static func isUrgent(game: Game, at now: Date = Date()) -> Bool {
-        let hours = GameClock.wholeHoursUntilStart(of: game, at: now)
-        return hours > 0 && hours <= 24
-    }
-
-    static func isDanger(game: Game, at now: Date = Date()) -> Bool {
-        let hours = GameClock.wholeHoursUntilStart(of: game, at: now)
-        return hours > 0 && hours <= 12
-    }
-
-    enum Border: Equatable { case none, betDone, urgent }
-
-    /// CSS source order pin: `.game--bet-urgent`/`--bet-danger` come after `--bet-done`,
-    /// so an urgent window overrides the green "bet placed" border.
-    static func border(game: Game, betted: Bool, at now: Date = Date()) -> Border {
-        if isUrgent(game: game, at: now) { return .urgent }
-        if betted { return .betDone }
-        return .none
     }
 }
 

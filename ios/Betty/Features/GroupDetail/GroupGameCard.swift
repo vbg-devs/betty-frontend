@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Web `Game.vue` (default layout): info row (LIVE badge or date label) above two teams
 /// flanking the big score, optional placed-bet chip with awarded points underneath it,
-/// urgency/bet-done border, 45% dim when finished, optional bet-count chip overlay.
+/// 45% dim when finished, optional bet-count chip overlay.
 struct GroupGameCard: View {
     let game: Game
     let betted: Bool
@@ -27,10 +27,6 @@ struct GroupGameCard: View {
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity)
             .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: Radius.sharp))
-            .overlay {
-                RoundedRectangle(cornerRadius: Radius.sharp)
-                    .strokeBorder(borderColor, lineWidth: 1)
-            }
             .overlay(alignment: .topTrailing) {
                 if let betCount {
                     HStack(spacing: 4) {
@@ -51,14 +47,6 @@ struct GroupGameCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("groupDetail.games.card.\(game.id)")
-    }
-
-    private var borderColor: Color {
-        switch GroupGameCardLogic.border(game: game, betted: betted) {
-        case .urgent: Palette.orange
-        case .betDone: theme.colors.accentPositive
-        case .none: .clear
-        }
     }
 
     private var infoRow: some View {

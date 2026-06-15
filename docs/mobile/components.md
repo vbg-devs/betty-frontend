@@ -151,12 +151,8 @@ Times are device-local. Implement with `Calendar.isDateInToday/Tomorrow` and a f
 - Green ("win") styling only when `user_points > 0`; `0P` renders muted.
 - Multiple own bets: take the first in array order.
 
-**Urgency border classes** (uses `differenceInHours(start, now)` — *truncated whole hours*):
-- `timeToBet > 0 && timeToBet <= 24` → urgent (orange border).
-- `timeToBet > 0 && timeToBet <= 12` → danger (also orange; same color today, keep two states).
-- Edge pins: exactly 24h → urgent only; 13h → urgent only; exactly 12h → urgent + danger;
-  25h → neither; any past game (negative) → neither; finished → neither.
-- `betted == true` → green border ("bet done"), and shows the user's placed bet
+**Placed bet & finished state**:
+- `betted == true` → shows the user's placed bet
   (`placedBetHomeTeam – placedBetAwayTeam`) as a small orange chip under the real score.
 - `status == 1` → dimmed (45% opacity).
 

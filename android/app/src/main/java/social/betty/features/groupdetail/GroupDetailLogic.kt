@@ -25,34 +25,13 @@ fun firstOwnBet(bets: List<Bet>, gameId: Int, userId: String?): Bet? {
 fun betCount(bets: List<Bet>, gameId: Int): Int = bets.count { it.gameId == gameId }
 
 object GroupGameCardLogic {
-    /** Truncated whole hours until kickoff (negative when past), web `differenceInHours`. */
-    fun wholeHoursUntilStart(game: Game, now: Instant): Long {
-        val start = game.startDate ?: return Long.MIN_VALUE
-        return (start.epochSecond - now.epochSecond) / 3600
-    }
-
-    /** Urgent border window: 0 < h <= 24. */
-    fun isUrgent(game: Game, now: Instant): Boolean {
-        val h = wholeHoursUntilStart(game, now)
-        return h in 1..24
-    }
-
     /**
-     * Top-right awarded points: finished games only, from the FIRST own bet; null when
-     * unfinished, no own bet, the bet is unevaluated, or logged out.
+     * Awarded points (below the placed-bet chip): finished games only, from the FIRST own
+     * bet; null when unfinished, no own bet, the bet is unevaluated, or logged out.
      */
     fun awardedPoints(game: Game, bets: List<Bet>, userId: String?): Int? {
         if (!game.isFinished) return null
         return firstOwnBet(bets, game.id, userId)?.userPoints
-    }
-
-    enum class Border { NONE, BET_DONE, URGENT }
-
-    /** Urgent overrides the green "bet placed" border (CSS source-order pin). */
-    fun border(game: Game, betted: Boolean, now: Instant): Border = when {
-        isUrgent(game, now) -> Border.URGENT
-        betted -> Border.BET_DONE
-        else -> Border.NONE
     }
 }
 
