@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Web `Game.vue` (default layout): info row (LIVE badge or date label + awarded points)
-/// above two teams flanking the big score, optional placed-bet chip, urgency/bet-done
-/// border, 45% dim when finished, optional bet-count chip overlay.
+/// Web `Game.vue` (default layout): info row (LIVE badge or date label) above two teams
+/// flanking the big score, optional placed-bet chip with awarded points underneath it,
+/// urgency/bet-done border, 45% dim when finished, optional bet-count chip overlay.
 struct GroupGameCard: View {
     let game: Game
     let betted: Bool
@@ -70,10 +70,6 @@ struct GroupGameCard: View {
                     .kicker(theme.colors.textMuted)
             }
             Spacer()
-            if let awardedPoints {
-                Text("\(awardedPoints)P")
-                    .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
-            }
         }
     }
 
@@ -102,6 +98,10 @@ struct GroupGameCard: View {
                     .padding(.horizontal, 8)
                     .background(Palette.orangeTint15, in: RoundedRectangle(cornerRadius: Radius.sharp))
                     .accessibilityLabel("Your bet \(placedHome) to \(placedAway)")
+                }
+                if let awardedPoints {
+                    Text("\(awardedPoints)P")
+                        .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
                 }
             }
             .padding(.top, Space.m)

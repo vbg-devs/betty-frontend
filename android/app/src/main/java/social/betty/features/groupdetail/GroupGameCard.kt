@@ -36,9 +36,9 @@ import social.betty.designsystem.components.TeamLogo
 import java.time.Instant
 
 /**
- * Web `Game.vue` (default layout): info row (LIVE badge or kickoff label + awarded points)
- * above two teams flanking the big score, optional placed-bet chip, urgency / bet-done
- * border, 45% dim when finished, optional bet-count chip overlay.
+ * Web `Game.vue` (default layout): info row (LIVE badge or kickoff label) above two teams
+ * flanking the big score, optional placed-bet chip with awarded points underneath it,
+ * urgency / bet-done border, 45% dim when finished, optional bet-count chip overlay.
  */
 @Composable
 fun GroupGameCard(
@@ -95,13 +95,6 @@ fun GroupGameCard(
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                if (awardedPoints != null) {
-                    Text(
-                        text = "${awardedPoints}P",
-                        style = type.kicker,
-                        color = if (awardedPoints > 0) colors.accentPositive else colors.textSecondary,
-                    )
-                }
             }
 
             // Teams + score
@@ -142,6 +135,13 @@ fun GroupGameCard(
                                 .clip(Radius.sharp)
                                 .background(Palette.orangeTint15)
                                 .padding(vertical = 3.dp, horizontal = 8.dp),
+                        )
+                    }
+                    if (awardedPoints != null) {
+                        Text(
+                            text = "${awardedPoints}P",
+                            style = type.kicker,
+                            color = if (awardedPoints > 0) colors.accentPositive else colors.textSecondary,
                         )
                     }
                 }

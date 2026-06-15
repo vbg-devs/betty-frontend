@@ -39,13 +39,6 @@
       <div class="game__information">
         <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
         <span v-else class="game__date">{{ startDate }}</span>
-        <span
-          v-if="awardedScore !== null"
-          class="awarded-points"
-          :class="{ 'awarded-points--win': awardedScore > 0 }"
-        >
-          {{ awardedScore }}P
-        </span>
       </div>
       <div class="teams">
         <div class="team">
@@ -66,6 +59,13 @@
               <div class="score__divider">-</div>
               <div class="score__label">{{ placedBetAwayTeam }}</div>
             </div>
+          </div>
+          <div
+            v-if="awardedScore !== null"
+            class="awarded-points"
+            :class="{ 'awarded-points--win': awardedScore > 0 }"
+          >
+            {{ awardedScore }}P
           </div>
         </div>
         <div class="team">
@@ -212,7 +212,12 @@ const isLive = computed(() => {
 }
 
 .awarded-points {
+  text-align: center;
+  padding-top: 6px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
   color: var(--muted-strong);
 }
 
@@ -290,7 +295,6 @@ const isLive = computed(() => {
   color: var(--orange);
   padding: 3px 8px;
   border-radius: 2px;
-  margin-top: 8px;
 }
 
 .score--small .score__label,

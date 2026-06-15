@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Web `Game.vue` (default layout): kicker info row (LIVE badge or kickoff label, awarded
-/// points), two teams flanking the big `H - A` score, optional own-bet chip. Border:
-/// orange when kickoff is 0 < h <= 24 truncated hours away, green when the user has bet,
-/// clear otherwise (urgency wins over bet-done, matching the web cascade). Finished games
-/// dim to 45%.
+/// Web `Game.vue` (default layout): kicker info row (LIVE badge or kickoff label), two
+/// teams flanking the big `H - A` score, optional own-bet chip with awarded points
+/// underneath it. Border: orange when kickoff is 0 < h <= 24 truncated hours away, green
+/// when the user has bet, clear otherwise (urgency wins over bet-done, matching the web
+/// cascade). Finished games dim to 45%.
 struct TournamentGameCard: View {
     var game: Game
     var bets: [Bet] = []
@@ -41,6 +41,12 @@ struct TournamentGameCard: View {
                 VStack(spacing: Space.xxs) {
                     scoreRow
                     if let bet = ownBet { betChip(bet) }
+                    if let points = awardedPoints {
+                        Text("\(points)P")
+                            .font(.bettyKicker)
+                            .kerning(1.4)
+                            .foregroundStyle(points > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                    }
                 }
                 teamColumn(awayTeam)
             }
@@ -66,12 +72,6 @@ struct TournamentGameCard: View {
                     .kicker(theme.colors.textMuted)
             }
             Spacer()
-            if let points = awardedPoints {
-                Text("\(points)P")
-                    .font(.bettyKicker)
-                    .kerning(1.4)
-                    .foregroundStyle(points > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
-            }
         }
     }
 

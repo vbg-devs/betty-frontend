@@ -143,7 +143,8 @@ Times are device-local. Implement with `Calendar.isDateInToday/Tomorrow` and a f
   relative date label again ("3 hours ago, 09:00"), not LIVE.
 - Pulsing orange dot + "LIVE".
 
-**Awarded points** (`awardedScore`) — top-right of the info row:
+**Awarded points** (`awardedScore`) — below the placed-bet chip in the center column
+(under the big score):
 - Only when `status == 1`. Find the **first** bet in `bets` where
   `bet.user_id == currentUserId && bet.game_id == game.id`; show its `user_points` as `"3P"`.
 - Hidden when: game unfinished, no matching own bet, or logged out.
@@ -160,9 +161,11 @@ Times are device-local. Implement with `Calendar.isDateInToday/Tomorrow` and a f
 - `status == 1` → dimmed (45% opacity).
 
 **Layouts**:
-- Default: info row (LIVE/date + points) above two teams flanking the big `H - A` score
-  (blank strings for nil scores), logos 56pt, names uppercased, plus the optional placed-bet chip.
-- `alternative`: two compact rows `logo | name | score`, **no** info row (no LIVE/date/points).
+- Default: info row (LIVE/date) above two teams flanking the big `H - A` score
+  (blank strings for nil scores), logos 56pt, names uppercased, plus the optional placed-bet
+  chip and (when finished) the awarded points underneath it in the center column.
+- `alternative`: two compact rows `logo | name | score`, **no** info row (no LIVE/date),
+  no awarded points.
 - Team names render as empty strings when the team id is not in the team store.
 
 **Interaction**: emits `click-game(game)` on any tap, even when `clickable == false`
