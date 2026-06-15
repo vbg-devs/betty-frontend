@@ -11,6 +11,14 @@ export default defineNuxtConfig({
     '/**': { ssr: false },
   },
 
+  // Prerendered pages reference a hashed _payload.json sidecar; after a new
+  // deploy the old hash no longer exists on the origin and SPA-only routes
+  // never had one — both cases return the SPA fallback HTML, which the client
+  // then tries to JSON.parse and crashes on. Disable the sidecar entirely.
+  experimental: {
+    payloadExtraction: false,
+  },
+
   modules: ['@pinia/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
 
   app: {
