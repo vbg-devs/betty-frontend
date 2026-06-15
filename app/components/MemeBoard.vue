@@ -510,7 +510,7 @@ async function postMessage(msg: { message?: string; image?: string }): Promise<b
         image_url: msg.image,
       },
     });
-    messages.value.unshift(data);
+    messages.value.unshift({ ...data, reactions: data.reactions ?? [] });
     images.value = [];
     selectedImageIndex.value = 0;
     return true;

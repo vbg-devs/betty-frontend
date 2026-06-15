@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
@@ -42,8 +43,9 @@ import social.betty.navigation.LocalAppContainer
 import java.time.Instant
 
 /**
- * Web `UserHistory`: a member's bets joined to games (orphans dropped), sorted by kickoff,
- * scores hidden pre-kickoff unless sneak peek, "<N> BETS · <Σ> PTS" header.
+ * Web `UserHistory`: one row per game — the member's bet if placed, else a "NO BET"
+ * skipped row for games that have already started. Sorted by kickoff, scores hidden
+ * pre-kickoff unless sneak peek, header counts only actual bets ("<N> BETS · <Σ> PTS").
  */
 @Composable
 fun UserHistorySheet(groupId: Int, userId: String, onDismiss: () -> Unit) {
@@ -65,8 +67,8 @@ fun UserHistorySheet(groupId: Int, userId: String, onDismiss: () -> Unit) {
     fun teamBy(id: Int): Team? = teams.firstOrNull { it.id == id }
 
     var bets by remember { mutableStateOf<List<Bet>>(emptyList()) }
-    val entries = remember(bets, userId, games) {
-        GroupUserHistoryLogic.entries(bets, userId, games)
+    val entries = remember(bets, userId, games, now) {
+        GroupUserHistoryLogic.entries(bets, userId, games, now)
     }
 
     LaunchedEffect(groupId) {
@@ -102,7 +104,11 @@ fun UserHistorySheet(groupId: Int, userId: String, onDismiss: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                    Text("${entries.size} BETS", style = type.kicker, color = colors.textSecondary)
+                    Text(
+                        text = "${GroupUserHistoryLogic.betsCount(entries)} BETS",
+                        style = type.kicker,
+                        color = colors.textSecondary,
+                    )
                     Text("·", color = colors.textMuted)
                     Text(
                         text = "${GroupUserHistoryLogic.totalPoints(entries)} PTS",
@@ -136,7 +142,7 @@ fun UserHistorySheet(groupId: Int, userId: String, onDismiss: () -> Unit) {
                 UserHistoryBetRow(
                     entry = entry,
                     peek = peek,
-                    isMine = myId == entry.bet.userId,
+                    isMine = entry.bet?.let { myId == it.userId } ?: false,
                     exactResultPoints = group?.exactResultPoints,
                     homeTeam = teamBy(entry.game.homeTeamId),
                     awayTeam = teamBy(entry.game.awayTeamId),
@@ -168,12 +174,15 @@ private fun UserHistoryBetRow(
 ) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
-    val showScore = GroupBetRowLogic.showScore(entry.bet, entry.game.startDate, peek, now)
-    val result = GroupBetRowLogic.result(entry.bet, showScore, exactResultPoints)
+    val bet = entry.bet
+    val showScore = bet != null && GroupBetRowLogic.showScore(bet, entry.game.startDate, peek, now)
+    val result = bet?.let { GroupBetRowLogic.result(it, showScore, exactResultPoints) }
+        ?: GroupBetRowLogic.Result.PENDING
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(if (bet == null) 0.55f else 1f)
             .padding(vertical = 14.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -185,9 +194,11 @@ private fun UserHistoryBetRow(
         }
 
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            if (showScore || isMine) {
+            if (bet == null) {
+                Text("NO BET", style = type.kicker, color = colors.textSecondary)
+            } else if (showScore || isMine) {
                 Text(
-                    text = "${entry.bet.homeTeamScore} – ${entry.bet.awayTeamScore}",
+                    text = "${bet.homeTeamScore} – ${bet.awayTeamScore}",
                     style = type.score.copy(fontSize = 18.sp),
                     color = colors.textPrimary,
                 )
@@ -198,8 +209,10 @@ private fun UserHistoryBetRow(
 
         Box(modifier = Modifier.width(64.dp), contentAlignment = Alignment.CenterEnd) {
             // Points stay pending until visible AND processed (isMine does not unlock points).
-            if (showScore && entry.bet.isProcessed) {
-                val points = entry.bet.userPoints ?: 0
+            if (bet == null) {
+                Text("—", style = type.subhead, color = colors.textSecondary)
+            } else if (showScore && bet.isProcessed) {
+                val points = bet.userPoints ?: 0
                 val chipColor = when (result) {
                     GroupBetRowLogic.Result.EXACT -> colors.accentPositive
                     GroupBetRowLogic.Result.WIN -> Palette.yellow

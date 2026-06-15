@@ -1,5 +1,5 @@
 // @vitest-environment nuxt
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
 import type { Bet, Game, GroupMember } from '~/types';
 import UserHistory from './UserHistory.vue';
@@ -54,25 +54,38 @@ const earlyGame = makeGame(1, '2026-06-10T18:00:00Z');
 const midGame = makeGame(2, '2026-06-12T18:00:00Z');
 const lateGame = makeGame(3, '2026-06-14T18:00:00Z');
 const allGames = [earlyGame, midGame, lateGame];
+const futureGame = makeGame(99, '2099-12-31T18:00:00Z');
 
 describe('UserHistory', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-15T12:00:00Z'));
     authFetch.mockReset();
     useUserStore().user = null;
     useTeamStore().teams = [];
     document.body.classList.remove('no-scroll');
   });
 
-  describe('userBets', () => {
-    it('renders only the given user bets, each joined with its game', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('history rows', () => {
+    it("renders the user's bet joined with its game and a NO BET row for each started game they skipped", async () => {
       const mine = makeBet({ user_id: 'uid-5', game_id: 1 });
       const theirs = makeBet({ user_id: 'uid-99', game_id: 2 });
       const wrapper = await mountSuspended(UserHistory, {
         props: { user: makeMember(), bets: [mine, theirs], games: allGames },
       });
       const items = wrapper.findAllComponents(UserBetListItem);
-      expect(items).toHaveLength(1);
+      expect(items).toHaveLength(3);
       expect(items[0]!.props('bet')).toEqual({ ...mine, game: earlyGame });
+      expect(items[0]!.props('game')).toBeNull();
+      // skipped rows receive only the game prop; bet falls back to its empty-object default
+      expect(items[1]!.props('bet')).toEqual({});
+      expect(items[1]!.props('game')).toEqual(midGame);
+      expect(items[2]!.props('bet')).toEqual({});
+      expect(items[2]!.props('game')).toEqual(lateGame);
     });
 
     it('silently drops bets whose game is missing from games', async () => {
@@ -82,7 +95,8 @@ describe('UserHistory', () => {
         props: { user: makeMember(), bets: [withGame, orphan], games: allGames },
       });
       const items = wrapper.findAllComponents(UserBetListItem);
-      expect(items).toHaveLength(1);
+      // 1 real bet row + 2 skipped rows for the games the user didn't bet on
+      expect(items).toHaveLength(3);
       expect(items[0]!.props('bet')!.id).toBe(withGame.id);
       // the dropped bet counts toward neither the bet count nor the points
       expect(wrapper.find('.modal__stats .kicker--muted-light').text()).toBe('1 BETS');
@@ -100,7 +114,42 @@ describe('UserHistory', () => {
       expect(items.map((i) => i.props('bet')!.id)).toEqual([early.id, mid.id, late.id]);
     });
 
-    it('renders no bets with the default empty props', async () => {
+    it('interleaves bets and skipped rows in chronological order', async () => {
+      const onMid = makeBet({ user_id: 'uid-5', game_id: 2 });
+      const wrapper = await mountSuspended(UserHistory, {
+        props: { user: makeMember(), bets: [onMid], games: allGames },
+      });
+      const items = wrapper.findAllComponents(UserBetListItem);
+      expect(items).toHaveLength(3);
+      // earlyGame (skipped), midGame (bet), lateGame (skipped)
+      expect(items[0]!.props('game')).toEqual(earlyGame);
+      expect(items[1]!.props('bet')!.game_id).toBe(2);
+      expect(items[2]!.props('game')).toEqual(lateGame);
+    });
+
+    it('omits future games the user has not bet on', async () => {
+      const onMid = makeBet({ user_id: 'uid-5', game_id: 2 });
+      const wrapper = await mountSuspended(UserHistory, {
+        props: { user: makeMember(), bets: [onMid], games: [...allGames, futureGame] },
+      });
+      const items = wrapper.findAllComponents(UserBetListItem);
+      // futureGame should NOT appear as a skipped row — only started games can be skipped
+      expect(items).toHaveLength(3);
+      expect(items.map((i) => i.props('game')?.id ?? i.props('bet')!.game_id)).toEqual([1, 2, 3]);
+    });
+
+    it("includes a future game the user did bet on", async () => {
+      const onFuture = makeBet({ user_id: 'uid-5', game_id: futureGame.id });
+      const wrapper = await mountSuspended(UserHistory, {
+        props: { user: makeMember(), bets: [onFuture], games: [...allGames, futureGame] },
+      });
+      const items = wrapper.findAllComponents(UserBetListItem);
+      // 3 skipped past games + 1 future bet = 4 rows
+      expect(items).toHaveLength(4);
+      expect(items[3]!.props('bet')!.game_id).toBe(futureGame.id);
+    });
+
+    it('renders no rows with the default empty props', async () => {
       const wrapper = await mountSuspended(UserHistory);
       expect(wrapper.findAllComponents(UserBetListItem)).toHaveLength(0);
       expect(wrapper.find('.empty').exists()).toBe(true);
@@ -162,13 +211,24 @@ describe('UserHistory', () => {
   });
 
   describe('empty state', () => {
-    it('shows NO BETS YET with zeroed stats when the user has no bets', async () => {
+    it('shows NO BETS YET with zeroed stats when there are no rows to show at all', async () => {
+      const wrapper = await mountSuspended(UserHistory, {
+        props: { user: makeMember(), bets: [], games: [] },
+      });
+      expect(wrapper.find('.empty').text()).toBe('★ NO BETS YET');
+      expect(wrapper.findAllComponents(UserBetListItem)).toHaveLength(0);
+      expect(wrapper.find('.modal__stats .kicker--muted-light').text()).toBe('0 BETS');
+      expect(wrapper.find('.kicker--green').text()).toBe('0 PTS');
+    });
+
+    it('still shows zero BETS in the header when only skipped rows are rendered', async () => {
       const theirs = makeBet({ user_id: 'uid-99', game_id: 1 });
       const wrapper = await mountSuspended(UserHistory, {
         props: { user: makeMember(), bets: [theirs], games: allGames },
       });
-      expect(wrapper.find('.empty').text()).toBe('★ NO BETS YET');
-      expect(wrapper.findAllComponents(UserBetListItem)).toHaveLength(0);
+      // empty banner suppressed because there are skipped rows to show
+      expect(wrapper.find('.empty').exists()).toBe(false);
+      expect(wrapper.findAllComponents(UserBetListItem)).toHaveLength(3);
       expect(wrapper.find('.modal__stats .kicker--muted-light').text()).toBe('0 BETS');
       expect(wrapper.find('.kicker--green').text()).toBe('0 PTS');
     });
@@ -208,7 +268,8 @@ describe('UserHistory', () => {
         props: { user: makeMember(), bets, games: allGames, peek: true },
       });
       const items = wrapper.findAllComponents(UserBetListItem);
-      expect(items).toHaveLength(2);
+      // 2 bet rows + 1 skipped row for game 3
+      expect(items).toHaveLength(3);
       for (const item of items) {
         expect(item.props('peek')).toBe(true);
       }

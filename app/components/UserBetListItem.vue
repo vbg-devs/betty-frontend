@@ -1,5 +1,5 @@
 <template>
-  <div class="bet-row" :class="resultClass">
+  <div class="bet-row" :class="[resultClass, { 'bet-row--skipped': isSkipped }]">
     <div class="bet-row__teams">
       <TeamLogo :team="homeTeam" class="bet-row__flag" />
       <span class="bet-row__divider">–</span>
@@ -7,7 +7,10 @@
     </div>
 
     <div class="bet-row__score">
-      <template v-if="showScore || isMyScore">
+      <template v-if="isSkipped">
+        <span class="bet-row__skipped-label">NO BET</span>
+      </template>
+      <template v-else-if="showScore || isMyScore">
         <span class="bet-row__score-value">{{ bet.home_team_score }}</span>
         <span class="bet-row__score-sep">–</span>
         <span class="bet-row__score-value">{{ bet.away_team_score }}</span>
@@ -16,7 +19,10 @@
     </div>
 
     <div class="bet-row__points">
-      <template v-if="showScore && isProcessed">
+      <template v-if="isSkipped">
+        <span class="bet-row__pending">—</span>
+      </template>
+      <template v-else-if="showScore && isProcessed">
         <span class="bet-row__pts">{{ bet.user_points > 0 ? `+${bet.user_points}P` : '0P' }}</span>
       </template>
       <template v-else>
@@ -29,8 +35,13 @@
 <script setup lang="ts">
 import { isAfter } from 'date-fns';
 
-const { bet = {} as Record<string, any>, peek = false } = defineProps<{
+const {
+  bet = {} as Record<string, any>,
+  game = null,
+  peek = false,
+} = defineProps<{
   bet?: Record<string, any>;
+  game?: Record<string, any> | null;
   peek?: boolean;
 }>();
 
@@ -40,6 +51,10 @@ const groupStore = useGroupStore();
 
 const userId = computed(() => userStore.id);
 
+const isSkipped = computed(() => !bet?.id && !!game);
+
+const displayGame = computed(() => bet?.game || game);
+
 const isMyScore = computed(() => !!bet.user_id && !!userId.value && bet.user_id === userId.value);
 
 const isProcessed = computed(() => bet.processed_at != null);
@@ -47,13 +62,13 @@ const isProcessed = computed(() => bet.processed_at != null);
 const showScore = computed(() => {
   if (peek) return true;
   if (isProcessed.value) return true;
-  const startDate = bet.game?.start_date;
+  const startDate = displayGame.value?.start_date;
   if (startDate && isAfter(new Date(), new Date(startDate))) return true;
   return false;
 });
 
-const homeTeam = computed(() => teamStore.byId(bet.game?.home_team_id));
-const awayTeam = computed(() => teamStore.byId(bet.game?.away_team_id));
+const homeTeam = computed(() => teamStore.byId(displayGame.value?.home_team_id));
+const awayTeam = computed(() => teamStore.byId(displayGame.value?.away_team_id));
 
 const resultClass = computed(() => {
   if (!showScore.value || !isProcessed.value) return 'bet-row--pending';
@@ -159,6 +174,18 @@ const resultClass = computed(() => {
   color: var(--muted-strong);
   font-size: 18px;
   font-weight: 800;
+}
+
+.bet-row--skipped {
+  opacity: 0.55;
+}
+
+.bet-row__skipped-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--muted-strong);
+  text-transform: uppercase;
 }
 
 /* HiddenScore icon: dark theme */

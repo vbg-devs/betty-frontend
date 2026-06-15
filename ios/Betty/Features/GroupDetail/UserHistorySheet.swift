@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Web `UserHistory`: a member's bets joined to games (orphans dropped), sorted by
-/// kickoff, scores hidden pre-kickoff unless sneak peek, "<N> BETS · <Σ> PTS" header.
+/// Web `UserHistory`: one row per game — the member's bet if placed, else a "NO BET"
+/// skipped row for games that have already started. Sorted by kickoff, scores hidden
+/// pre-kickoff unless sneak peek, header counts only actual bets ("<N> BETS · <Σ> PTS").
 struct UserHistorySheet: View {
     let groupID: Int
     let userID: String
@@ -41,7 +42,7 @@ struct UserHistorySheet: View {
                             UserHistoryBetRow(
                                 entry: entry,
                                 peek: peek,
-                                isMine: env.userStore.id == entry.bet.userID,
+                                isMine: entry.bet.map { env.userStore.id == $0.userID } ?? false,
                                 exactResultPoints: group?.exactResultPoints
                             )
                             .accessibilityElement(children: .combine)
@@ -97,7 +98,7 @@ struct UserHistorySheet: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 HStack(spacing: Space.xs) {
-                    Text("\(entries.count) BETS")
+                    Text("\(GroupUserHistoryLogic.betsCount(entries)) BETS")
                         .kicker(theme.colors.textSecondary)
                     Text("·").foregroundStyle(theme.colors.textMuted)
                     Text("\(GroupUserHistoryLogic.totalPoints(entries)) PTS")
@@ -113,7 +114,8 @@ struct UserHistorySheet: View {
 
 /// Web `UserBetListItem`: team flags, the bet's score (hidden pre-kickoff unless peek —
 /// but you always see your own), and a points chip once processed; result coloring uses
-/// the group's exact points (legacy 3-or-4 heuristic when unknown).
+/// the group's exact points (legacy 3-or-4 heuristic when unknown). A `nil` entry.bet
+/// renders a muted "NO BET" skipped row for games the member sat out.
 struct UserHistoryBetRow: View {
     let entry: GroupUserHistoryEntry
     let peek: Bool
@@ -124,11 +126,13 @@ struct UserHistoryBetRow: View {
     @Environment(ThemeStore.self) private var theme
 
     private var showScore: Bool {
-        GroupBetRowLogic.showScore(bet: entry.bet, gameStart: entry.game.startDate, peek: peek)
+        guard let bet = entry.bet else { return false }
+        return GroupBetRowLogic.showScore(bet: bet, gameStart: entry.game.startDate, peek: peek)
     }
 
     private var result: GroupBetRowLogic.Result {
-        GroupBetRowLogic.result(bet: entry.bet, showScore: showScore, exactResultPoints: exactResultPoints)
+        guard let bet = entry.bet else { return .pending }
+        return GroupBetRowLogic.result(bet: bet, showScore: showScore, exactResultPoints: exactResultPoints)
     }
 
     var body: some View {
@@ -142,14 +146,18 @@ struct UserHistoryBetRow: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                if showScore || isMine {
-                    Text("\(entry.bet.homeTeamScore)")
-                    Text("–")
-                        .font(.betty(14, .regular))
-                        .foregroundStyle(theme.colors.textSecondary)
-                    Text("\(entry.bet.awayTeamScore)")
+                if let bet = entry.bet {
+                    if showScore || isMine {
+                        Text("\(bet.homeTeamScore)")
+                        Text("–")
+                            .font(.betty(14, .regular))
+                            .foregroundStyle(theme.colors.textSecondary)
+                        Text("\(bet.awayTeamScore)")
+                    } else {
+                        HiddenScoreView()
+                    }
                 } else {
-                    HiddenScoreView()
+                    Text("NO BET").kicker(theme.colors.textSecondary)
                 }
             }
             .font(.betty(18, .black))
@@ -162,14 +170,19 @@ struct UserHistoryBetRow: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 12)
+        .opacity(entry.bet == nil ? 0.55 : 1)
     }
 
     @ViewBuilder
     private var pointsColumn: some View {
         // Points stay pending until visible AND processed (your own pre-kickoff bet shows
         // its score but no points — isMine does not unlock points; web pin).
-        if showScore, entry.bet.isProcessed {
-            let points = entry.bet.userPoints ?? 0
+        if entry.bet == nil {
+            Text("—")
+                .font(.betty(18, .heavy))
+                .foregroundStyle(theme.colors.textSecondary)
+        } else if showScore, let bet = entry.bet, bet.isProcessed {
+            let points = bet.userPoints ?? 0
             Text(points > 0 ? "+\(points)P" : "0P")
                 .font(.bettyKicker)
                 .kerning(0.8)

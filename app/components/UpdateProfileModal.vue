@@ -84,6 +84,30 @@
             </select>
           </label>
 
+          <label class="check">
+            <input v-model="allowMarketing" type="checkbox" class="check__input" />
+            <span class="check__box" aria-hidden="true">
+              <svg
+                v-if="allowMarketing"
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            <span class="check__text">
+              <span class="check__title">Allow emails</span>
+              <span class="check__sub">New tournaments and bet reminders.</span>
+            </span>
+          </label>
+
           <div class="field">
             <span class="field__label">Appearance</span>
             <div class="theme-toggle" role="radiogroup" aria-label="Theme">
@@ -139,6 +163,7 @@ const name = ref('');
 const imageUrl = ref('');
 const firebaseImageUrl = ref<string | null>(null);
 const country = ref<string | null>(null);
+const allowMarketing = ref(true);
 const saving = ref(false);
 const id = ref<number | null>(null);
 const isLight = ref(false);
@@ -187,6 +212,7 @@ onMounted(async () => {
     imageUrl.value = data.image_url;
     firebaseImageUrl.value = data.firebase_image_url ?? null;
     country.value = data.country ?? null;
+    allowMarketing.value = data.allow_marketing ?? true;
     id.value = data.id;
   } catch (err) {
     console.error(err);
@@ -299,13 +325,14 @@ onBeforeUnmount(() => {
 async function save() {
   saving.value = true;
   try {
-    // The backend PUT /user/me only applies name and country — never send email.
+    // The backend PUT /user/me only applies name, country and allow_marketing — never send email.
     await authFetch<any>('/user/me', {
       method: 'PUT',
       body: {
         name: name.value,
         image_url: imageUrl.value,
         country: country.value,
+        allow_marketing: allowMarketing.value,
       },
     });
     alert({
@@ -634,6 +661,64 @@ async function save() {
 .theme-toggle__btn--active {
   background: rgba(255, 90, 58, 0.18);
   color: var(--orange);
+}
+
+/* ===== Checkbox ===== */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
+  border-radius: 2px;
+  cursor: pointer;
+  margin-bottom: 22px;
+}
+
+.check__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.check__box {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--surface-overlay-06);
+  border: 1.5px solid var(--surface-overlay-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--orange);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.check__input:checked + .check__box {
+  background: rgba(255, 90, 58, 0.15);
+  border-color: var(--orange);
+}
+
+.check__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.check__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.check__sub {
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
 }
 
 /* ===== Button ===== */

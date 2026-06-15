@@ -248,8 +248,11 @@ tab. The header "+ NEW GROUP" button is a toolbar `+` on Home (and the empty-sta
     (HiddenScore placeholder) until kickoff unless the group has `allow_sneak_peek`;
     your row highlighted; +1P/+3P/0P chips once `processed_at` is set.
   - On success: dismiss + reload bets (and haptic).
-- **UserHistorySheet** (web `UserHistory`): a member's bets joined to games, sorted by
-  kickoff, scores hidden pre-kickoff unless peek, total points footer.
+- **UserHistorySheet** (web `UserHistory`): one row per game — the member's bet if
+  placed, else a muted "NO BET" skipped row for games that have already started (future
+  games with no bet are omitted, mirroring the hidden-score pin). Sorted by kickoff,
+  scores hidden pre-kickoff unless peek; header `"<bets> BETS · <Σ pts> PTS"` reflects
+  actual bets only.
 - **GroupSettingsSheet** (author only): welcome message, description (≤1000 chars),
   winning/exact points, sneak-peek toggle; save → `PUT /group/:id/settings`; disabled
   until dirty + valid; 401/403 → "Only the group author can edit these settings."

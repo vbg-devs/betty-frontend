@@ -331,13 +331,23 @@ team placeholder when unknown).
 
 Inputs: `user` (GroupMember), `bets`, `games`, `peek`. Emits `close`.
 
-- `userBets`: filter `bets` by `user_id == user.user_id`, join each with its game from
-  `games` (by `game_id`), **silently drop** bets whose game is missing, sort ascending by
-  `game.start_date`.
+- `historyRows`: one row per game. For each game in `games`:
+  - if the user bet on it (`bets[user_id == user.user_id, game_id == game.id]`), include a
+    **bet row** with the bet joined to its game;
+  - else if the game has already started (`now > game.start_date`), include a
+    **skipped row** with `bet = null` — displayed as a muted "NO BET" placeholder;
+  - else (future game with no bet) **omit** — don't leak who hasn't placed bets yet on
+    upcoming games (mirrors the hidden-score / pre-kickoff pin).
+  Sort ascending by `game.start_date`, stable. Orphan bets (game not in `games`) are
+  silently dropped.
 - Header: medium UserBadge; title `(nickname ?? name).uppercased()`;
-  stats `"<count> BETS · <Σ user_points> PTS"` (missing `user_points` counts as 0; dropped
-  orphan bets count toward neither stat).
-- Body: `BetRowView` per bet with `peek` forwarded; empty state `"★ NO BETS YET"`.
+  stats `"<bets-count> BETS · <Σ user_points> PTS"`. **Both counts reflect actual bets
+  only** — skipped rows count toward neither (missing `user_points` counts as 0; orphan
+  bets count toward neither).
+- Body: `BetRowView` per row with `peek` forwarded. A skipped row renders the team
+  flags, a "NO BET" label in the score slot, and an em-dash in the points slot, all at
+  `opacity 0.55`. Empty state `"★ NO BETS YET"` shows only when `historyRows` is empty
+  (e.g. no games at all, or only future games the user hasn't bet on).
 - Sheet with backdrop/close-button dismissal.
 
 ---

@@ -198,17 +198,37 @@ object GroupBetRowLogic {
     }
 }
 
-/** Member bet-history entries (web `UserHistory.vue`). */
-data class UserHistoryEntry(val bet: Bet, val game: Game)
+/**
+ * Member bet-history row (web `UserHistory.vue`). A null `bet` is a "NO BET" row for a
+ * game the member skipped — only included once the game has started (so we don't leak
+ * who hasn't placed bets yet on upcoming games).
+ */
+data class UserHistoryEntry(val bet: Bet?, val game: Game)
 
 object GroupUserHistoryLogic {
-    /** Member's bets joined to games (orphans dropped), sorted ascending by kickoff. */
-    fun entries(bets: List<Bet>, userId: String, games: List<Game>): List<UserHistoryEntry> {
-        val byId = games.associateBy { it.id }
-        return bets
+    /**
+     * One row per game: bet-row if the member bet on it, skipped-row ("NO BET") if the
+     * game has already started. Future games the member hasn't bet on are omitted
+     * (the hidden-score / pre-kickoff pin — don't leak un-placed bets). Sorted ascending
+     * by kickoff, stable.
+     */
+    fun entries(
+        bets: List<Bet>,
+        userId: String,
+        games: List<Game>,
+        now: Instant = Instant.now(),
+    ): List<UserHistoryEntry> {
+        val betByGameId = bets.asSequence()
             .filter { it.userId == userId }
-            .mapNotNull { bet -> byId[bet.gameId]?.let { UserHistoryEntry(bet, it) } }
-            .withIndex()
+            .associateBy { it.gameId }
+
+        val rows = games.mapNotNull { game ->
+            betByGameId[game.id]?.let { return@mapNotNull UserHistoryEntry(it, game) }
+            val start = game.startDate
+            if (start != null && now.isAfter(start)) UserHistoryEntry(null, game) else null
+        }
+
+        return rows.withIndex()
             .sortedWith(
                 compareBy<IndexedValue<UserHistoryEntry>> {
                     it.value.game.startDate ?: Instant.EPOCH
@@ -217,9 +237,12 @@ object GroupUserHistoryLogic {
             .map { it.value }
     }
 
-    /** Σ user_points over the joined entries (null counts as 0). */
+    /** "<N> BETS" — only actual bets, not skipped rows. */
+    fun betsCount(entries: List<UserHistoryEntry>): Int = entries.count { it.bet != null }
+
+    /** Σ user_points over the bets only (null/skipped count as 0). */
     fun totalPoints(entries: List<UserHistoryEntry>): Int =
-        entries.sumOf { it.bet.userPoints ?: 0 }
+        entries.sumOf { it.bet?.userPoints ?: 0 }
 }
 
 object GroupStandings {

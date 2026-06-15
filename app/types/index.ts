@@ -5,6 +5,7 @@ export interface UserProfile {
   image_url: string | null;
   firebase_image_url: string | null;
   country: string | null;
+  allow_marketing: boolean;
   is_admin: boolean;
   created_at: string;
   updated_at: string;
