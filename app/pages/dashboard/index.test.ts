@@ -92,13 +92,11 @@ describe('pages/dashboard', () => {
   });
 
   describe('empty state', () => {
-    it('renders the get-started card and a NO GROUPS YET hero when there are no groups', async () => {
+    it('renders only the get-started card when there are no groups', async () => {
       const wrapper = await mountPage();
-      expect(wrapper.find('.hero__title').text()).toContain('NO GROUPS');
-      expect(wrapper.find('.hero__title--green').text()).toBe('YET.');
+      expect(wrapper.find('.hero').exists()).toBe(false);
       expect(wrapper.find('.groups-section').exists()).toBe(false);
       expect(wrapper.find('.tabs').exists()).toBe(false);
-      expect(wrapper.find('.hero__countdown').exists()).toBe(false);
       expect(wrapper.find('.empty-card__title').text()).toContain('SIX FRIENDS.');
     });
 
@@ -111,9 +109,9 @@ describe('pages/dashboard', () => {
   });
 
   describe('hero', () => {
-    it('links the feedback banner to support and the browse link to public groups', async () => {
+    it('links the feedback pill to support and the browse link to public groups', async () => {
       const wrapper = await mountPage();
-      expect(wrapper.find('a.feedback-banner').attributes('href')).toBe('/support');
+      expect(wrapper.find('a.feedback-pill').attributes('href')).toBe('/support');
       expect(wrapper.find('a.hero__browse').attributes('href')).toBe('/dashboard/groups/browse');
     });
 
