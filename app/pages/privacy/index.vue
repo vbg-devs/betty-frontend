@@ -376,10 +376,10 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Privacy Policy · Betty.social',
+  title: 'Privacy Policy · Betty',
   description:
     'How Betty.social collects, uses, and protects your personal data when you use the service.',
-  ogTitle: 'Privacy Policy · Betty.social',
+  ogTitle: 'Privacy Policy · Betty',
   ogDescription:
     'How Betty.social collects, uses, and protects your personal data when you use the service.',
   ogUrl: 'https://betty.social/privacy',
