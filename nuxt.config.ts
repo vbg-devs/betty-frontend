@@ -68,6 +68,13 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       ],
+      script: [
+        {
+          src: 'https://scripts.simpleanalyticscdn.com/latest.js',
+          async: true,
+          'data-collect-dnt': 'true',
+        },
+      ],
     },
   },
 
