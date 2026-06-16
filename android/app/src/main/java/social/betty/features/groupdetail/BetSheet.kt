@@ -435,8 +435,8 @@ private fun PlacedBetsTab(
 ) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
-    val ordered = GroupBetLogic.orderedBets(bets)
     val membersById = group?.members?.associateBy { it.userId } ?: emptyMap()
+    val ordered = GroupBetLogic.orderedBets(bets.filter { membersById.containsKey(it.userId) })
 
     Column(
         modifier = Modifier

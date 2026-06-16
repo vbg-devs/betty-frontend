@@ -53,7 +53,7 @@
               'bet-row--full': bet.user_points === 3,
             }"
           >
-            <span class="bet-row__name">{{ bet.user.nickname || bet.user.name }}</span>
+            <span class="bet-row__name">{{ bet.user?.nickname || bet.user?.name }}</span>
             <span class="bet-row__score">
               <template v-if="showScores">
                 <strong>{{ bet.home_team_score }} – {{ bet.away_team_score }}</strong>
@@ -184,7 +184,7 @@ const canSave = computed(() => {
 });
 
 const orderedBets = computed(() => {
-  const sorted = bets.concat();
+  const sorted = bets.filter((x: any) => x.user);
   sorted.sort((a: any, b: any) => b.user_points - a.user_points);
   return sorted;
 });

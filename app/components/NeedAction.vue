@@ -230,6 +230,12 @@ function placedBetAwayTeam(game: any) {
   }
 }
 
+:deep(.game) {
+  background:
+    linear-gradient(var(--surface-overlay-06), var(--surface-overlay-06)),
+    var(--indigo-dark);
+}
+
 .game__bets-info {
   position: absolute;
   top: 10px;

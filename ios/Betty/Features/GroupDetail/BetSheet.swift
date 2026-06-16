@@ -252,13 +252,14 @@ struct BetSheet: View {
     // MARK: - Placed bets
 
     private var placedBetsTab: some View {
-        VStack(spacing: 2) {
-            ForEach(Array(GroupBetLogic.orderedBets(gameBets).enumerated()), id: \.element.id) { index, bet in
+        let visibleBets = gameBets.filter { group?.member(withUserID: $0.userID) != nil }
+        return VStack(spacing: 2) {
+            ForEach(Array(GroupBetLogic.orderedBets(visibleBets).enumerated()), id: \.element.id) { index, bet in
                 placedBetRow(bet)
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("groupDetail.betSheet.placedRow.\(index)")
             }
-            if gameBets.isEmpty {
+            if visibleBets.isEmpty {
                 Text("★ NO BETS YET")
                     .kicker(theme.colors.textMuted)
                     .padding(.vertical, Space.xl)
