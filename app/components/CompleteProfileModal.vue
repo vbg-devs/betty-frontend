@@ -203,6 +203,7 @@ async function save() {
 .modal__body {
   padding: 8px 28px 28px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .profile-image-wrapper {

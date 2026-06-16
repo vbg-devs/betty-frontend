@@ -557,6 +557,7 @@ function selectTournament(tournament: Tournament) {
 .modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px 28px 20px;
 }
 

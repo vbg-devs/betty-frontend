@@ -439,6 +439,7 @@ async function placeBet() {
 .modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 0;
 }
 

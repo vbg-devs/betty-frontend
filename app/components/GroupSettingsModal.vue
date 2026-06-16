@@ -311,6 +311,7 @@ async function save() {
 .modal__body {
   padding: 8px 28px 20px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -488,6 +488,7 @@ async function submitEmailAuth() {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .auth-buttons {
