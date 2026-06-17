@@ -12,8 +12,8 @@ private final class PushRecorder {
 
 private struct StubError: Error {}
 
-/// Pins the APNs registration flow: post-onboarding prompt, hex token encoding, one POST
-/// per distinct token, retry-after-failure, simulator fallback, sign-out reset.
+/// Pins the FCM registration flow: post-onboarding prompt, one POST per
+/// distinct token, retry-after-failure, simulator fallback, sign-out reset.
 @Suite struct PushRegistrationServiceTests {
     private let recorder = PushRecorder()
     private let defaults: UserDefaults
@@ -38,11 +38,6 @@ private struct StubError: Error {}
         )
     }
 
-    @Test func hexTokenEncoding() {
-        #expect(PushRegistrationService.hexToken(from: Data([0x00, 0xAB, 0xFF])) == "00abff")
-        #expect(PushRegistrationService.hexToken(from: Data()) == "")
-    }
-
     @Test func grantedAuthorizationRegistersWithAPNs() async {
         await service.registerIfNeeded()
 
@@ -62,30 +57,38 @@ private struct StubError: Error {}
         #expect(service.phase == .denied)
     }
 
-    @Test func deviceTokenIsSentOncePerValue() async {
-        await service.handleDeviceToken(Data([0x01, 0x02]))
-        await service.handleDeviceToken(Data([0x01, 0x02])) // same token — deduped
+    @Test func fcmTokenIsSentOncePerValue() async {
+        await service.handleFCMToken("fcm-token-A")
+        await service.handleFCMToken("fcm-token-A") // same token — deduped
 
-        #expect(recorder.sentTokens == ["0102"])
-        #expect(service.phase == .registered(token: "0102"))
+        #expect(recorder.sentTokens == ["fcm-token-A"])
+        #expect(service.phase == .registered(token: "fcm-token-A"))
+    }
+
+    @Test func nilOrEmptyFCMTokenIgnored() async {
+        await service.handleFCMToken(nil)
+        await service.handleFCMToken("")
+
+        #expect(recorder.sentTokens.isEmpty)
+        #expect(service.phase == .idle)
     }
 
     @Test func changedTokenIsSentAgain() async {
-        await service.handleDeviceToken(Data([0x01]))
-        await service.handleDeviceToken(Data([0x02]))
+        await service.handleFCMToken("fcm-1")
+        await service.handleFCMToken("fcm-2")
 
-        #expect(recorder.sentTokens == ["01", "02"])
+        #expect(recorder.sentTokens == ["fcm-1", "fcm-2"])
     }
 
     @Test func failedSendStaysUnsentAndRetries() async {
         recorder.sendError = StubError()
-        await service.handleDeviceToken(Data([0x0A]))
+        await service.handleFCMToken("fcm-X")
         #expect(recorder.sentTokens.isEmpty)
 
         recorder.sendError = nil
         await service.registerIfNeeded() // registered phase retries the unsent token
 
-        #expect(recorder.sentTokens == ["0a"])
+        #expect(recorder.sentTokens == ["fcm-X"])
         #expect(recorder.registerCalls == 0) // no re-registration needed
     }
 
@@ -100,12 +103,13 @@ private struct StubError: Error {}
     }
 
     @Test func signOutResetResendsForTheNextAccount() async {
-        await service.handleDeviceToken(Data([0x01]))
+        await service.handleFCMToken("fcm-X")
         service.resetForSignOut()
         #expect(service.phase == .idle)
 
-        await service.handleDeviceToken(Data([0x01]))
+        // After reset, the next handleFCMToken POSTs again.
+        await service.handleFCMToken("fcm-X")
 
-        #expect(recorder.sentTokens == ["01", "01"])
+        #expect(recorder.sentTokens == ["fcm-X", "fcm-X"])
     }
 }
