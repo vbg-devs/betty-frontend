@@ -5,7 +5,7 @@
       <img src="/apple-touch-icon.png" alt="" class="ios-banner__icon" />
       <div class="ios-banner__body">
         <span class="kicker">★ BETTY FOR iOS</span>
-        <p class="ios-banner__text">Bet on the go. Push notifications, faster bets.</p>
+        <p class="ios-banner__text">Betty is finally available on the App Store! Go get it</p>
       </div>
       <a
         :href="APP_STORE_URL"
@@ -26,16 +26,6 @@ const STORAGE_KEY = 'betty-ios-banner-dismissed';
 
 const visible = ref(false);
 
-function isIOS(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  // iPhone, iPod, iPad (including iPadOS 13+ which reports as Mac with touch).
-  return (
-    /iPad|iPhone|iPod/.test(ua) ||
-    (ua.includes('Mac') && typeof document !== 'undefined' && 'ontouchend' in document)
-  );
-}
-
 function dismiss() {
   visible.value = false;
   try {
@@ -46,7 +36,6 @@ function dismiss() {
 }
 
 onMounted(() => {
-  if (!isIOS()) return;
   try {
     if (window.localStorage.getItem(STORAGE_KEY) === '1') return;
   } catch {
@@ -63,7 +52,7 @@ onMounted(() => {
   right: 12px;
   bottom: 12px;
   z-index: 60;
-  display: flex;
+  display: none;
   align-items: center;
   gap: 14px;
   padding: 12px 16px 12px 14px;
@@ -161,5 +150,11 @@ onMounted(() => {
 .ios-banner-leave-to {
   transform: translateY(110%);
   opacity: 0;
+}
+
+@media (max-width: 900px) {
+  .ios-banner {
+    display: flex;
+  }
 }
 </style>
