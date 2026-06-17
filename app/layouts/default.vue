@@ -28,6 +28,7 @@
     </Transition>
     <NotificationProvider />
     <NotificationTester v-if="user && isDev" />
+    <IosAppBanner />
   </div>
 </template>
 

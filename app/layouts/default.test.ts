@@ -48,6 +48,11 @@ const NotificationTesterStub = {
   template: '<div data-testid="notification-tester" />',
 };
 
+const IosAppBannerStub = {
+  name: 'IosAppBanner',
+  template: '<div data-testid="ios-app-banner" />',
+};
+
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
     id: 'uid-1',
@@ -77,6 +82,7 @@ async function mountLayout(route = '/dashboard') {
         SideBar: SideBarStub,
         NotificationProvider: NotificationProviderStub,
         NotificationTester: NotificationTesterStub,
+        IosAppBanner: IosAppBannerStub,
       },
     },
   });
