@@ -3,7 +3,7 @@
 Betty.social — social betting with friends. One repo, every client:
 
 - `app/` — Nuxt 4 / Vue web app (SPA, `ssr: false`)
-- `ios/` — native SwiftUI app (iOS 17+, XcodeGen, zero third-party deps)
+- `ios/` — native SwiftUI app (iOS 17+, XcodeGen, one third-party dep: `FirebaseMessaging` only)
 - `android/` — native Kotlin / Jetpack Compose app (minSdk 26, Gradle), a
   faithful 1:1 port of iOS: same Core/DesignSystem/Features layout, Firebase-REST
   auth, hermetic in-process mock-backend e2e.
@@ -93,6 +93,17 @@ iOS (`ios/`): `xcodegen generate`, then
 - Auth is Firebase Auth **REST** (no Firebase SDK): Identity Toolkit +
   securetoken, Keychain persistence. Google sign-in's iOS OAuth client ID is
   set in project.yml (`GoogleOAuthClientID`).
+
+**iOS dep carve-out — Firebase Messaging only.** The iOS app links
+`FirebaseMessaging` (and its transitive deps: `FirebaseCore`,
+`GoogleUtilities`, `GoogleDataTransport`, `nanopb`, `PromisesObjC`) via
+SPM (`ios/project.yml` → `packages.Firebase`). This is the ONLY
+third-party dep on iOS. Auth remains REST-only — `FirebaseAuth` is
+NOT linked. Future deps require an explicit override of this rule.
+`GoogleService-Info.plist` is gitignored; CI decodes it from
+`GOOGLE_SERVICE_INFO_PLIST_BASE64` (in the protected `release`
+environment) into `ios/Betty/GoogleService-Info.plist` before
+`xcodegen generate`.
 
 Android (`android/`): Kotlin + Jetpack Compose, applicationId `social.betty.android`
 (code/namespace `social.betty`),
