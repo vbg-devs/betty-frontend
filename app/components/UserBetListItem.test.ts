@@ -52,6 +52,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: false,
     correct_team_points: 1,
     exact_result_points: 3,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [],
     ...overrides,
@@ -67,6 +69,7 @@ function makeBet(overrides: Partial<BetWithGame> = {}): BetWithGame {
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     game: futureGame,
     ...overrides,
@@ -250,5 +253,79 @@ describe('UserBetListItem', () => {
     });
     expect(wrapper.findComponent(HiddenScore).exists()).toBe(true);
     expect(wrapper.classes()).toContain('bet-row--pending');
+  });
+
+  describe('booster rocket', () => {
+    it('renders the rocket next to the awarded points for a boosted processed win', async () => {
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: {
+          bet: makeBet({
+            user_points: 4,
+            boosted: true,
+            processed_at: '2026-06-01T00:00:00Z',
+          }),
+        },
+      });
+      expect(wrapper.find('.bet-row__pts').text()).toBe('+4P');
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(true);
+    });
+
+    it('does not render the rocket on a processed bet that scored zero points', async () => {
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: {
+          bet: makeBet({
+            user_points: 0,
+            boosted: true,
+            processed_at: '2026-06-01T00:00:00Z',
+          }),
+        },
+      });
+      expect(wrapper.find('.bet-row__pts').text()).toBe('0P');
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(false);
+    });
+
+    it('does not render the rocket on a processed bet that is not boosted', async () => {
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: {
+          bet: makeBet({
+            user_points: 3,
+            boosted: false,
+            processed_at: '2026-06-01T00:00:00Z',
+          }),
+        },
+      });
+      expect(wrapper.find('.bet-row__pts').exists()).toBe(true);
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(false);
+    });
+
+    it('renders a standalone rocket pre-kickoff for the viewer own boosted bet', async () => {
+      useUserStore().user = me;
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: { bet: makeBet({ user_id: 'uid-5', boosted: true }) },
+      });
+      // Score visible (own bet), but no points yet (unprocessed).
+      expect(wrapper.find('.bet-row__pts').exists()).toBe(false);
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(true);
+      expect(wrapper.find('.bet-row__rocket').text()).toBe('🚀');
+    });
+
+    it('renders the rocket pre-kickoff when peek reveals another user boosted bet', async () => {
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: {
+          bet: makeBet({ user_id: 'uid-42', boosted: true }),
+          peek: true,
+        },
+      });
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(true);
+    });
+
+    it('hides the pre-kickoff rocket when the score is hidden for other users', async () => {
+      useUserStore().user = { ...me, id: 'uid-99' };
+      const wrapper = await mountSuspended(UserBetListItem, {
+        props: { bet: makeBet({ user_id: 'uid-5', boosted: true }) },
+      });
+      // Score is hidden, so the booster signal is also hidden.
+      expect(wrapper.find('.bet-row__rocket').exists()).toBe(false);
+    });
   });
 });

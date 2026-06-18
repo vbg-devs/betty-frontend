@@ -71,6 +71,12 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
     let allowSneakPeek: Bool
     let groupPlayDeadline: Date?
     let mode: Int
+    /// Boosters per user in this group. `0` disables boosters. Defaults to `0` if
+    /// missing (pre-feature backend) so the client still decodes.
+    let boostCount: Int
+    /// Multiplier applied to a bet with `boosted == true` when boosters are enabled
+    /// (`boostCount > 0`). Defaults to `2` if missing.
+    let boostMultiplier: Int
     let publicAt: Date?
     let createdAt: Date
     let updatedAt: Date
@@ -101,6 +107,8 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
         case exactResultPoints = "exact_result_points"
         case allowSneakPeek = "allow_sneak_peek"
         case groupPlayDeadline = "group_play_deadline"
+        case boostCount = "boost_count"
+        case boostMultiplier = "boost_multiplier"
         case publicAt = "public_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -123,6 +131,8 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
         allowSneakPeek = try c.decodeIfPresent(Bool.self, forKey: .allowSneakPeek) ?? false
         groupPlayDeadline = try c.decodeIfPresent(Date.self, forKey: .groupPlayDeadline)
         mode = try c.decodeIfPresent(Int.self, forKey: .mode) ?? 0
+        boostCount = try c.decodeIfPresent(Int.self, forKey: .boostCount) ?? 0
+        boostMultiplier = try c.decodeIfPresent(Int.self, forKey: .boostMultiplier) ?? 2
         publicAt = try c.decodeIfPresent(Date.self, forKey: .publicAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
@@ -188,6 +198,8 @@ nonisolated struct PublicGroupItem: Decodable, Identifiable, Hashable, Sendable 
     let allowSneakPeek: Bool
     let betMode: Int
     let groupPlayDeadline: Date?
+    let boostCount: Int
+    let boostMultiplier: Int
     let publicAt: Date
     let createdAt: Date
     var memberCount: Int   // var: mutated optimistically on join
@@ -204,10 +216,34 @@ nonisolated struct PublicGroupItem: Decodable, Identifiable, Hashable, Sendable 
         case allowSneakPeek = "allow_sneak_peek"
         case betMode = "bet_mode"
         case groupPlayDeadline = "group_play_deadline"
+        case boostCount = "boost_count"
+        case boostMultiplier = "boost_multiplier"
         case publicAt = "public_at"
         case createdAt = "created_at"
         case memberCount = "member_count"
         case isMember = "is_member"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        tournamentID = try c.decode(Int.self, forKey: .tournamentID)
+        tournamentName = try c.decodeIfPresent(String.self, forKey: .tournamentName) ?? ""
+        tournamentImageURL = try c.decodeIfPresent(String.self, forKey: .tournamentImageURL)
+        headerImageURL = try c.decodeIfPresent(String.self, forKey: .headerImageURL)
+        correctTeamPoints = try c.decodeIfPresent(Int.self, forKey: .correctTeamPoints) ?? 1
+        exactResultPoints = try c.decodeIfPresent(Int.self, forKey: .exactResultPoints) ?? 3
+        allowSneakPeek = try c.decodeIfPresent(Bool.self, forKey: .allowSneakPeek) ?? false
+        betMode = try c.decodeIfPresent(Int.self, forKey: .betMode) ?? 0
+        groupPlayDeadline = try c.decodeIfPresent(Date.self, forKey: .groupPlayDeadline)
+        boostCount = try c.decodeIfPresent(Int.self, forKey: .boostCount) ?? 0
+        boostMultiplier = try c.decodeIfPresent(Int.self, forKey: .boostMultiplier) ?? 2
+        publicAt = try c.decode(Date.self, forKey: .publicAt)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        memberCount = try c.decodeIfPresent(Int.self, forKey: .memberCount) ?? 0
+        isMember = try c.decodeIfPresent(Bool.self, forKey: .isMember) ?? false
     }
 }
 
@@ -250,7 +286,8 @@ nonisolated struct GroupPeek: Decodable, Identifiable, Hashable, Sendable {
 }
 
 /// Body for `POST /group`. `correct_team_points`/`exact_result_points` must be NON-ZERO
-/// (Gin binding rejects 0 with a 400).
+/// (Gin binding rejects 0 with a 400). `boostCount`/`boostMultiplier` are optional and
+/// default to 0/2 (boosters off) per the spec (`docs/superpowers/specs/2026-06-14-boosters-design.md`).
 nonisolated struct CreateGroupRequest: Encodable, Sendable {
     var name: String
     var tournamentID: Int
@@ -262,6 +299,10 @@ nonisolated struct CreateGroupRequest: Encodable, Sendable {
     var description: String?
     var isPublic: Bool = false
     var mode: Int = 0
+    /// 0 = boosters disabled in this group (default). Server rejects `< 0` with 400.
+    var boostCount: Int = 0
+    /// Multiplier when a booster is applied. Default 2. Server rejects `< 1` with 400.
+    var boostMultiplier: Int = 2
 
     enum CodingKeys: String, CodingKey {
         case name, mode, description
@@ -272,17 +313,26 @@ nonisolated struct CreateGroupRequest: Encodable, Sendable {
         case groupPlayDeadline = "group_play_deadline"
         case welcomeMessage = "welcome_message"
         case isPublic = "is_public"
+        case boostCount = "boost_count"
+        case boostMultiplier = "boost_multiplier"
     }
 }
 
-/// Body for `PUT /group/:id/settings`. All five fields are always sent (matching the web
-/// settings sheet); explicit `null` clears `welcome_message`/`description`.
+/// Body for `PUT /group/:id/settings`. The five legacy fields are always sent (matching
+/// the web settings sheet); explicit `null` clears `welcome_message`/`description`.
+/// `boostCount`/`boostMultiplier` are partial-update optionals — encoded only when
+/// non-nil, matching how `welcome_message`/`description` skip their key when omitted is
+/// not the intent (those use explicit null to clear).
 nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
     var welcomeMessage: String?
     var description: String?
     var correctTeamPoints: Int
     var exactResultPoints: Int
     var allowSneakPeek: Bool
+    /// nil = leave the group's current `boost_count` alone. Server rejects `< 0` with 400.
+    var boostCount: Int? = nil
+    /// nil = leave the group's current `boost_multiplier` alone. Server rejects `< 1` with 400.
+    var boostMultiplier: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case description
@@ -290,6 +340,8 @@ nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
         case correctTeamPoints = "correct_team_points"
         case exactResultPoints = "exact_result_points"
         case allowSneakPeek = "allow_sneak_peek"
+        case boostCount = "boost_count"
+        case boostMultiplier = "boost_multiplier"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -301,6 +353,8 @@ nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
         try c.encode(correctTeamPoints, forKey: .correctTeamPoints)
         try c.encode(exactResultPoints, forKey: .exactResultPoints)
         try c.encode(allowSneakPeek, forKey: .allowSneakPeek)
+        if let boostCount { try c.encode(boostCount, forKey: .boostCount) }
+        if let boostMultiplier { try c.encode(boostMultiplier, forKey: .boostMultiplier) }
     }
 }
 

@@ -93,6 +93,8 @@ object MockWire {
             "allow_sneak_peek" to g.allowSneakPeek,
             "group_play_deadline" to time(g.groupPlayDeadline),
             "mode" to g.mode,
+            "boost_count" to g.boostCount,
+            "boost_multiplier" to g.boostMultiplier,
             "is_public" to false, // db:"-" — ALWAYS false on reads; derive from public_at
             "public_at" to time(g.publicAt),
             "created_at" to time(g.createdAt),
@@ -137,6 +139,8 @@ object MockWire {
             "exact_result_points" to g.exactResultPoints,
             "allow_sneak_peek" to g.allowSneakPeek,
             "bet_mode" to g.mode,
+            "boost_count" to g.boostCount,
+            "boost_multiplier" to g.boostMultiplier,
             "group_play_deadline" to time(g.groupPlayDeadline),
             "public_at" to time(g.publicAt ?: Instant.now()),
             "created_at" to time(g.createdAt),
@@ -170,13 +174,22 @@ object MockWire {
         "home_team_score" to b.homeTeamScore,
         "away_team_score" to b.awayTeamScore,
         "is_universal" to false, // request-only flag — never stored
+        "boosted" to b.boosted,
         "processed_at" to time(b.processedAt),
         "created_at" to time(b.createdAt),
         "updated_at" to time(b.updatedAt),
     )
 
     /** The `POST /bet` 200 body: a request echo with `id: 0` and zero timestamps. */
-    fun betEcho(userId: String, gameId: Int, groupId: Int, home: Int, away: Int, isUniversal: Boolean): JSONObject = obj(
+    fun betEcho(
+        userId: String,
+        gameId: Int,
+        groupId: Int,
+        home: Int,
+        away: Int,
+        isUniversal: Boolean,
+        boosted: Boolean = false,
+    ): JSONObject = obj(
         "id" to 0,
         "user_id" to userId,
         "game_id" to gameId,
@@ -185,6 +198,7 @@ object MockWire {
         "home_team_score" to home,
         "away_team_score" to away,
         "is_universal" to isUniversal,
+        "boosted" to boosted,
         "processed_at" to JSONObject.NULL,
         "created_at" to ZERO_TIME,
         "updated_at" to ZERO_TIME,

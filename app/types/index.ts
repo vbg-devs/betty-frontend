@@ -44,6 +44,8 @@ export interface Group {
   allow_sneak_peek: boolean;
   correct_team_points: number;
   exact_result_points: number;
+  boost_count: number;
+  boost_multiplier: number;
   public_at: string | null;
   members: GroupMember[];
 }
@@ -61,6 +63,8 @@ export interface PublicGroupItem {
   allow_sneak_peek: boolean;
   bet_mode: number;
   group_play_deadline: string | null;
+  boost_count: number;
+  boost_multiplier: number;
   public_at: string;
   created_at: string;
   member_count: number;
@@ -102,6 +106,7 @@ export interface Bet {
   home_team_score: number;
   away_team_score: number;
   user_points: number;
+  boosted: boolean;
   processed_at: string | null;
   user?: GroupMember;
 }

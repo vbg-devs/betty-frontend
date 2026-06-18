@@ -16,6 +16,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     ...overrides,
   };
@@ -83,6 +84,18 @@ describe('useBetStore', () => {
       await expect(store.place({ game_id: 20 })).rejects.toThrow('boom');
       expect(store.bets).toEqual([]);
     });
+
+    it('forwards boosted when the caller includes it in the payload', async () => {
+      authFetch.mockResolvedValue(makeBet({ boosted: true }));
+      const store = useBetStore();
+
+      await store.place({ game_id: 20, group_id: 30, boosted: true });
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({ body: expect.objectContaining({ boosted: true }) }),
+      );
+    });
   });
 
   describe('update()', () => {
@@ -140,6 +153,18 @@ describe('useBetStore', () => {
       const store = useBetStore();
 
       await expect(store.update({ id: 1 })).rejects.toThrow('nope');
+    });
+
+    it('forwards boosted when the caller includes it in the payload', async () => {
+      authFetch.mockResolvedValue(makeBet({ id: 5, boosted: true }));
+      const store = useBetStore();
+
+      await store.update({ id: 5, boosted: true });
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet/5',
+        expect.objectContaining({ body: expect.objectContaining({ boosted: true }) }),
+      );
     });
   });
 });

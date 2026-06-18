@@ -66,6 +66,8 @@ export const useGroupStore = defineStore('group', () => {
       correct_team_points?: number;
       exact_result_points?: number;
       allow_sneak_peek?: boolean;
+      boost_count?: number;
+      boost_multiplier?: number;
     },
   ) {
     const { authFetch } = useApi();

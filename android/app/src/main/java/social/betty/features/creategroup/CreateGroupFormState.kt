@@ -29,16 +29,29 @@ class CreateGroupFormState {
     /** Default OFF — components.md §4.2. */
     var isPublic: Boolean by mutableStateOf(false)
 
+    /**
+     * Booster fields (Boosters spec §3.2). Defaults match the wire defaults: count 0
+     * (boosters OFF on new groups), multiplier 2.
+     */
+    var boostCount: String by mutableStateOf("0")
+    var boostMultiplier: String by mutableStateOf("2")
+
     fun selectedTournament(running: List<Tournament>): Tournament? =
         tournamentId?.let { id -> running.firstOrNull { it.id == id } }
 
     /**
      * Web `canSave`: tournament still in the running list AND name non-empty AND both
-     * point strings non-empty (components.md §4.2).
+     * point strings non-empty (components.md §4.2). Plus the booster fields: count ≥ 0 and
+     * multiplier ≥ 1 (server-side validation mirror).
      */
-    fun canSave(running: List<Tournament>): Boolean =
-        selectedTournament(running) != null &&
+    fun canSave(running: List<Tournament>): Boolean {
+        val bc = boostCount.toIntOrNull()
+        val bm = boostMultiplier.toIntOrNull()
+        return selectedTournament(running) != null &&
             name.isNotEmpty() &&
             winPoints.isNotEmpty() &&
-            exactPoints.isNotEmpty()
+            exactPoints.isNotEmpty() &&
+            bc != null && bc >= 0 &&
+            bm != null && bm >= 1
+    }
 }

@@ -24,6 +24,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: false,
     correct_team_points: 2,
     exact_result_points: 4,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [],
     ...overrides,
@@ -33,7 +35,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
 async function mountModal(group: Group = makeGroup()) {
   const wrapper = await mountSuspended(GroupSettingsModal, { props: { group } });
   const [welcome, description] = wrapper.findAll('textarea');
-  const [winPoints, exactPoints] = wrapper.findAll('input[type="number"]');
+  const [winPoints, exactPoints, boostCount, boostMultiplier] =
+    wrapper.findAll('input[type="number"]');
   const peek = wrapper.find('input[type="checkbox"]');
   const saveButton = wrapper.find('.modal__footer button');
   return {
@@ -42,6 +45,8 @@ async function mountModal(group: Group = makeGroup()) {
     description: description!,
     winPoints: winPoints!,
     exactPoints: exactPoints!,
+    boostCount: boostCount!,
+    boostMultiplier: boostMultiplier!,
     peek,
     saveButton,
   };
@@ -160,6 +165,8 @@ describe('GroupSettingsModal', () => {
           correct_team_points: 2,
           exact_result_points: 4,
           allow_sneak_peek: true,
+          boost_count: 0,
+          boost_multiplier: 2,
         },
       },
     ]);
@@ -252,6 +259,83 @@ describe('GroupSettingsModal', () => {
     });
     expect(saveButton.text()).toBe('SAVE CHANGES');
     expect(saveButton.attributes('disabled')).toBeUndefined();
+  });
+
+  describe('boosters', () => {
+    it('renders the boost count and multiplier inputs with values from the group', async () => {
+      const { boostCount, boostMultiplier, wrapper } = await mountModal(
+        makeGroup({ boost_count: 3, boost_multiplier: 4 }),
+      );
+      expect((boostCount.element as HTMLInputElement).value).toBe('3');
+      expect((boostMultiplier.element as HTMLInputElement).value).toBe('4');
+      expect(wrapper.text()).toContain(
+        "Members can apply a booster to multiply a single bet's points",
+      );
+    });
+
+    it('disables the multiplier input when boost count is 0', async () => {
+      const { boostCount, boostMultiplier } = await mountModal(makeGroup({ boost_count: 0 }));
+      expect((boostCount.element as HTMLInputElement).value).toBe('0');
+      expect((boostMultiplier.element as HTMLInputElement).disabled).toBe(true);
+    });
+
+    it('enables the multiplier input once boost count becomes positive', async () => {
+      const { boostCount, boostMultiplier } = await mountModal(makeGroup({ boost_count: 0 }));
+      expect((boostMultiplier.element as HTMLInputElement).disabled).toBe(true);
+      await boostCount.setValue('2');
+      expect((boostMultiplier.element as HTMLInputElement).disabled).toBe(false);
+    });
+
+    it('treats a boost-count change as dirty', async () => {
+      const { boostCount, saveButton } = await mountModal();
+      await boostCount.setValue('2');
+      expect(saveButton.attributes('disabled')).toBeUndefined();
+    });
+
+    it('treats a boost-multiplier change as dirty', async () => {
+      const { boostMultiplier, saveButton } = await mountModal(
+        makeGroup({ boost_count: 2, boost_multiplier: 2 }),
+      );
+      await boostMultiplier.setValue('3');
+      expect(saveButton.attributes('disabled')).toBeUndefined();
+    });
+
+    it('disables save when boost count is negative', async () => {
+      const { boostCount, saveButton, welcome } = await mountModal();
+      await welcome.setValue('dirty');
+      expect(saveButton.attributes('disabled')).toBeUndefined();
+      await boostCount.setValue('-1');
+      expect(saveButton.attributes('disabled')).toBeDefined();
+    });
+
+    it('disables save when boost multiplier is below 1', async () => {
+      const { boostMultiplier, saveButton, welcome } = await mountModal(
+        makeGroup({ boost_count: 2, boost_multiplier: 2 }),
+      );
+      await welcome.setValue('dirty');
+      expect(saveButton.attributes('disabled')).toBeUndefined();
+      await boostMultiplier.setValue('0');
+      expect(saveButton.attributes('disabled')).toBeDefined();
+    });
+
+    it('disables save when the boost count is cleared', async () => {
+      const { boostCount, saveButton } = await mountModal();
+      await boostCount.setValue('');
+      expect(saveButton.attributes('disabled')).toBeDefined();
+    });
+
+    it('sends boost_count and boost_multiplier in the save payload', async () => {
+      const { boostCount, boostMultiplier, saveButton } = await mountModal();
+      await boostCount.setValue('3');
+      await boostMultiplier.setValue('4');
+      await saveButton.trigger('click');
+      await flushPromises();
+
+      expect(authFetch.mock.calls[0]?.[1]?.body).toMatchObject({
+        boost_count: 3,
+        boost_multiplier: 4,
+      });
+    });
   });
 
   it('locks body scroll on mount and unlocks it on unmount', async () => {

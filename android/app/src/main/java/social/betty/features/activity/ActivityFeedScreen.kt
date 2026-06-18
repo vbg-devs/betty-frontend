@@ -111,6 +111,15 @@ fun ActivityFeedScreen() {
                         },
                         teamById = { id -> teamIndex[id] },
                         groupNameById = { id -> groupIndex[id]?.name },
+                        memberDisplayName = { groupId, userId ->
+                            // Mirrors web `GameMessageListItem.vue:59-64`: resolve via the
+                            // group's member roster (nickname || name).
+                            val group = groupIndex[groupId] ?: return@ActivityRow null
+                            val member = group.members.firstOrNull { it.userId == userId }
+                                ?: return@ActivityRow null
+                            member.nickname?.takeIf { it.isNotEmpty() }
+                                ?: member.name?.takeIf { it.isNotEmpty() }
+                        },
                         currentUserId = currentUserId,
                         // No-op: standalone game fetch is unavailable in the current API
                         // surface (BettyApi has no getGame(id) and GameStore has no load(id)).

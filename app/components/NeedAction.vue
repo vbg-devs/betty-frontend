@@ -14,6 +14,7 @@
       <Game
         v-for="game in games"
         :key="game.id"
+        :bets="bets"
         :betted="hasBet(game)"
         :placed-bet-home-team="placedBetHomeTeam(game)"
         :placed-bet-away-team="placedBetAwayTeam(game)"

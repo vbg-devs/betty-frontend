@@ -83,26 +83,39 @@ fun GroupSettingsSheet(groupId: Int, onDismiss: () -> Unit) {
     val initialWin = group.correctTeamPoints.toString()
     val initialExact = group.exactResultPoints.toString()
     val initialPeek = group.allowSneakPeek
+    val initialBoostCount = group.boostCount.toString()
+    val initialBoostMultiplier = group.boostMultiplier.toString()
 
     var welcome by remember(groupId) { mutableStateOf(initialWelcome) }
     var description by remember(groupId) { mutableStateOf(initialDescription) }
     var winPoints by remember(groupId) { mutableStateOf(initialWin) }
     var exactPoints by remember(groupId) { mutableStateOf(initialExact) }
     var peek by remember(groupId) { mutableStateOf(initialPeek) }
+    var boostCount by remember(groupId) { mutableStateOf(initialBoostCount) }
+    var boostMultiplier by remember(groupId) { mutableStateOf(initialBoostMultiplier) }
     var isSaving by remember { mutableStateOf(false) }
 
     val isDirty = welcome != initialWelcome ||
         description != initialDescription ||
         winPoints != initialWin ||
         exactPoints != initialExact ||
-        peek != initialPeek
+        peek != initialPeek ||
+        boostCount != initialBoostCount ||
+        boostMultiplier != initialBoostMultiplier
+    val parsedBoostCount = boostCount.toIntOrNull()
+    val parsedBoostMultiplier = boostMultiplier.toIntOrNull()
     val isValid = winPoints.toIntOrNull() != null && exactPoints.toIntOrNull() != null &&
-        description.length <= MAX_DESCRIPTION
+        description.length <= MAX_DESCRIPTION &&
+        // Spec §1.1: boost_count ≥ 0, boost_multiplier ≥ 1.
+        parsedBoostCount != null && parsedBoostCount >= 0 &&
+        parsedBoostMultiplier != null && parsedBoostMultiplier >= 1
     val canSave = isDirty && isValid && !isSaving
 
     fun save() {
         val win = winPoints.toIntOrNull() ?: return
         val exact = exactPoints.toIntOrNull() ?: return
+        val bc = parsedBoostCount ?: return
+        val bm = parsedBoostMultiplier ?: return
         if (isSaving) return
         isSaving = true
         scope.launch {
@@ -114,6 +127,8 @@ fun GroupSettingsSheet(groupId: Int, onDismiss: () -> Unit) {
                     correctTeamPoints = win,
                     exactResultPoints = exact,
                     allowSneakPeek = peek,
+                    boostCount = bc,
+                    boostMultiplier = bm,
                 )
                 container.notify.success("Settings saved.")
                 isSaving = false
@@ -192,6 +207,34 @@ fun GroupSettingsSheet(groupId: Int, onDismiss: () -> Unit) {
             }
         }
 
+        // Boosters (spec §3.1). Count ≥ 0, multiplier ≥ 1. Multiplier disabled when count = 0.
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.s), modifier = Modifier.fillMaxWidth()) {
+            SettingsField(label = "Boosters per user", modifier = Modifier.weight(1f)) {
+                BettyNumberField(
+                    value = boostCount,
+                    onValueChange = { boostCount = it.filter { c -> c.isDigit() } },
+                    placeholder = "0",
+                    tag = "group-settings-boost-count",
+                )
+            }
+            SettingsField(label = "Booster multiplier", modifier = Modifier.weight(1f)) {
+                val countEnabled = (parsedBoostCount ?: 0) > 0
+                BettyNumberField(
+                    value = boostMultiplier,
+                    onValueChange = { boostMultiplier = it.filter { c -> c.isDigit() } },
+                    placeholder = "2",
+                    tag = "group-settings-boost-multiplier",
+                    enabled = countEnabled,
+                )
+            }
+        }
+        Text(
+            text = "Members can apply a booster to multiply a single bet's points. Set count to 0 to disable.",
+            style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+            color = colors.textSecondary,
+            modifier = Modifier.testTag("group-settings-boost-help"),
+        )
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -260,14 +303,20 @@ private fun BettyTextArea(value: String, onValueChange: (String) -> Unit, placeh
 }
 
 @Composable
-private fun BettyNumberField(value: String, onValueChange: (String) -> Unit, placeholder: String, tag: String) {
+private fun BettyNumberField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    tag: String,
+    enabled: Boolean = true,
+) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(Radius.sharp)
-            .background(colors.overlay06)
+            .background(if (enabled) colors.overlay06 else colors.overlay04)
             .border(1.dp, colors.overlay10, Radius.sharp)
             .padding(Space.s),
     ) {
@@ -278,7 +327,10 @@ private fun BettyNumberField(value: String, onValueChange: (String) -> Unit, pla
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = type.body.copy(color = colors.textPrimary),
+            enabled = enabled,
+            textStyle = type.body.copy(
+                color = if (enabled) colors.textPrimary else colors.textMuted,
+            ),
             cursorBrush = SolidColor(Palette.orange),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier

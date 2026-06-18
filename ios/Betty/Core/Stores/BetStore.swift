@@ -54,14 +54,20 @@ final class BetStore {
     /// CRITICAL universal-edit rule (regression-pinned by the web): editing an existing
     /// bet with "place in all my groups" checked must RE-POST here with
     /// `isUniversal: true` — `update(...)` only ever touches a single bet.
+    ///
+    /// `boosted` (default false) applies the user's booster to this row. With
+    /// `isUniversal: true, boosted: true` only the row matching `groupID` is marked
+    /// boosted server-side; sibling rows in other groups stay `boosted: false`.
     @discardableResult
-    func place(gameID: Int, groupID: Int, homeTeamScore: Int, awayTeamScore: Int, isUniversal: Bool) async throws -> Bet {
+    func place(gameID: Int, groupID: Int, homeTeamScore: Int, awayTeamScore: Int,
+               isUniversal: Bool, boosted: Bool = false) async throws -> Bet {
         let echo = try await api.placeBet(PlaceBetRequest(
             gameID: gameID,
             groupID: groupID,
             homeTeamScore: homeTeamScore,
             awayTeamScore: awayTeamScore,
-            isUniversal: isUniversal
+            isUniversal: isUniversal,
+            boosted: boosted
         ))
         if loadedGroupID == groupID {
             try? await load(groupID: groupID)
@@ -71,9 +77,13 @@ final class BetStore {
 
     /// `PUT /bet/:id` — SINGLE-group edit only (404 unknown id, 423 started, 401 not
     /// yours, 500 already processed). Patches the matching local entry.
+    /// `boosted` (default false) toggles the booster on this bet — same 400 errors as
+    /// `place` when the group has boosters off or the user is at capacity.
     @discardableResult
-    func update(betID: Int, homeTeamScore: Int, awayTeamScore: Int) async throws -> Bet {
-        let updated = try await api.updateBet(id: betID, homeTeamScore: homeTeamScore, awayTeamScore: awayTeamScore)
+    func update(betID: Int, homeTeamScore: Int, awayTeamScore: Int,
+                boosted: Bool = false) async throws -> Bet {
+        let updated = try await api.updateBet(id: betID, homeTeamScore: homeTeamScore,
+                                              awayTeamScore: awayTeamScore, boosted: boosted)
         if let index = bets.firstIndex(where: { $0.id == betID }) {
             bets[index] = updated
         }

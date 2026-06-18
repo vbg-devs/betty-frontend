@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
-import type { Bet, GroupMember, Team, UserProfile } from '~/types';
+import type { Bet, Group, GroupMember, Team, UserProfile } from '~/types';
 import BetModal from './BetModal.vue';
 import BetHistory from './BetHistory.vue';
 import HiddenScore from './HiddenScore.vue';
@@ -55,6 +55,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     user: makeMember(userId),
     ...overrides,
@@ -65,6 +66,26 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
 // resolve it for detached nodes, so isVisible() cannot be used here.
 function isShown(wrapper: { attributes: (key: string) => string | undefined }) {
   return !(wrapper.attributes('style') ?? '').includes('display: none');
+}
+
+function makeGroup(overrides: Partial<Group> = {}): Group {
+  return {
+    id: 3,
+    name: 'Group 3',
+    tournament_id: 1,
+    invite_code: 'code-3',
+    welcome_message: 'Welcome',
+    description: null,
+    header_image_url: null,
+    allow_sneak_peek: false,
+    correct_team_points: 1,
+    exact_result_points: 3,
+    boost_count: 0,
+    boost_multiplier: 2,
+    public_at: null,
+    members: [],
+    ...overrides,
+  };
 }
 
 function makeUser(id: string): UserProfile {
@@ -89,6 +110,7 @@ describe('BetModal', () => {
     useTeamStore().teams = [home, away];
     useUserStore().user = null;
     useBetStore().bets = [];
+    useGroupStore().groups = [];
     document.body.classList.remove('no-scroll');
   });
 
@@ -389,6 +411,7 @@ describe('BetModal', () => {
           home_team_score: 2,
           away_team_score: 1,
           is_universal: true,
+          boosted: false,
         },
       });
       expect(wrapper.emitted('bet-placed')).toHaveLength(1);
@@ -444,6 +467,25 @@ describe('BetModal', () => {
       expect(wrapper.emitted('bet-placed')).toBeUndefined();
       expect(wrapper.find('.btn--orange').attributes('disabled')).toBeUndefined();
       expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    // $fetch puts the parsed JSON body on `err.data` (e.g. `{ error: "no boosters
+    // remaining" }`). Surface that verbatim instead of the FetchError's generic toString.
+    it('surfaces the API error message from $fetch FetchError.data.error', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const fetchErr = Object.assign(new Error('400 Bad Request'), {
+        data: { error: 'no boosters remaining' },
+      });
+      authFetch.mockRejectedValue(fetchErr);
+      const wrapper = await fillAndMount();
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(alert).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'no boosters remaining' }),
+      );
       consoleError.mockRestore();
     });
   });
@@ -504,7 +546,7 @@ describe('BetModal', () => {
       expect(button.text()).toBe('UPDATE BET');
       expect(authFetch).toHaveBeenCalledWith('/bet/99', {
         method: 'PUT',
-        body: { id: 99, home_team_score: 3, away_team_score: 2 },
+        body: { id: 99, home_team_score: 3, away_team_score: 2, boosted: false },
       });
       expect(wrapper.emitted('bet-placed')).toHaveLength(1);
     });
@@ -513,6 +555,76 @@ describe('BetModal', () => {
     // The PUT /bet/:id path only updates the one bet, so a checked ("all my groups")
     // edit has to re-POST with is_universal=true and let the backend fan out the new
     // score — otherwise the other groups silently retain the stale prediction.
+    it('re-POSTs with the current boosted value when editing a boosted bet', async () => {
+      useGroupStore().groups = [makeGroup({ boost_count: 2, boost_multiplier: 2 })];
+      authFetch.mockResolvedValue(makeBet({ id: 99 }));
+      useUserStore().user = makeUser('uid-42');
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          bets: [
+            makeBet({
+              id: 99,
+              user_id: 'uid-42',
+              home_team_score: 3,
+              away_team_score: 2,
+              boosted: true,
+            }),
+          ],
+        },
+      });
+      await wrapper.vm.$nextTick();
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({
+          body: expect.objectContaining({ boosted: true, is_universal: true }),
+        }),
+      );
+    });
+
+    // Spec §2.6: an admin lowering boost_count to 0 mid-tournament must not strip the
+    // existing boosted flag from bets that were placed while boosters were enabled —
+    // the scoring formula just multiplies by 1×. Re-saving such a bet (with the row
+    // hidden, so the user can't toggle anything) must preserve the existing boosted
+    // value on the outgoing payload.
+    it('preserves the existing boosted flag when the group has disabled boosters mid-tournament', async () => {
+      useGroupStore().groups = [makeGroup({ boost_count: 0, boost_multiplier: 2 })];
+      authFetch.mockResolvedValue(makeBet({ id: 99 }));
+      useUserStore().user = makeUser('uid-42');
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          bets: [
+            makeBet({
+              id: 99,
+              user_id: 'uid-42',
+              home_team_score: 3,
+              away_team_score: 2,
+              boosted: true,
+            }),
+          ],
+        },
+      });
+      await wrapper.vm.$nextTick();
+
+      // Booster row must be hidden when the group has disabled boosters.
+      expect(wrapper.find('.booster').exists()).toBe(false);
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({
+          body: expect.objectContaining({ boosted: true, is_universal: true }),
+        }),
+      );
+    });
+
     it('re-POSTs with is_universal true when editing with the all-groups box checked', async () => {
       authFetch.mockResolvedValue(makeBet({ id: 99 }));
       const wrapper = await mountSuspended(BetModal, {
@@ -539,11 +651,152 @@ describe('BetModal', () => {
           home_team_score: 3,
           away_team_score: 2,
           is_universal: true,
+          boosted: false,
         },
       });
       // Must not silently fall back to the single-group PUT that drops cross-group sync.
       expect(authFetch).not.toHaveBeenCalledWith('/bet/99', expect.anything());
       expect(wrapper.emitted('bet-placed')).toHaveLength(1);
+    });
+  });
+
+  describe('booster row', () => {
+    async function mountWithGroup(
+      group: Group,
+      bets: Bet[] = [],
+      user: UserProfile = makeUser('uid-42'),
+    ) {
+      useGroupStore().groups = [group];
+      useUserStore().user = user;
+      // The parent passes group-wide bets via `group-bets` so cross-game boosters
+      // count against the cap; the per-game `bets` is a subset of that.
+      const thisGameBets = bets.filter((b: any) => b.game_id === 7);
+      const wrapper = await mountSuspended(BetModal, {
+        props: { gameBet: makeGameBet(), bets: thisGameBets, groupBets: bets },
+      });
+      const inputs = wrapper.findAll('.score-input__field');
+      await inputs[0]!.setValue('2');
+      await inputs[1]!.setValue('1');
+      return wrapper;
+    }
+
+    it('hides the booster row when the group has boost_count 0', async () => {
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 0 }));
+      expect(wrapper.find('.booster').exists()).toBe(false);
+    });
+
+    it('shows the booster row when boost_count is positive', async () => {
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 2, boost_multiplier: 3 }));
+      expect(wrapper.find('.booster').exists()).toBe(true);
+      expect(wrapper.text()).toContain('Apply booster');
+      expect(wrapper.text()).toContain('3× multiplier');
+      expect(wrapper.text()).toContain('2 of 2 remaining');
+    });
+
+    it('disables the switch when remaining is 0 and this bet is not boosted', async () => {
+      // Two other boosted bets in the same group exhaust the cap of 2.
+      const others = [
+        makeBet({ user_id: 'uid-42', game_id: 100, group_id: 3, boosted: true }),
+        makeBet({ user_id: 'uid-42', game_id: 101, group_id: 3, boosted: true }),
+      ];
+      const wrapper = await mountWithGroup(
+        makeGroup({ boost_count: 2, boost_multiplier: 2 }),
+        others,
+      );
+      const sw = wrapper.find('.booster__input');
+      expect((sw.element as HTMLInputElement).disabled).toBe(true);
+      expect(wrapper.text()).toContain('No boosters remaining in this group');
+    });
+
+    // Regression: cap math has to read `group-bets` (all games in the group), not the
+    // per-game `bets` prop, otherwise boosters spent on OTHER games in the same group
+    // are invisible and the user can blow past the cap.
+    it('counts a booster spent on a different game in the same group against the cap', async () => {
+      useGroupStore().groups = [makeGroup({ boost_count: 1, boost_multiplier: 2 })];
+      useUserStore().user = makeUser('uid-42');
+      const otherGameBet = makeBet({
+        user_id: 'uid-42',
+        game_id: 100,
+        group_id: 3,
+        boosted: true,
+      });
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          // Per-game bets — empty for this game.
+          bets: [],
+          // Group-wide bets — contains the booster on game 100.
+          groupBets: [otherGameBet],
+        },
+      });
+      const sw = wrapper.find('.booster__input');
+      expect((sw.element as HTMLInputElement).disabled).toBe(true);
+      expect(wrapper.text()).toContain('No boosters remaining in this group');
+    });
+
+    it('enables the switch when remaining is 0 but this bet is already boosted (un-boost path)', async () => {
+      // Cap is 1 and is already used on THIS bet; switch must stay toggleable.
+      const myBoosted = makeBet({
+        id: 50,
+        user_id: 'uid-42',
+        game_id: 7,
+        group_id: 3,
+        boosted: true,
+        home_team_score: 2,
+        away_team_score: 1,
+      });
+      const wrapper = await mountWithGroup(
+        makeGroup({ boost_count: 1, boost_multiplier: 2 }),
+        [myBoosted],
+      );
+      const sw = wrapper.find('.booster__input');
+      expect((sw.element as HTMLInputElement).disabled).toBe(false);
+      expect((sw.element as HTMLInputElement).checked).toBe(true);
+    });
+
+    it('sends boosted: true when the switch is on', async () => {
+      authFetch.mockResolvedValue(makeBet());
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 2, boost_multiplier: 2 }));
+      await wrapper.find('.booster__input').setValue(true);
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({ body: expect.objectContaining({ boosted: true }) }),
+      );
+    });
+
+    it('sends boosted: false when the switch is off', async () => {
+      authFetch.mockResolvedValue(makeBet());
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 2, boost_multiplier: 2 }));
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenCalledWith(
+        '/bet',
+        expect.objectContaining({ body: expect.objectContaining({ boosted: false }) }),
+      );
+    });
+
+    it('shows the universal-bet caveat when the booster is on and place-in-all-groups is on', async () => {
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 2, boost_multiplier: 2 }));
+      // Defaults: placeInAllGroups=true, boosted=false → no caveat yet.
+      expect(wrapper.text()).not.toContain('Booster applies to this group only');
+
+      await wrapper.find('.booster__input').setValue(true);
+      expect(wrapper.text()).toContain(
+        "Booster applies to this group only — the bet's copies in your other groups aren't boosted.",
+      );
+    });
+
+    it('hides the universal-bet caveat when place-in-all-groups is off', async () => {
+      const wrapper = await mountWithGroup(makeGroup({ boost_count: 2, boost_multiplier: 2 }));
+      await wrapper.find('.check__input').setValue(false);
+      await wrapper.find('.booster__input').setValue(true);
+      expect(wrapper.text()).not.toContain('Booster applies to this group only');
     });
   });
 });

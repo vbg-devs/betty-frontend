@@ -45,6 +45,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     ...overrides,
   };

@@ -73,6 +73,14 @@ nonisolated enum GroupGameCardLogic {
         guard game.isFinished else { return nil }
         return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.userPoints
     }
+
+    /// True iff the user's own bet on this finished game has `boosted == true`. The
+    /// rocket-suppression check (`points > 0`) is left to the view (where the count is
+    /// already in hand) so this helper doesn't have to re-derive it.
+    static func awardedBoosted(game: Game, bets: [Bet], userID: String?) -> Bool {
+        guard game.isFinished else { return false }
+        return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.boosted ?? false
+    }
 }
 
 // MARK: - Day-grouped schedule (Pools.vue `gameGroups`)

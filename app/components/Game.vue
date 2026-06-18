@@ -56,13 +56,24 @@
               <div class="score__divider">-</div>
               <div class="score__label">{{ placedBetAwayTeam }}</div>
             </div>
+            <span
+              v-if="placedBoosted"
+              class="my-score__rocket"
+              aria-label="Boosted"
+              >🚀</span
+            >
           </div>
           <div
             v-if="awardedScore !== null"
             class="awarded-points"
             :class="{ 'awarded-points--win': awardedScore > 0 }"
           >
-            {{ awardedScore }}P
+            {{ awardedScore }}P<span
+              v-if="awardedBoosted && awardedScore > 0"
+              class="awarded-points__rocket"
+              aria-label="Boosted"
+              >🚀</span
+            >
           </div>
         </div>
         <div class="team">
@@ -114,14 +125,18 @@ const teamStore = useTeamStore();
 
 const userId = computed(() => userStore.id);
 
+const myBet = computed(
+  () => bets.find((bet) => bet.user_id === userId.value && bet.game_id === game.id) ?? null,
+);
+
 const awardedScore = computed(() => {
   if (game.status !== 1) return null;
-  const filteredBets = bets
-    .filter((bet) => bet.user_id === userId.value)
-    .filter((bet) => bet.game_id === game.id);
-
-  return filteredBets.length > 0 ? filteredBets[0].user_points : null;
+  return myBet.value ? myBet.value.user_points : null;
 });
+
+const awardedBoosted = computed(() => game.status === 1 && !!myBet.value?.boosted);
+
+const placedBoosted = computed(() => !!myBet.value?.boosted);
 
 const homeTeam = computed(() => teamStore.byId(game.home_team_id));
 const awayTeam = computed(() => teamStore.byId(game.away_team_id));
@@ -204,6 +219,12 @@ const isLive = computed(() => {
   color: var(--green);
 }
 
+.awarded-points__rocket {
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .teams {
   display: flex;
   align-items: center;
@@ -265,6 +286,13 @@ const isLive = computed(() => {
 .my-score {
   padding-top: 6px;
   text-align: center;
+}
+
+.my-score__rocket {
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .score--small {

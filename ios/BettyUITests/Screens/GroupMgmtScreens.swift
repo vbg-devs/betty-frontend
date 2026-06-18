@@ -35,6 +35,8 @@ struct CreateGroupPage {
     var descriptionField: XCUIElement { element(app, id: "createGroup.form.descriptionField") }
     var winPointsField: XCUIElement { element(app, id: "createGroup.form.winPointsField") }
     var exactPointsField: XCUIElement { element(app, id: "createGroup.form.exactPointsField") }
+    var boostCountField: XCUIElement { element(app, id: "createGroup.form.boostCountField") }
+    var boostMultiplierField: XCUIElement { element(app, id: "createGroup.form.boostMultiplierField") }
     var sneakPeekToggle: XCUIElement { app.switches["createGroup.form.sneakPeekToggle"].firstMatch }
     var publicToggle: XCUIElement { app.switches["createGroup.form.publicToggle"].firstMatch }
     var submitButton: XCUIElement { app.buttons["createGroup.form.submitButton"] }
@@ -69,6 +71,8 @@ struct GroupSettingsPage {
     var descriptionField: XCUIElement { element(app, id: "groupSettings.form.descriptionField") }
     var winPointsField: XCUIElement { element(app, id: "groupSettings.form.winPointsField") }
     var exactPointsField: XCUIElement { element(app, id: "groupSettings.form.exactPointsField") }
+    var boostCountField: XCUIElement { element(app, id: "groupSettings.form.boostCountField") }
+    var boostMultiplierField: XCUIElement { element(app, id: "groupSettings.form.boostMultiplierField") }
     var sneakPeekToggle: XCUIElement { app.switches["groupSettings.form.sneakPeekToggle"].firstMatch }
     var saveButton: XCUIElement { app.buttons["groupSettings.form.saveButton"] }
     var visibilityToggle: XCUIElement { app.switches["groupSettings.visibility.toggle"].firstMatch }

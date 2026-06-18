@@ -22,6 +22,11 @@ data class Bet(
     @SerialName("home_team_score") val homeTeamScore: Int = 0,
     @SerialName("away_team_score") val awayTeamScore: Int = 0,
     @SerialName("is_universal") val isUniversal: Boolean = false,
+    /**
+     * True iff the user has applied their booster to this bet row. Defaults to `false`
+     * if missing on the wire so the client still decodes pre-feature backend responses.
+     */
+    @SerialName("boosted") val boosted: Boolean = false,
     @SerialName("processed_at") val processedAt: Instant? = null,
     @SerialName("created_at") val createdAt: Instant? = null,
     @SerialName("updated_at") val updatedAt: Instant? = null,

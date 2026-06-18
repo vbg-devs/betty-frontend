@@ -20,7 +20,8 @@ extension MockScenario {
         home: Int,
         away: Int,
         points: Int? = nil,
-        processed: Bool = false
+        processed: Bool = false,
+        boosted: Bool = false
     ) {
         let bet = MockBet(
             id: nextBetID,
@@ -30,11 +31,24 @@ extension MockScenario {
             userPoints: points,
             homeTeamScore: home,
             awayTeamScore: away,
+            boosted: boosted,
             processedAt: processed ? Date().addingTimeInterval(-3600) : nil,
             createdAt: Date().addingTimeInterval(-86_400)
         )
         nextBetID += 1
         bets.append(bet)
+    }
+
+    /// Override a group's booster config (spec §3.1 fixtures).
+    mutating func groupDetailSetBoosters(
+        count: Int,
+        multiplier: Int = 2,
+        groupID: Int = DefaultScenario.groupSundayLegendsID
+    ) {
+        updateGroup(groupID) {
+            $0.boostCount = count
+            $0.boostMultiplier = multiplier
+        }
     }
 
     /// Overrides a member's score (drives dense-ranking/tie fixtures).

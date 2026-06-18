@@ -113,8 +113,10 @@ describe('pages/dashboard/groups/create', () => {
       expect(numberInputs.map((i) => i.attributes('placeholder'))).toEqual([
         'Points for winning team *',
         'Points for exact score *',
+        'Boosters per user (0 disables)',
+        'Booster multiplier',
       ]);
-      expect(numberInputs.map((i) => i.attributes('min'))).toEqual(['0', '0']);
+      expect(numberInputs.map((i) => i.attributes('min'))).toEqual(['0', '0', '0', '1']);
 
       const checkbox = wrapper.find('input[type="checkbox"]');
       expect((checkbox.element as HTMLInputElement).checked).toBe(false);
@@ -169,6 +171,8 @@ describe('pages/dashboard/groups/create', () => {
           correct_team_points: 2.5,
           exact_result_points: 5,
           allow_sneak_peek: false,
+          boost_count: 0,
+          boost_multiplier: 2,
           group_play_deadline: '2026-06-11T00:00:00Z',
           welcome_message: 'Welcome everyone',
           mode: 0,

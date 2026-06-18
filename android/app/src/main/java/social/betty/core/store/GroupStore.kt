@@ -33,9 +33,12 @@ class GroupStore(private val api: BettyApi) {
         welcomeMessage: String?,
         description: String?,
         isPublic: Boolean,
+        boostCount: Int = 0,
+        boostMultiplier: Int = 2,
     ): Int = api.createGroup(
         name, tournamentId, correctTeamPoints, exactResultPoints, allowSneakPeek,
         groupPlayDeadline, welcomeMessage, description?.takeIf { it.isNotBlank() }, isPublic,
+        boostCount = boostCount, boostMultiplier = boostMultiplier,
     )
 
     suspend fun joinByCode(code: String): Int = api.joinByCode(code).also { load() }
@@ -56,8 +59,12 @@ class GroupStore(private val api: BettyApi) {
         correctTeamPoints: Int,
         exactResultPoints: Int,
         allowSneakPeek: Boolean,
-    ): Group = api.updateGroupSettings(id, welcomeMessage, description, correctTeamPoints, exactResultPoints, allowSneakPeek)
-        .also { load() }
+        boostCount: Int? = null,
+        boostMultiplier: Int? = null,
+    ): Group = api.updateGroupSettings(
+        id, welcomeMessage, description, correctTeamPoints, exactResultPoints, allowSneakPeek,
+        boostCount = boostCount, boostMultiplier = boostMultiplier,
+    ).also { load() }
 
     suspend fun setNickname(id: Int, nickname: String?): String? =
         api.setNickname(id, nickname).also { load() }
