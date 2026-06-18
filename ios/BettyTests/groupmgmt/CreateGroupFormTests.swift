@@ -33,9 +33,9 @@ import Testing
         #expect(!form.canSave(running: [try GroupMgmtFixtures.tournament(id: 6)]))
     }
 
-    @Test func defaultsAreSneakPeekOnAndPublicOff() {
+    @Test func defaultsAreSneakPeekOffAndPublicOff() {
         let form = CreateGroupForm()
-        #expect(form.allowSneakPeek)
+        #expect(!form.allowSneakPeek)
         #expect(!form.isPublic)
     }
 
