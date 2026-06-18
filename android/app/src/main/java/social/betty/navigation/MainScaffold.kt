@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -131,6 +132,21 @@ private fun BettyTopBar(nav: AppNavigator) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
+                        tint = colors.textPrimary,
+                    )
+                }
+            }
+        },
+        actions = {
+            // Feedback / Support entry point — Home only (replaces the old in-feed pill).
+            if (isHomeRoot) {
+                IconButton(
+                    onClick = { nav.push(Route.Support) },
+                    modifier = Modifier.testTag("topbar-feedback"),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MailOutline,
+                        contentDescription = "Send feedback",
                         tint = colors.textPrimary,
                     )
                 }
