@@ -42,7 +42,7 @@
           </button>
 
           <p v-if="linkResult" class="panel__note">
-            ● Linked <strong>{{ linkResult.competition_id }}</strong> —
+            ● Linked <strong>{{ linkResult.competition_id }}</strong>.
             {{ linkResult.match_count }} matches in the feed.
           </p>
 
@@ -69,7 +69,7 @@
             <div class="row__main">
               <span class="mono">game #{{ s.game_id }}</span>
               <span class="arrow">→</span>
-              <span class="mono">FIFA match {{ s.match_id || '—' }}</span>
+              <span class="mono">FIFA match {{ s.match_id || '?' }}</span>
               <span v-if="s.orientation_flipped" class="badge badge--warn">flipped</span>
               <span v-if="s.ambiguous" class="badge badge--danger">ambiguous</span>
             </div>
@@ -86,7 +86,7 @@
           </div>
         </div>
         <p v-else-if="mappingsLoaded" class="tab-empty__copy">
-          No suggestions — every game is already mapped, or none matched within the kickoff window.
+          No suggestions. Every game is already mapped, or none matched within the kickoff window.
         </p>
       </section>
 
