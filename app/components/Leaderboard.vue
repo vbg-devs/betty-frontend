@@ -19,7 +19,9 @@
       </div>
       <div class="lb-row__name">
         <template v-if="global">
-          {{ user.name }}
+          <NuxtLink :to="`/user/${user.user_id}`" class="lb-row__link">
+            {{ user.name }}
+          </NuxtLink>
         </template>
         <template v-else>
           <a href="javascript:void(0);" class="lb-row__link" @click="emit('user-selected', user)">{{

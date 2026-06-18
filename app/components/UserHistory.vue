@@ -30,6 +30,14 @@
               <span class="dot">·</span>
               <span class="kicker kicker--green">{{ totalPoints }} PTS</span>
             </div>
+            <NuxtLink
+              v-if="user.user_id"
+              :to="`/user/${user.user_id}`"
+              class="modal__profile-link"
+              @click="emit('close')"
+            >
+              VIEW PROFILE →
+            </NuxtLink>
           </div>
         </div>
       </header>
@@ -217,6 +225,22 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.modal__profile-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--orange);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.modal__profile-link:hover {
+  transform: translateX(3px);
 }
 
 .dot {
