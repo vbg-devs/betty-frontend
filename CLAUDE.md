@@ -137,8 +137,13 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
 - `.github/workflows/ios-testflight.yml` uploads to TestFlight after CI
   succeeds on `main` (cloud signing via ASC API key from the `release`
   environment; no certs in CI).
-- `MARKETING_VERSION` (workflow env + `ios/project.yml`) must match the
-  in-flight version in App Store Connect (app 1636185602) — bump per release.
+- `MARKETING_VERSION` is resolved per-run from App Store Connect by the
+  "Resolve TestFlight version" step (`ios/scripts/asc-marketing-version.py`):
+  `ios/project.yml`'s `MARKETING_VERSION` is the **floor**, and the script
+  patch-bumps past any train ASC reports as released (closed), so a routine
+  patch release needs no edit. A released train rejects new builds with error
+  90186 ("Invalid Pre-Release Train … is closed") — this avoids it. Only bump
+  `ios/project.yml` for a deliberate minor/major (e.g. 1.0.x → 1.1.0).
 - Build numbers are `100 + run_number` (TestFlight history already reaches 28
   from the previous pipeline); never reuse/decrease.
 - Internal testers (group "Betty") get builds automatically after processing.
