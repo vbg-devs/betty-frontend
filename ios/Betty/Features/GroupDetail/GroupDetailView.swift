@@ -143,7 +143,11 @@ struct GroupDetailView: View {
                     }
                 }
                 .padding(Space.m)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            // Suppress the horizontal rubber-band that SwiftUI's default ScrollView
+            // shows when a child's intrinsic width occasionally pokes past the bounds.
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             .onChange(of: currentTab) { _, newTab in
                 guard newTab == .games else { return }
                 let groups = GroupGameDaySchedule.build(pools: tournamentDetails?.poolsWithGames ?? [])
