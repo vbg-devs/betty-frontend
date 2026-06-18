@@ -134,3 +134,52 @@ export interface GroupMessage {
   created_at: string;
   reactions: MessageReaction[];
 }
+
+// ===== FIFA result polling (admin) =====
+// Wire shapes from betty-api internal/fifa (admin /fifa endpoints). Admin-only
+// operator tooling; not part of the player wire contract or the native clients.
+
+export interface FifaLinkResult {
+  competition_id: string;
+  match_count: number;
+}
+
+export interface FifaMappingSuggestion {
+  game_id: number;
+  match_id: string;
+  orientation_flipped: boolean;
+  ambiguous: boolean;
+}
+
+export interface FifaMappings {
+  competition_id: string;
+  suggestions: FifaMappingSuggestion[];
+}
+
+export type FifaProposalKind = 'initial' | 'correction' | 'rollback';
+export type FifaProposalStatus = 'pending' | 'applied' | 'dismissed' | 'superseded';
+export type FifaProposalSource = 'proposal' | 'auto';
+
+export interface FifaResultProposal {
+  id: number;
+  game_id: number;
+  match_id: string;
+  home_team_score: number;
+  away_team_score: number;
+  kind: FifaProposalKind;
+  status: FifaProposalStatus;
+  source: FifaProposalSource;
+  prev_home_score: number | null;
+  prev_away_score: number | null;
+  feed_hash: number;
+}
+
+export interface FifaUnmappedResult {
+  competition_id: string;
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  start_time: string;
+}
