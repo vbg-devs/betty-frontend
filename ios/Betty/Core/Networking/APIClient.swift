@@ -72,8 +72,9 @@ final class APIClient {
         try await requestVoid(.deleteMe)
     }
 
-    /// `POST /user/me/add_push_token` — server-side delivery uses FCM; a raw APNs token
-    /// is accepted but never receives a push. Dormant until an FCM bridge exists.
+    /// `POST /user/me/add_push_token` — server-side delivery uses FCM.
+    /// The token sent here is an FCM registration token from
+    /// `Messaging.messaging().token`, NOT a raw APNs device token.
     func addPushToken(_ token: String) async throws {
         struct Body: Encodable { let token: String }
         try await requestVoid(.addPushToken(encode(Body(token: token))))

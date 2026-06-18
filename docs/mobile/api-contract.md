@@ -410,14 +410,43 @@ Anonymizes the DB row, deletes push tokens, deletes the Firebase account.
 
 #### POST `/user/me/add_push_token`
 
-Request `{ "token": "<fcm-registration-token>" }` → **200 empty body** (also 200 if
-the token already exists). 400 missing/empty token. 500.
+Clients post an **FCM registration token** obtained from Firebase
+Messaging on the device (~163 chars). Raw APNs/GCM device tokens are
+not accepted — the backend dispatches via FCM (`messaging.SendAll`),
+which only addresses FCM tokens.
 
-> Server-side delivery uses **Firebase Cloud Messaging** (`fcmClient`), so the stored
-> token must be an FCM *registration* token — a raw APNs device token will be accepted
-> by this endpoint but will never receive a push. Without the Firebase SDK on iOS this
-> route is effectively dormant; register it anyway behind a flag if/when an FCM bridge
-> is added. (Original audit note "(APNs)" is therefore imprecise.)
+```
+POST /user/me/add_push_token
+{ "token": "<fcm-registration-token>" }
+→ 200 (empty body)
+```
+
+400 missing/empty token. 500. (Also 200 if the token already exists.)
+
+Tokens are soft-deleted (`deleted_at = now()`) when FCM reports them as
+no longer deliverable. Re-registration (after reinstall, restore, or
+explicit `deleteToken()`) goes through the same endpoint and inserts a
+fresh row.
+
+**Push payload shape** (delivered to the device by FCM):
+
+```json
+{
+  "notification": {
+    "title": "⏰ Sweden vs Germany starts in 2h",
+    "body": "You haven't locked in your pick for Office League yet — tap to play."
+  },
+  "data": { "url": "https://betty.social/groups/<groupID>/games/<gameID>" }
+}
+```
+
+The `groupID` is chosen by the backend as the alphabetically-first group
+(by name) in which the user has an unplaced bet for this game.
+
+iOS reads `userInfo["url"]` and routes it through `DeepLink.parse` /
+`Router.handle` (DeepLink case `.bet(gameID:, groupID:)`). Android (when
+push is wired) should mirror this — the data payload is the source of
+truth for deep linking.
 
 #### POST `/user/me/profile-image/upload-url`
 
