@@ -177,10 +177,16 @@ import { isAfter } from 'date-fns';
 const {
   gameBet = null,
   bets = [],
+  groupBets = [],
   peek = false,
 } = defineProps<{
   gameBet?: Record<string, any> | null;
+  /** Bets on the current game only — drives the placed-bets list and BetHistory chart. */
   bets?: any[];
+  /** All bets in the current group (every game). Drives the booster cap math so we can
+   * see boosters the user already spent on OTHER games in this group. Defaults to [],
+   * which disables the cap (callers that don't pass it lose the cross-game count). */
+  groupBets?: any[];
   peek?: boolean;
 }>();
 
@@ -209,12 +215,14 @@ const group = computed(() => (gameBet ? groupStore.byId(gameBet.groupId) : null)
 const boostersEnabled = computed(() => (group.value?.boost_count ?? 0) > 0);
 
 // Count this user's boosted bets in this group, excluding the bet we're editing
-// (so toggling off-then-on the same bet doesn't drain capacity).
+// (so toggling off-then-on the same bet doesn't drain capacity). Reads from
+// `groupBets` (all games in the group), not `bets` (only the current game), so
+// boosters already spent on OTHER games still count against the cap.
 const boostersUsedByMe = computed(() => {
   const me = userId.value;
   const gid = gameBet?.groupId;
   if (!me || gid == null) return 0;
-  return bets.filter(
+  return groupBets.filter(
     (b: any) =>
       b.user_id === me &&
       b.group_id === gid &&
@@ -365,9 +373,13 @@ async function placeBet() {
     }
     emit('bet-placed');
   } catch (err) {
+    // $fetch throws FetchError with the parsed JSON body on `err.data`; the API uses
+    // `{ "error": "..." }` for human messages (e.g. "no boosters remaining", 423 lock).
+    const apiMessage =
+      (err as any)?.data?.error || (err as any)?.message || String(err);
     alert({
       title: 'Could not place bet',
-      message: `Your bet could not be placed, please try again \n\n ${err}`,
+      message: apiMessage,
       state: 'critical',
     });
     console.error(err);

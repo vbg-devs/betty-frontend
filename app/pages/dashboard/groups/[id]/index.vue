@@ -362,6 +362,7 @@
       :show="gameBet !== null"
       :peek="group.allow_sneak_peek"
       :bets="betsForGame"
+      :group-bets="bets"
       @bet-placed="betPlaced"
       @close="gameBet = null"
     />

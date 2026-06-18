@@ -469,6 +469,25 @@ describe('BetModal', () => {
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
+
+    // $fetch puts the parsed JSON body on `err.data` (e.g. `{ error: "no boosters
+    // remaining" }`). Surface that verbatim instead of the FetchError's generic toString.
+    it('surfaces the API error message from $fetch FetchError.data.error', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const fetchErr = Object.assign(new Error('400 Bad Request'), {
+        data: { error: 'no boosters remaining' },
+      });
+      authFetch.mockRejectedValue(fetchErr);
+      const wrapper = await fillAndMount();
+
+      await wrapper.find('.btn--orange').trigger('click');
+      await flushPromises();
+
+      expect(alert).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'no boosters remaining' }),
+      );
+      consoleError.mockRestore();
+    });
   });
 
   describe('editing an existing bet', () => {
@@ -649,8 +668,11 @@ describe('BetModal', () => {
     ) {
       useGroupStore().groups = [group];
       useUserStore().user = user;
+      // The parent passes group-wide bets via `group-bets` so cross-game boosters
+      // count against the cap; the per-game `bets` is a subset of that.
+      const thisGameBets = bets.filter((b: any) => b.game_id === 7);
       const wrapper = await mountSuspended(BetModal, {
-        props: { gameBet: makeGameBet(), bets },
+        props: { gameBet: makeGameBet(), bets: thisGameBets, groupBets: bets },
       });
       const inputs = wrapper.findAll('.score-input__field');
       await inputs[0]!.setValue('2');
@@ -681,6 +703,32 @@ describe('BetModal', () => {
         makeGroup({ boost_count: 2, boost_multiplier: 2 }),
         others,
       );
+      const sw = wrapper.find('.booster__input');
+      expect((sw.element as HTMLInputElement).disabled).toBe(true);
+      expect(wrapper.text()).toContain('No boosters remaining in this group');
+    });
+
+    // Regression: cap math has to read `group-bets` (all games in the group), not the
+    // per-game `bets` prop, otherwise boosters spent on OTHER games in the same group
+    // are invisible and the user can blow past the cap.
+    it('counts a booster spent on a different game in the same group against the cap', async () => {
+      useGroupStore().groups = [makeGroup({ boost_count: 1, boost_multiplier: 2 })];
+      useUserStore().user = makeUser('uid-42');
+      const otherGameBet = makeBet({
+        user_id: 'uid-42',
+        game_id: 100,
+        group_id: 3,
+        boosted: true,
+      });
+      const wrapper = await mountSuspended(BetModal, {
+        props: {
+          gameBet: makeGameBet(),
+          // Per-game bets — empty for this game.
+          bets: [],
+          // Group-wide bets — contains the booster on game 100.
+          groupBets: [otherGameBet],
+        },
+      });
       const sw = wrapper.find('.booster__input');
       expect((sw.element as HTMLInputElement).disabled).toBe(true);
       expect(wrapper.text()).toContain('No boosters remaining in this group');
