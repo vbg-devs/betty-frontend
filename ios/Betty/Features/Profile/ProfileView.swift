@@ -52,6 +52,7 @@ struct ProfileView: View {
             }
         }
         .navigationTitle("Profile")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsPrivacy) {
             NavigationStack {
                 PrivacyView()

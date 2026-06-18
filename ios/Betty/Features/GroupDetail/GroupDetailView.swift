@@ -15,7 +15,6 @@ struct GroupDetailView: View {
     enum Tab: Hashable { case group, games, leaderboard }
 
     @State private var selectedTab: Tab = .group
-    @State private var copiedInvite = false
     @State private var warnedBetsFailure = false
     @State private var nicknameDraft = ""
     @State private var nicknameLoadedFor: Int?
@@ -123,39 +122,46 @@ struct GroupDetailView: View {
     // MARK: - Layout
 
     private func content(_ group: Group) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: Space.l) {
-                    hero(group)
-                    tabBar
-                    switch currentTab {
-                    case .group:
-                        groupTab(group)
-                    case .games:
-                        GroupGameSchedule(
-                            pools: tournamentDetails?.poolsWithGames ?? [],
-                            bets: env.betStore.bets,
-                            showBets: true,
-                            onGameTap: { openBetSheet(for: $0) }
-                        )
-                    case .leaderboard:
-                        GroupLeaderboardList(members: group.members) { openHistory(for: $0) }
+        GeometryReader { outer in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Space.l) {
+                        hero(group)
+                        tabBar
+                        switch currentTab {
+                        case .group:
+                            groupTab(group)
+                        case .games:
+                            GroupGameSchedule(
+                                pools: tournamentDetails?.poolsWithGames ?? [],
+                                bets: env.betStore.bets,
+                                showBets: true,
+                                onGameTap: { openBetSheet(for: $0) }
+                            )
+                        case .leaderboard:
+                            GroupLeaderboardList(members: group.members) { openHistory(for: $0) }
+                        }
                     }
+                    .padding(Space.m)
+                    // Hard-pin to the ScrollView's viewport width. `maxWidth: .infinity`
+                    // alone wasn't enough on iPhone 15 — some child's intrinsic content
+                    // (likely a Text without an explicit `frame(maxWidth:)`) made the
+                    // ScrollView's contentSize report wider than its bounds, which let
+                    // it pan/bounce horizontally on a device where the viewport is only
+                    // 393pt. An explicit `width:` here forces children to lay out within
+                    // it and prevents the rubber-band.
+                    .frame(width: outer.size.width, alignment: .leading)
                 }
-                .padding(Space.m)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            // Suppress the horizontal rubber-band that SwiftUI's default ScrollView
-            // shows when a child's intrinsic width occasionally pokes past the bounds.
-            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-            .onChange(of: currentTab) { _, newTab in
-                guard newTab == .games else { return }
-                let groups = GroupGameDaySchedule.build(pools: tournamentDetails?.poolsWithGames ?? [])
-                guard let key = GroupGameDaySchedule.nextUpcomingKey(in: groups) else { return }
-                Task {
-                    try? await Task.sleep(for: .milliseconds(350))
-                    withAnimation {
-                        proxy.scrollTo(GroupGameSchedule.dayAnchorID(key), anchor: .top)
+                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                .onChange(of: currentTab) { _, newTab in
+                    guard newTab == .games else { return }
+                    let groups = GroupGameDaySchedule.build(pools: tournamentDetails?.poolsWithGames ?? [])
+                    guard let key = GroupGameDaySchedule.nextUpcomingKey(in: groups) else { return }
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(350))
+                        withAnimation {
+                            proxy.scrollTo(GroupGameSchedule.dayAnchorID(key), anchor: .top)
+                        }
                     }
                 }
             }
@@ -405,6 +411,7 @@ struct GroupDetailView: View {
     @ViewBuilder
     private func groupTab(_ group: Group) -> some View {
         welcomeCard(group)
+        chatCard
 
         if tournamentEnded {
             podiumCard(group)
@@ -426,7 +433,6 @@ struct GroupDetailView: View {
             visibilityCard(group)
         }
         houseRulesCard(group)
-        chatCard
         leaveButton(group)
     }
 
@@ -629,15 +635,6 @@ struct GroupDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Space.s)
                     .background(theme.colors.overlay06, in: RoundedRectangle(cornerRadius: Radius.sharp))
-                Button(copiedInvite ? "COPIED ✓" : "COPY →") {
-                    UIPasteboard.general.string = group.inviteLink?.absoluteString ?? group.inviteCode
-                    copiedInvite = true
-                    Task {
-                        try? await Task.sleep(for: .seconds(1.5))
-                        copiedInvite = false
-                    }
-                }
-                .buttonStyle(.bettyPrimary)
                 if let inviteLink = group.inviteLink {
                     ShareLink(item: inviteLink) {
                         Image(systemName: "square.and.arrow.up")
@@ -719,7 +716,7 @@ struct GroupDetailView: View {
                 Button(isSavingVisibility ? "SAVING…" : (group.isPublic ? "MAKE PRIVATE" : "GO PUBLIC →")) {
                     toggleVisibility(to: !group.isPublic)
                 }
-                .buttonStyle(.bettyOutline)
+                .buttonStyle(.bettyOutlineBlock)
                 .disabled(isSavingVisibility)
             }
         }
@@ -826,7 +823,7 @@ struct GroupDetailView: View {
         NavigationLink(value: Destination.groupChat(groupID: groupID)) {
             Text("OPEN MEME BOARD →")
         }
-        .buttonStyle(.bettyOutline)
+        .buttonStyle(.bettyOutlineBlock)
     }
 
     private func leaveButton(_ group: Group) -> some View {
@@ -844,7 +841,7 @@ struct GroupDetailView: View {
                 }
             }
         }
-        .buttonStyle(.bettyDestructive)
+        .buttonStyle(.bettyDestructiveBlock)
     }
 
     private func sideCard(_ kickerText: String, @ViewBuilder content: () -> some View) -> some View {

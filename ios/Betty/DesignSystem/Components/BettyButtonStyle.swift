@@ -109,7 +109,9 @@ extension ButtonStyle where Self == BettyButtonStyle {
     static var bettyPrimary: BettyButtonStyle { BettyButtonStyle(variant: .primary) }
     static var bettyPrimaryBlock: BettyButtonStyle { BettyButtonStyle(variant: .primary, isBlock: true) }
     static var bettyOutline: BettyButtonStyle { BettyButtonStyle(variant: .outline) }
+    static var bettyOutlineBlock: BettyButtonStyle { BettyButtonStyle(variant: .outline, isBlock: true) }
     static var bettyGhost: BettyButtonStyle { BettyButtonStyle(variant: .ghost) }
     static var bettyDark: BettyButtonStyle { BettyButtonStyle(variant: .dark) }
     static var bettyDestructive: BettyButtonStyle { BettyButtonStyle(variant: .destructive) }
+    static var bettyDestructiveBlock: BettyButtonStyle { BettyButtonStyle(variant: .destructive, isBlock: true) }
 }

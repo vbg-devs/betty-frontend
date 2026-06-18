@@ -21,6 +21,7 @@ struct AdminEvaluateView: View {
             }
         }
         .navigationTitle("Admin")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             if model == nil { model = AdminEvaluateModel(api: env.api) }
         }

@@ -25,6 +25,7 @@ struct SupportView: View {
             }
         }
         .navigationTitle("Support")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var hero: some View {
