@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -409,6 +410,9 @@ private fun HomeTabButton(
 
     Column(
         modifier = modifier
+            // Size to content so the fillMaxWidth underline below spans only the tab's
+            // label+pill — not the whole row (which squeezed the ENDED tab to a vertical sliver).
+            .width(IntrinsicSize.Max)
             .clickable(onClick = onClick)
             .padding(vertical = Space.xs),
     ) {
