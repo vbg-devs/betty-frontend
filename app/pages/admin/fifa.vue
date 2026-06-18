@@ -47,7 +47,7 @@
           </p>
 
           <label class="toggle">
-            <input type="checkbox" v-model="autoApply" :disabled="!selectedTournamentId" @change="toggleAutoApply" />
+            <input type="checkbox" v-model="autoApply" :disabled="!isLinked" @change="toggleAutoApply" />
             <span>Auto-apply trusted results (skip manual confirm)</span>
           </label>
         </div>
@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FifaMappingSuggestion, FifaResultProposal } from '~/types';
+import type { FifaLinkResult, FifaMappingSuggestion, FifaResultProposal } from '~/types';
 
 const userStore = useUserStore();
 const tournamentStore = useTournamentStore();
@@ -176,12 +176,11 @@ const { alert: notify, confirm: confirmDialog } = useNotify();
 
 const selectedTournamentId = ref<number | null>(null);
 const seasonId = ref('');
-const linkResult = ref<{ competition_id: string; match_count: number } | null>(null);
+const linkResult = ref<FifaLinkResult | null>(null);
 const autoApply = ref(false);
 const linking = ref(false);
 const loadingMappings = ref(false);
 const mappingsLoaded = ref(false);
-const mappingCompetitionId = ref('');
 const proposalTab = ref<'pending' | 'applied'>('pending');
 
 const isAdmin = computed(() => userStore.isAdmin);
@@ -189,12 +188,32 @@ const tournaments = computed(() => tournamentStore.running);
 const suggestions = computed(() => fifaStore.suggestions);
 const proposals = computed(() => fifaStore.proposals);
 const unmapped = computed(() => fifaStore.unmapped);
+const isLinked = computed(() => fifaStore.competitionId.length > 0);
 
 const canLink = computed(() => selectedTournamentId.value !== null && seasonId.value.trim().length > 0);
 
 onMounted(() => {
   fifaStore.loadProposals('pending').catch(() => {});
   fifaStore.loadUnmapped().catch(() => {});
+});
+
+// On tournament change, clear stale per-tournament UI and load the real link
+// state (season id + auto-apply) so the screen never shows a previous
+// tournament's values. A 404 means the tournament is not linked yet.
+watch(selectedTournamentId, async (id) => {
+  linkResult.value = null;
+  mappingsLoaded.value = false;
+  seasonId.value = '';
+  autoApply.value = false;
+  fifaStore.reset();
+  if (id === null) return;
+  try {
+    const link = await fifaStore.loadCompetition(id);
+    seasonId.value = link.competition_id;
+    autoApply.value = link.auto_apply;
+  } catch {
+    // not linked yet: leave the form blank for a fresh link
+  }
 });
 
 function kindBadge(kind: string) {
@@ -211,7 +230,6 @@ async function doLink() {
       tournament_id: selectedTournamentId.value,
       competition_id: seasonId.value.trim(),
     });
-    mappingCompetitionId.value = linkResult.value.competition_id;
     notify({ title: 'Linked!', message: `${linkResult.value.match_count} matches in the feed.`, state: 'success' });
   } catch (err) {
     notify({ title: 'Could not link', message: `${err}`, state: 'error' });
@@ -235,8 +253,7 @@ async function reloadMappings() {
   if (selectedTournamentId.value === null) return;
   loadingMappings.value = true;
   try {
-    const data = await fifaStore.loadMappings(selectedTournamentId.value);
-    mappingCompetitionId.value = data.competition_id;
+    await fifaStore.loadMappings(selectedTournamentId.value);
     mappingsLoaded.value = true;
   } catch (err) {
     notify({ title: 'Could not load mappings', message: `${err}`, state: 'error' });
@@ -249,7 +266,6 @@ async function confirmMapping(s: FifaMappingSuggestion) {
   try {
     await fifaStore.confirmMapping({
       game_id: s.game_id,
-      competition_id: mappingCompetitionId.value,
       match_id: s.match_id,
       orientation_flipped: s.orientation_flipped,
     });

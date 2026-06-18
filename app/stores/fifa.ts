@@ -1,7 +1,6 @@
 import type {
   FifaLinkResult,
   FifaMappings,
-  FifaMappingSuggestion,
   FifaResultProposal,
   FifaUnmappedResult,
 } from '~/types';
@@ -10,13 +9,32 @@ import type {
 // betty-api /admin/fifa endpoints via the authenticated fetch wrapper and keeps
 // the most recently loaded lists in state for the admin screen to render.
 export const useFifaStore = defineStore('fifa', () => {
-  const suggestions = ref<FifaMappingSuggestion[]>([]);
+  const competitionId = ref('');
+  const suggestions = ref<FifaMappings['suggestions']>([]);
   const proposals = ref<FifaResultProposal[]>([]);
   const unmapped = ref<FifaUnmappedResult[]>([]);
 
+  // Monotonic token so a slow proposals response cannot overwrite a newer one
+  // (rapid Pending<->Applied tab switching).
+  let proposalsReq = 0;
+
   async function linkCompetition(payload: { tournament_id: number; competition_id: string }) {
     const { authFetch } = useApi();
-    return authFetch<FifaLinkResult>('/admin/fifa/competitions', { method: 'POST', body: payload });
+    const data = await authFetch<FifaLinkResult>('/admin/fifa/competitions', {
+      method: 'POST',
+      body: payload,
+    });
+    competitionId.value = data.competition_id;
+    return data;
+  }
+
+  async function loadCompetition(tournamentId: number) {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ competition_id: string; auto_apply: boolean; enabled: boolean }>(
+      `/admin/fifa/competitions/${tournamentId}`,
+    );
+    competitionId.value = data.competition_id;
+    return data;
   }
 
   async function setAutoApply(payload: { tournament_id: number; auto_apply: boolean }) {
@@ -30,13 +48,13 @@ export const useFifaStore = defineStore('fifa', () => {
   async function loadMappings(tournamentId: number) {
     const { authFetch } = useApi();
     const data = await authFetch<FifaMappings>(`/admin/fifa/mappings?tournament_id=${tournamentId}`);
+    competitionId.value = data.competition_id;
     suggestions.value = data.suggestions ?? [];
     return data;
   }
 
   async function confirmMapping(payload: {
     game_id: number;
-    competition_id: string;
     match_id: string;
     orientation_flipped: boolean;
   }) {
@@ -44,7 +62,7 @@ export const useFifaStore = defineStore('fifa', () => {
     await authFetch(`/admin/fifa/mappings/${payload.game_id}/confirm`, {
       method: 'POST',
       body: {
-        competition_id: payload.competition_id,
+        competition_id: competitionId.value,
         match_id: payload.match_id,
         orientation_flipped: payload.orientation_flipped,
       },
@@ -60,11 +78,16 @@ export const useFifaStore = defineStore('fifa', () => {
 
   async function loadProposals(status: string) {
     const { authFetch } = useApi();
+    const req = ++proposalsReq;
     const data = await authFetch<{ proposals: FifaResultProposal[] }>(
       `/admin/fifa/proposals?status=${status}`,
     );
-    proposals.value = data.proposals ?? [];
-    return proposals.value;
+    const list = data.proposals ?? [];
+    // Only commit if this is still the most recent request (drop stale responses).
+    if (req === proposalsReq) {
+      proposals.value = list;
+    }
+    return list;
   }
 
   async function confirmProposal(id: number) {
@@ -86,11 +109,18 @@ export const useFifaStore = defineStore('fifa', () => {
     return unmapped.value;
   }
 
+  function reset() {
+    competitionId.value = '';
+    suggestions.value = [];
+  }
+
   return {
+    competitionId,
     suggestions,
     proposals,
     unmapped,
     linkCompetition,
+    loadCompetition,
     setAutoApply,
     loadMappings,
     confirmMapping,
@@ -99,5 +129,6 @@ export const useFifaStore = defineStore('fifa', () => {
     confirmProposal,
     dismissProposal,
     loadUnmapped,
+    reset,
   };
 });

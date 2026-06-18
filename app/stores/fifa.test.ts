@@ -83,14 +83,27 @@ describe('useFifaStore', () => {
     });
   });
 
+  describe('loadCompetition()', () => {
+    it('GETs the link and stores the competition id', async () => {
+      authFetch.mockResolvedValue({ competition_id: '285023', auto_apply: true, enabled: true });
+      const store = useFifaStore();
+
+      const data = await store.loadCompetition(7);
+
+      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/competitions/7');
+      expect(data.auto_apply).toBe(true);
+      expect(store.competitionId).toBe('285023');
+    });
+  });
+
   describe('confirmMapping()', () => {
-    it('POSTs the orientation and drops the suggestion from state', async () => {
+    it('POSTs the competition id from the loaded mappings and drops the suggestion', async () => {
       authFetch.mockResolvedValueOnce({ competition_id: '285023', suggestions: [suggestion({ game_id: 1 }), suggestion({ game_id: 2 })] });
       const store = useFifaStore();
-      await store.loadMappings(7);
+      await store.loadMappings(7); // sets competitionId in the store
       authFetch.mockResolvedValueOnce(undefined);
 
-      await store.confirmMapping({ game_id: 1, competition_id: '285023', match_id: 'm1', orientation_flipped: true });
+      await store.confirmMapping({ game_id: 1, match_id: 'm1', orientation_flipped: true });
 
       expect(authFetch).toHaveBeenCalledWith('/admin/fifa/mappings/1/confirm', {
         method: 'POST',
