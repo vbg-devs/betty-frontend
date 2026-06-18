@@ -22,8 +22,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -541,20 +541,20 @@ private fun ProfileTextField(
     singleLine: Boolean = true,
 ) {
     val colors = BettyTheme.colors
-    TextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = {
             Text(text = placeholder, style = BettyTheme.type.body, color = colors.textMuted)
         },
         singleLine = singleLine,
-        colors = TextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = colors.overlay06,
             unfocusedContainerColor = colors.overlay06,
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
+            focusedBorderColor = Palette.orange,
+            unfocusedBorderColor = colors.overlay10,
             cursorColor = colors.textPrimary,
         ),
         shape = Radius.sharp,

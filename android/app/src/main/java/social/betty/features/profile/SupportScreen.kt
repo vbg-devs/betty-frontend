@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -125,7 +125,7 @@ fun SupportScreen() {
                         color = colors.textSecondary,
                     )
 
-                    TextField(
+                    OutlinedTextField(
                         value = description,
                         onValueChange = { description = SupportFormLogic.clamped(it) },
                         placeholder = {
@@ -136,16 +136,16 @@ fun SupportScreen() {
                             )
                         },
                         enabled = !isSubmitting,
-                        colors = TextFieldDefaults.colors(
+                        colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = colors.overlay06,
                             unfocusedContainerColor = colors.overlay06,
                             disabledContainerColor = colors.overlay06,
                             focusedTextColor = colors.textPrimary,
                             unfocusedTextColor = colors.textPrimary,
                             disabledTextColor = colors.textPrimary,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
+                            focusedBorderColor = Palette.orange,
+                            unfocusedBorderColor = colors.overlay10,
+                            disabledBorderColor = colors.overlay10,
                             cursorColor = colors.textPrimary,
                         ),
                         shape = Radius.sharp,

@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -508,6 +512,7 @@ private fun StatTile(background: Color, modifier: Modifier, content: @Composable
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TabBar(
     labels: List<String>,
@@ -517,41 +522,33 @@ private fun TabBar(
 ) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .align(Alignment.BottomStart)
-                .background(colors.overlay08),
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.xl)) {
-            labels.forEachIndexed { index, label ->
-                val selected = index == selectedIndex
-                val tag = when (logicalForLabel(index)) {
-                    0 -> "group-tab-group"
-                    1 -> "group-tab-games"
-                    else -> "group-tab-leaderboard"
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .clickable { onSelect(index) }
-                        .testTag(tag),
-                ) {
-                    Text(
-                        text = label.uppercase(),
-                        style = type.caption,
-                        color = if (selected) colors.textPrimary else colors.textMuted,
-                        modifier = Modifier.padding(vertical = Space.s),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .height(3.dp)
-                            .width(if (selected) 64.dp else 0.dp)
-                            .background(Palette.orange),
-                    )
-                }
+    SecondaryTabRow(
+        selectedTabIndex = selectedIndex,
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = Color.Transparent,
+        contentColor = Palette.orange,
+        divider = { HorizontalDivider(thickness = 1.dp, color = colors.overlay08) },
+    ) {
+        labels.forEachIndexed { index, label ->
+            val selected = index == selectedIndex
+            val tag = when (logicalForLabel(index)) {
+                0 -> "group-tab-group"
+                1 -> "group-tab-games"
+                else -> "group-tab-leaderboard"
+            }
+            Tab(
+                selected = selected,
+                onClick = { onSelect(index) },
+                selectedContentColor = colors.textPrimary,
+                unselectedContentColor = colors.textMuted,
+                modifier = Modifier.testTag(tag),
+            ) {
+                Text(
+                    text = label.uppercase(),
+                    style = type.caption,
+                    color = if (selected) colors.textPrimary else colors.textMuted,
+                    modifier = Modifier.padding(vertical = Space.s),
+                )
             }
         }
     }

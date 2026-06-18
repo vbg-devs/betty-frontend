@@ -11,8 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -181,7 +181,7 @@ private fun CompleteProfileTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     val colors = BettyTheme.colors
-    TextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = {
@@ -193,13 +193,13 @@ private fun CompleteProfileTextField(
         },
         singleLine = true,
         keyboardOptions = keyboardOptions,
-        colors = TextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = colors.overlay06,
             unfocusedContainerColor = colors.overlay06,
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
+            focusedBorderColor = Palette.orange,
+            unfocusedBorderColor = colors.overlay10,
             cursorColor = colors.textPrimary,
         ),
         shape = Radius.sharp,
