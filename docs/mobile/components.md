@@ -143,26 +143,25 @@ Times are device-local. Implement with `Calendar.isDateInToday/Tomorrow` and a f
   relative date label again ("3 hours ago, 09:00"), not LIVE.
 - Pulsing orange dot + "LIVE".
 
-**Awarded points** (`awardedScore`) — top-right of the info row:
+**Awarded points** (`awardedScore`) — below the placed-bet chip in the center column
+(under the big score):
 - Only when `status == 1`. Find the **first** bet in `bets` where
   `bet.user_id == currentUserId && bet.game_id == game.id`; show its `user_points` as `"3P"`.
 - Hidden when: game unfinished, no matching own bet, or logged out.
 - Green ("win") styling only when `user_points > 0`; `0P` renders muted.
 - Multiple own bets: take the first in array order.
 
-**Urgency border classes** (uses `differenceInHours(start, now)` — *truncated whole hours*):
-- `timeToBet > 0 && timeToBet <= 24` → urgent (orange border).
-- `timeToBet > 0 && timeToBet <= 12` → danger (also orange; same color today, keep two states).
-- Edge pins: exactly 24h → urgent only; 13h → urgent only; exactly 12h → urgent + danger;
-  25h → neither; any past game (negative) → neither; finished → neither.
-- `betted == true` → green border ("bet done"), and shows the user's placed bet
+**Placed bet & finished state**:
+- `betted == true` → shows the user's placed bet
   (`placedBetHomeTeam – placedBetAwayTeam`) as a small orange chip under the real score.
 - `status == 1` → dimmed (45% opacity).
 
 **Layouts**:
-- Default: info row (LIVE/date + points) above two teams flanking the big `H - A` score
-  (blank strings for nil scores), logos 56pt, names uppercased, plus the optional placed-bet chip.
-- `alternative`: two compact rows `logo | name | score`, **no** info row (no LIVE/date/points).
+- Default: info row (LIVE/date) above two teams flanking the big `H - A` score
+  (blank strings for nil scores), logos 56pt, names uppercased, plus the optional placed-bet
+  chip and (when finished) the awarded points underneath it in the center column.
+- `alternative`: two compact rows `logo | name | score`, **no** info row (no LIVE/date),
+  no awarded points.
 - Team names render as empty strings when the team id is not in the team store.
 
 **Interaction**: emits `click-game(game)` on any tap, even when `clickable == false`
@@ -331,13 +330,23 @@ team placeholder when unknown).
 
 Inputs: `user` (GroupMember), `bets`, `games`, `peek`. Emits `close`.
 
-- `userBets`: filter `bets` by `user_id == user.user_id`, join each with its game from
-  `games` (by `game_id`), **silently drop** bets whose game is missing, sort ascending by
-  `game.start_date`.
+- `historyRows`: one row per game. For each game in `games`:
+  - if the user bet on it (`bets[user_id == user.user_id, game_id == game.id]`), include a
+    **bet row** with the bet joined to its game;
+  - else if the game has already started (`now > game.start_date`), include a
+    **skipped row** with `bet = null` — displayed as a muted "NO BET" placeholder;
+  - else (future game with no bet) **omit** — don't leak who hasn't placed bets yet on
+    upcoming games (mirrors the hidden-score / pre-kickoff pin).
+  Sort ascending by `game.start_date`, stable. Orphan bets (game not in `games`) are
+  silently dropped.
 - Header: medium UserBadge; title `(nickname ?? name).uppercased()`;
-  stats `"<count> BETS · <Σ user_points> PTS"` (missing `user_points` counts as 0; dropped
-  orphan bets count toward neither stat).
-- Body: `BetRowView` per bet with `peek` forwarded; empty state `"★ NO BETS YET"`.
+  stats `"<bets-count> BETS · <Σ user_points> PTS"`. **Both counts reflect actual bets
+  only** — skipped rows count toward neither (missing `user_points` counts as 0; orphan
+  bets count toward neither).
+- Body: `BetRowView` per row with `peek` forwarded. A skipped row renders the team
+  flags, a "NO BET" label in the score slot, and an em-dash in the points slot, all at
+  `opacity 0.55`. Empty state `"★ NO BETS YET"` shows only when `historyRows` is empty
+  (e.g. no games at all, or only future games the user hasn't bet on).
 - Sheet with backdrop/close-button dismissal.
 
 ---

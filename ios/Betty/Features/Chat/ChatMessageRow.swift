@@ -87,16 +87,10 @@ struct ChatMessageRow: View {
     @ViewBuilder
     private var content: some View {
         if let imageURL = message.imageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
-            AsyncImage(url: url) { phase in
-                if case .success(let image) = phase {
-                    image.resizable().scaledToFit()
-                } else {
-                    theme.colors.overlay06
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: 240, alignment: .leading)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.sharp))
-            .accessibilityIdentifier("chat.board.message.\(message.id).image")
+            AnimatedImageView(url: url)
+                .frame(maxWidth: .infinity, maxHeight: 240, alignment: .leading)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sharp))
+                .accessibilityIdentifier("chat.board.message.\(message.id).image")
         } else if let body = message.body {
             Text(body)
                 .font(.bettyBody)

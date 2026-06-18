@@ -35,15 +35,13 @@
       </header>
 
       <section class="modal__body">
-        <div v-if="userBets.length === 0" class="empty">
+        <div v-if="historyRows.length === 0" class="empty">
           <span class="kicker kicker--muted-light">★ NO BETS YET</span>
         </div>
-        <UserBetListItem
-          v-for="bet in userBets"
-          :key="bet.id"
-          :peek="peek"
-          :bet="bet"
-        />
+        <template v-for="row in historyRows" :key="row.game.id">
+          <UserBetListItem v-if="row.bet" :peek="peek" :bet="row.bet" />
+          <UserBetListItem v-else :peek="peek" :game="row.game" />
+        </template>
       </section>
     </section>
   </div>
@@ -66,18 +64,34 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const userBets = computed(() => {
-  const filtered = bets
-    .concat()
-    .filter((x: any) => x.user_id === user.user_id)
-    .map((x: any) => ({ ...x, game: games.find((z: any) => z.id === x.game_id) }))
-    .filter((x: any) => x.game);
-  filtered.sort(
-    (a: any, b: any) =>
+type HistoryRow = { game: any; bet: any | null };
+
+const historyRows = computed<HistoryRow[]>(() => {
+  const betByGameId = new Map<any, any>();
+  for (const b of bets) {
+    if (b.user_id === user.user_id) betByGameId.set(b.game_id, b);
+  }
+  const now = Date.now();
+
+  const rows: HistoryRow[] = [];
+  for (const game of games) {
+    const bet = betByGameId.get(game.id);
+    if (bet) {
+      rows.push({ game, bet: { ...bet, game } });
+      continue;
+    }
+    const started = game.start_date && new Date(game.start_date).getTime() <= now;
+    if (started) rows.push({ game, bet: null });
+  }
+
+  rows.sort(
+    (a, b) =>
       new Date(a.game.start_date).getTime() - new Date(b.game.start_date).getTime(),
   );
-  return filtered;
+  return rows;
 });
+
+const userBets = computed(() => historyRows.value.filter((r) => r.bet).map((r) => r.bet));
 
 const totalPoints = computed(() =>
   userBets.value.reduce((sum: number, b: any) => sum + (b.user_points || 0), 0),
@@ -232,6 +246,7 @@ onBeforeUnmount(() => {
 .modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 14px 18px;
 }
 

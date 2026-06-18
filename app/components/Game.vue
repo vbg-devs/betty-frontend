@@ -4,9 +4,6 @@
     :class="{
       'game--clickable': clickable,
       'game--alternative': alternative,
-      'game--bet-done': betted,
-      'game--bet-urgent': timeToBet > 0 && timeToBet <= 24,
-      'game--bet-danger': timeToBet > 0 && timeToBet <= 12,
       'game--over': game.status === 1,
     }"
     @click="emit('click-game', game)"
@@ -39,18 +36,6 @@
       <div class="game__information">
         <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
         <span v-else class="game__date">{{ startDate }}</span>
-        <span
-          v-if="awardedScore !== null"
-          class="awarded-points"
-          :class="{ 'awarded-points--win': awardedScore > 0 }"
-        >
-          {{ awardedScore }}P<span
-            v-if="awardedBoosted && awardedScore > 0"
-            class="awarded-points__rocket"
-            aria-label="Boosted"
-            >🚀</span
-          >
-        </span>
       </div>
       <div class="teams">
         <div class="team">
@@ -71,6 +56,18 @@
               <div class="score__divider">-</div>
               <div class="score__label">{{ placedBetAwayTeam }}</div>
             </div>
+          </div>
+          <div
+            v-if="awardedScore !== null"
+            class="awarded-points"
+            :class="{ 'awarded-points--win': awardedScore > 0 }"
+          >
+            {{ awardedScore }}P<span
+              v-if="awardedBoosted && awardedScore > 0"
+              class="awarded-points__rocket"
+              aria-label="Boosted"
+              >🚀</span
+            >
           </div>
         </div>
         <div class="team">
@@ -136,10 +133,6 @@ const awardedScore = computed(() => {
 
 const awardedBoosted = computed(() => !!myFinishedBet.value?.boosted);
 
-const timeToBet = computed(() => {
-  return differenceInHours(new Date(game.start_date), new Date());
-});
-
 const homeTeam = computed(() => teamStore.byId(game.home_team_id));
 const awayTeam = computed(() => teamStore.byId(game.away_team_id));
 
@@ -174,13 +167,11 @@ const isLive = computed(() => {
 .game {
   position: relative;
   background: var(--indigo-dark);
-  border: 1px solid transparent;
   border-radius: 2px;
   padding: 14px 16px 16px;
   color: var(--cream);
   transition:
     transform 0.15s ease,
-    border-color 0.15s ease,
     background 0.15s ease;
 }
 
@@ -197,18 +188,6 @@ const isLive = computed(() => {
   transform: translateY(-1px);
 }
 
-.game--bet-done {
-  border-color: var(--green);
-}
-
-.game--bet-urgent {
-  border-color: var(--orange);
-}
-
-.game--bet-danger {
-  border-color: var(--orange);
-}
-
 .game__information {
   display: flex;
   align-items: center;
@@ -222,7 +201,12 @@ const isLive = computed(() => {
 }
 
 .awarded-points {
+  text-align: center;
+  padding-top: 6px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
   color: var(--muted-strong);
 }
 
@@ -306,7 +290,6 @@ const isLive = computed(() => {
   color: var(--orange);
   padding: 3px 8px;
   border-radius: 2px;
-  margin-top: 8px;
 }
 
 .score--small .score__label,

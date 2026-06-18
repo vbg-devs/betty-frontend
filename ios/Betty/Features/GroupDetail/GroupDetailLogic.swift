@@ -66,8 +66,9 @@ nonisolated enum GroupGameDateLabel {
 // MARK: - Game card derived state (Game.vue)
 
 nonisolated enum GroupGameCardLogic {
-    /// Top-right awarded points: only for finished games, from the FIRST own bet in array
-    /// order; hidden (nil) when unfinished, no own bet, unevaluated bet, or logged out.
+    /// Awarded points (below the placed-bet chip): only for finished games, from the FIRST
+    /// own bet in array order; hidden (nil) when unfinished, no own bet, unevaluated bet,
+    /// or logged out.
     static func awardedPoints(game: Game, bets: [Bet], userID: String?) -> Int? {
         guard game.isFinished else { return nil }
         return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.userPoints
@@ -79,28 +80,6 @@ nonisolated enum GroupGameCardLogic {
     static func awardedBoosted(game: Game, bets: [Bet], userID: String?) -> Bool {
         guard game.isFinished else { return false }
         return BetOwnership.firstOwnBet(in: bets, gameID: game.id, userID: userID)?.boosted ?? false
-    }
-
-    /// Web `differenceInHours` truncated-hour urgency: urgent when 0 < h <= 24,
-    /// danger when 0 < h <= 12 (same orange today; both pinned).
-    static func isUrgent(game: Game, at now: Date = Date()) -> Bool {
-        let hours = GameClock.wholeHoursUntilStart(of: game, at: now)
-        return hours > 0 && hours <= 24
-    }
-
-    static func isDanger(game: Game, at now: Date = Date()) -> Bool {
-        let hours = GameClock.wholeHoursUntilStart(of: game, at: now)
-        return hours > 0 && hours <= 12
-    }
-
-    enum Border: Equatable { case none, betDone, urgent }
-
-    /// CSS source order pin: `.game--bet-urgent`/`--bet-danger` come after `--bet-done`,
-    /// so an urgent window overrides the green "bet placed" border.
-    static func border(game: Game, betted: Bool, at now: Date = Date()) -> Border {
-        if isUrgent(game: game, at: now) { return .urgent }
-        if betted { return .betDone }
-        return .none
     }
 }
 
@@ -368,23 +347,37 @@ nonisolated enum GroupCoverPolicy {
 
 // MARK: - Member bet history (UserHistory.vue)
 
+/// One row in a member's bet-history sheet. `bet == nil` is a "NO BET" row for a game
+/// the member skipped — only included once the game has started (so we don't leak who
+/// hasn't placed bets yet on upcoming games).
 nonisolated struct GroupUserHistoryEntry: Identifiable, Hashable {
-    let bet: Bet
+    let bet: Bet?
     let game: Game
-    var id: Int { bet.id }
+    var id: Int { game.id }
 }
 
 nonisolated enum GroupUserHistoryLogic {
-    /// Filter to the member's bets, join each to its game (silently dropping orphans),
-    /// sort ascending by kickoff (stable).
-    static func entries(bets: [Bet], userID: String, games: [Game]) -> [GroupUserHistoryEntry] {
-        let joined: [GroupUserHistoryEntry] = bets
-            .filter { $0.userID == userID }
-            .compactMap { bet in
-                guard let game = games.first(where: { $0.id == bet.gameID }) else { return nil }
+    /// Build one row per game: bet-row if the member bet on it, skipped-row ("NO BET")
+    /// if the game has already started. Future games the member hasn't bet on are
+    /// omitted (the hidden-score / pre-kickoff pattern — don't leak un-placed bets).
+    /// Sorted ascending by kickoff, stable.
+    static func entries(bets: [Bet], userID: String, games: [Game], now: Date = Date()) -> [GroupUserHistoryEntry] {
+        var betByGameID: [Int: Bet] = [:]
+        for bet in bets where bet.userID == userID {
+            betByGameID[bet.gameID] = bet
+        }
+
+        let rows: [GroupUserHistoryEntry] = games.compactMap { game in
+            if let bet = betByGameID[game.id] {
                 return GroupUserHistoryEntry(bet: bet, game: game)
             }
-        return joined.enumerated().sorted { a, b in
+            if now > game.startDate {
+                return GroupUserHistoryEntry(bet: nil, game: game)
+            }
+            return nil
+        }
+
+        return rows.enumerated().sorted { a, b in
             if a.element.game.startDate != b.element.game.startDate {
                 return a.element.game.startDate < b.element.game.startDate
             }
@@ -392,8 +385,13 @@ nonisolated enum GroupUserHistoryLogic {
         }.map(\.element)
     }
 
-    /// Σ user_points over the joined entries (nil counts as 0; orphans already dropped).
+    /// "<N> BETS" — only actual bets, not skipped rows.
+    static func betsCount(_ entries: [GroupUserHistoryEntry]) -> Int {
+        entries.lazy.filter { $0.bet != nil }.count
+    }
+
+    /// Σ user_points over the bets only (nil/skipped count as 0).
     static func totalPoints(_ entries: [GroupUserHistoryEntry]) -> Int {
-        entries.reduce(0) { $0 + ($1.bet.userPoints ?? 0) }
+        entries.reduce(0) { $0 + ($1.bet?.userPoints ?? 0) }
     }
 }

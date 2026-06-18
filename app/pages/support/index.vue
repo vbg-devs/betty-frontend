@@ -61,10 +61,10 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Support & Contact · Betty.social',
+  title: 'Support & Contact · Betty',
   description:
     'Get in touch with Betty.social — bug reports, feature requests, and support for the free social predictions game.',
-  ogTitle: 'Support & Contact · Betty.social',
+  ogTitle: 'Support & Contact · Betty',
   ogDescription:
     'Get in touch with Betty.social — bug reports, feature requests, and support for the free social predictions game.',
   ogUrl: 'https://betty.social/support',

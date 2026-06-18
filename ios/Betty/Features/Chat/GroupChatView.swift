@@ -93,7 +93,6 @@ struct GroupChatView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.s) {
                     chatHeader
-                    gifSelector
                     if let store, store.isLoaded, store.messages.isEmpty {
                         Text("No messages yet. Say something!")
                             .font(.bettyBody)
@@ -122,6 +121,8 @@ struct GroupChatView: View {
             }
             .defaultScrollAnchor(.bottom)
             .scrollDismissesKeyboard(.interactively)
+            // Pinned above the composer so swapping GIFs doesn't require scrolling.
+            gifSelector
             composer
         }
     }
@@ -184,47 +185,63 @@ struct GroupChatView: View {
     private var gifSelector: some View {
         if !gifResults.isEmpty {
             let safeIndex = min(gifIndex, gifResults.count - 1)
-            BettyCard(padding: Space.m) {
-                VStack(alignment: .leading, spacing: Space.s) {
-                    Text("SELECT GIF")
-                        .kicker(theme.colors.textMuted)
-                        .accessibilityIdentifier("chat.gifSelector.title")
-                    AsyncImage(url: URL(string: gifResults[safeIndex].originalURL)) { phase in
-                        if case .success(let image) = phase {
-                            image.resizable().scaledToFit()
-                        } else {
-                            theme.colors.overlay06
-                        }
-                    }
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text("SELECT A GIF")
+                    .kicker(theme.colors.textMuted)
+                    .accessibilityIdentifier("chat.gifSelector.title")
+                AnimatedImageView(url: URL(string: gifResults[safeIndex].originalURL))
                     .id(gifResults[safeIndex].id)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 220)
+                    .frame(height: 180)
+                    .background(theme.colors.overlay06, in: RoundedRectangle(cornerRadius: Radius.sharp))
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sharp))
                     .accessibilityElement(children: .ignore)
                     // The selected GIF's id, exposed so UI tests can pin prev/next/clamp.
                     .accessibilityValue(gifResults[safeIndex].id)
                     .accessibilityIdentifier("chat.gifSelector.preview")
-                    HStack(spacing: Space.xs) {
-                        Button("PREV") { gifIndex = max(0, safeIndex - 1) }
-                            .buttonStyle(.bettyOutline)
-                            .disabled(safeIndex == 0)
-                            .accessibilityIdentifier("chat.gifSelector.prev")
-                        Button("NEXT") { gifIndex = min(gifResults.count - 1, safeIndex + 1) }
-                            .buttonStyle(.bettyOutline)
-                            .disabled(safeIndex == gifResults.count - 1)
-                            .accessibilityIdentifier("chat.gifSelector.next")
-                        Spacer()
-                        Button("SUBMIT") { sendSelectedGif() }
-                            .buttonStyle(.bettyPrimary)
-                            .disabled(isPosting)
-                            .accessibilityIdentifier("chat.gifSelector.submit")
-                        Button("CANCEL") { resetGifSelector() }
-                            .buttonStyle(.bettyGhost)
-                            .accessibilityIdentifier("chat.gifSelector.cancel")
+                HStack(spacing: Space.xs) {
+                    gifNavButton(systemName: "chevron.left", id: "chat.gifSelector.prev", disabled: safeIndex == 0) {
+                        gifIndex = max(0, safeIndex - 1)
                     }
+                    gifNavButton(systemName: "chevron.right", id: "chat.gifSelector.next", disabled: safeIndex == gifResults.count - 1) {
+                        gifIndex = min(gifResults.count - 1, safeIndex + 1)
+                    }
+                    Spacer()
+                    Button("SUBMIT") { sendSelectedGif() }
+                        .buttonStyle(.bettyPrimary)
+                        .disabled(isPosting)
+                        .accessibilityIdentifier("chat.gifSelector.submit")
+                    Button("CANCEL") { resetGifSelector() }
+                        .buttonStyle(.bettyGhost)
+                        .accessibilityIdentifier("chat.gifSelector.cancel")
                 }
             }
+            .padding(.horizontal, Space.m)
+            .padding(.top, Space.s)
+            .padding(.bottom, Space.xs)
+            .background(theme.colors.surfaceDeep)
+            .overlay(alignment: .top) {
+                Divider().overlay(theme.colors.overlay06)
+            }
         }
+    }
+
+    private func gifNavButton(systemName: String, id: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 15, weight: .heavy))
+                .foregroundStyle(theme.colors.textPrimary)
+                .frame(width: 44, height: 44)
+                .overlay {
+                    RoundedRectangle(cornerRadius: Radius.sharp)
+                        .strokeBorder(theme.colors.textPrimary.opacity(0.25), lineWidth: 1)
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.4 : 1)
+        .accessibilityIdentifier(id)
     }
 
     private func resetGifSelector() {

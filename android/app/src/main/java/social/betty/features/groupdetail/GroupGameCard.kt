@@ -1,7 +1,6 @@
 package social.betty.features.groupdetail
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,9 +35,9 @@ import social.betty.designsystem.components.TeamLogo
 import java.time.Instant
 
 /**
- * Web `Game.vue` (default layout): info row (LIVE badge or kickoff label + awarded points)
- * above two teams flanking the big score, optional placed-bet chip, urgency / bet-done
- * border, 45% dim when finished, optional bet-count chip overlay.
+ * Web `Game.vue` (default layout): info row (LIVE badge or kickoff label) above two teams
+ * flanking the big score, optional placed-bet chip with awarded points underneath it,
+ * 45% dim when finished, optional bet-count chip overlay.
  */
 @Composable
 fun GroupGameCard(
@@ -61,18 +59,11 @@ fun GroupGameCard(
     val colors = BettyTheme.colors
     val type = BettyTheme.type
 
-    val borderColor = when (GroupGameCardLogic.border(game, betted, now)) {
-        GroupGameCardLogic.Border.URGENT -> Palette.orange
-        GroupGameCardLogic.Border.BET_DONE -> colors.accentPositive
-        GroupGameCardLogic.Border.NONE -> Color.Transparent
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(Radius.sharp)
             .background(colors.surface)
-            .border(1.dp, borderColor, Radius.sharp)
             .clickable { onTap() }
             .alpha(if (game.isFinished) 0.45f else 1f)
             .testTag("group-game-card"),
@@ -98,22 +89,6 @@ fun GroupGameCard(
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                if (awardedPoints != null) {
-                    Text(
-                        text = "${awardedPoints}P",
-                        style = type.kicker,
-                        color = if (awardedPoints > 0) colors.accentPositive else colors.textSecondary,
-                    )
-                    // Post-evaluation rocket — only when boosted AND scored > 0 (spec §2.5).
-                    if (awardedBoosted && awardedPoints > 0) {
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "🚀",
-                            style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
-                            modifier = Modifier.testTag("group-game-card-rocket"),
-                        )
-                    }
-                }
             }
 
             // Teams + score
@@ -155,6 +130,24 @@ fun GroupGameCard(
                                 .background(Palette.orangeTint15)
                                 .padding(vertical = 3.dp, horizontal = 8.dp),
                         )
+                    }
+                    if (awardedPoints != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${awardedPoints}P",
+                                style = type.kicker,
+                                color = if (awardedPoints > 0) colors.accentPositive else colors.textSecondary,
+                            )
+                            // Post-evaluation rocket — only when boosted AND scored > 0 (spec §2.5).
+                            if (awardedBoosted && awardedPoints > 0) {
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "🚀",
+                                    style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                                    modifier = Modifier.testTag("group-game-card-rocket"),
+                                )
+                            }
+                        }
                     }
                 }
                 teamColumn(awayTeam, Modifier.weight(1f))

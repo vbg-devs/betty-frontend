@@ -11,11 +11,19 @@ export default defineNuxtConfig({
     '/**': { ssr: false },
   },
 
+  // Prerendered pages reference a hashed _payload.json sidecar; after a new
+  // deploy the old hash no longer exists on the origin and SPA-only routes
+  // never had one — both cases return the SPA fallback HTML, which the client
+  // then tries to JSON.parse and crashes on. Disable the sidecar entirely.
+  experimental: {
+    payloadExtraction: false,
+  },
+
   modules: ['@pinia/nuxt', 'nuxt-gtag', '@sentry/nuxt/module'],
 
   app: {
     head: {
-      title: 'Betty.social \u2014 Creating frenemies since 2021',
+      title: 'Betty \u2014 Creating frenemies since 2021',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
@@ -24,14 +32,14 @@ export default defineNuxtConfig({
           content:
             'Place friendly bets with your friends on any sport, track every score, and crown a champion. Betty keeps the receipts so the group chat can keep the smack talk.',
         },
-        { property: 'og:title', content: 'Betty.social \u2014 Creating frenemies since 2021' },
-        { property: 'og:site_name', content: 'Betty.social' },
+        { property: 'og:title', content: 'Betty \u2014 Creating frenemies since 2021' },
+        { property: 'og:site_name', content: 'Betty' },
         { property: 'og:image', content: 'https://betty.social/shareimage.jpg' },
         { property: 'og:image:secure_url', content: 'https://betty.social/shareimage.jpg' },
         { property: 'og:image:type', content: 'image/jpeg' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: 'Betty.social \u2014 Creating frenemies since 2021' },
+        { property: 'og:image:alt', content: 'Betty \u2014 Creating frenemies since 2021' },
         { property: 'og:url', content: 'https://betty.social' },
         {
           property: 'og:description',
@@ -40,7 +48,7 @@ export default defineNuxtConfig({
         },
         { property: 'og:type', content: 'website' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Betty.social \u2014 Creating frenemies since 2021' },
+        { name: 'twitter:title', content: 'Betty \u2014 Creating frenemies since 2021' },
         {
           name: 'twitter:description',
           content:
@@ -59,6 +67,13 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      ],
+      script: [
+        {
+          src: 'https://scripts.simpleanalyticscdn.com/latest.js',
+          async: true,
+          'data-collect-dnt': 'true',
+        },
       ],
     },
   },

@@ -5,6 +5,7 @@ import { h, nextTick } from 'vue';
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
 import type { UserProfile } from '~/types';
 import DefaultLayout from './default.vue';
+import { useNotificationsPref } from '~/composables/useNotificationsPref';
 
 const { authFetch, onAuthStateChanged, fakeAuth } = vi.hoisted(() => ({
   authFetch: vi.fn(),
@@ -47,6 +48,11 @@ const NotificationTesterStub = {
   template: '<div data-testid="notification-tester" />',
 };
 
+const IosAppBannerStub = {
+  name: 'IosAppBanner',
+  template: '<div data-testid="ios-app-banner" />',
+};
+
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
     id: 'uid-1',
@@ -55,6 +61,7 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
     image_url: null,
     firebase_image_url: null,
     country: null,
+    allow_marketing: true,
     is_admin: false,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -75,6 +82,7 @@ async function mountLayout(route = '/dashboard') {
         SideBar: SideBarStub,
         NotificationProvider: NotificationProviderStub,
         NotificationTester: NotificationTesterStub,
+        IosAppBanner: IosAppBannerStub,
       },
     },
   });
@@ -106,11 +114,13 @@ describe('default layout', () => {
     authFetch.mockResolvedValue([]);
     onAuthStateChanged.mockReset();
     window.localStorage.removeItem('betty-theme');
+    window.localStorage.removeItem('betty:notifications-hidden');
     document.documentElement.classList.remove('theme-light');
     useUserStore().set(null);
     useTeamStore().teams = [];
     useTournamentStore().tournaments = [];
     useGroupStore().groups = [];
+    useNotificationsPref().value = false;
   });
 
   afterEach(() => {
@@ -318,21 +328,33 @@ describe('default layout', () => {
       expect(wrapper.find('[data-testid="side-bar"]').exists()).toBe(false);
     });
 
-    it('toggle-notifications from the header toggles the sidebar visibility', async () => {
+    it('binds SideBar visibility to the persisted notifications preference', async () => {
       const wrapper = await mountLayout('/dashboard');
       await triggerAuth(firebaseUser);
       wrapper.findComponent(CompleteProfileModalStub).vm.$emit('set-user', makeProfile());
       await nextTick();
 
+      const pref = useNotificationsPref();
       expect(wrapper.findComponent(SideBarStub).props('show')).toBe(false);
 
-      wrapper.findComponent(HeaderBarStub).vm.$emit('toggle-notifications');
+      pref.value = true;
       await nextTick();
       expect(wrapper.findComponent(SideBarStub).props('show')).toBe(true);
 
-      wrapper.findComponent(HeaderBarStub).vm.$emit('toggle-notifications');
+      pref.value = false;
       await nextTick();
       expect(wrapper.findComponent(SideBarStub).props('show')).toBe(false);
+    });
+
+    it('hydrates the sidebar visibility from localStorage on mount', async () => {
+      window.localStorage.setItem('betty:notifications-hidden', 'true');
+      useNotificationsPref().value = true; // singleton already initialized; sync it
+      const wrapper = await mountLayout('/dashboard');
+      await triggerAuth(firebaseUser);
+      wrapper.findComponent(CompleteProfileModalStub).vm.$emit('set-user', makeProfile());
+      await nextTick();
+
+      expect(wrapper.findComponent(SideBarStub).props('show')).toBe(true);
     });
 
     it('gates the notification tester behind a signed-in user and the dev flag', async () => {

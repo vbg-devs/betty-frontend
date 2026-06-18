@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -136,18 +137,10 @@ private fun HomeScreenContent(
                     .padding(Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
-                // 1. Feedback banner → Support
-                FeedbackBanner(onTap = onSupport)
+                // 1. Feedback pill → Support (subtle right-aligned entry point)
+                FeedbackPill(onTap = onSupport)
 
-                // 2. Hero card: headline + countdown + CTAs
-                HomeHeroCard(
-                    allCards = groups,
-                    selectedTab = selectedTab,
-                    onNewGroup = onNewGroup,
-                    onBrowse = onBrowse,
-                )
-
-                // 3. Group list or global empty state
+                // 2. Group list or global empty state
                 if (groups.isEmpty()) {
                     GlobalEmptyState(onNewGroup = onNewGroup, onBrowse = onBrowse)
                 } else {
@@ -170,6 +163,14 @@ private fun HomeScreenContent(
                             DashboardItemCard(item = item)
                         }
                     }
+
+                    // 3. Hero card below the list: headline + countdown + CTAs
+                    HomeHeroCard(
+                        allCards = groups,
+                        selectedTab = selectedTab,
+                        onNewGroup = onNewGroup,
+                        onBrowse = onBrowse,
+                    )
                 }
 
                 Spacer(Modifier.height(Space.xxl))
@@ -179,32 +180,45 @@ private fun HomeScreenContent(
 }
 
 // ---------------------------------------------------------------------------
-// Feedback banner
+// Feedback pill (subtle right-aligned entry point to Support)
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun FeedbackBanner(onTap: () -> Unit) {
+private fun FeedbackPill(onTap: () -> Unit) {
     val colors = BettyTheme.colors
     val type = BettyTheme.type
 
-    InsetPanel(
-        accent = colors.accentPositive,
-        modifier = Modifier.clickable(onClick = onTap),
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(colors.overlay08, shape = RoundedCornerShape(999.dp))
+                .clickable(onClick = onTap)
+                .testTag("home-feedback-pill")
+                .padding(horizontal = Space.s, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            KickerText(text = "● FEEDBACK", color = colors.accentPositive)
-            Spacer(Modifier.width(Space.xs))
-            Text(
-                text = "Got feedback or a feature request? Betty's listening.",
-                style = type.subhead,
-                color = colors.textSecondary,
-                modifier = Modifier.weight(1f),
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(colors.accentPositive, shape = RoundedCornerShape(999.dp)),
             )
             Spacer(Modifier.width(Space.xs))
-            KickerText(text = "→", color = colors.textSecondary)
+            Text(
+                text = "Feedback? Betty's listening",
+                style = type.kicker,
+                color = colors.textSecondary,
+            )
+            Spacer(Modifier.width(Space.xs))
+            Text(
+                text = "→",
+                style = type.kicker,
+                color = colors.textSecondary,
+            )
         }
     }
 }

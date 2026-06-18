@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Web `Game.vue` (default layout): info row (LIVE badge or date label + awarded points)
-/// above two teams flanking the big score, optional placed-bet chip, urgency/bet-done
-/// border, 45% dim when finished, optional bet-count chip overlay.
+/// Web `Game.vue` (default layout): info row (LIVE badge or date label) above two teams
+/// flanking the big score, optional placed-bet chip with awarded points underneath it,
+/// 45% dim when finished, optional bet-count chip overlay.
 struct GroupGameCard: View {
     let game: Game
     let betted: Bool
@@ -30,10 +30,6 @@ struct GroupGameCard: View {
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity)
             .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: Radius.sharp))
-            .overlay {
-                RoundedRectangle(cornerRadius: Radius.sharp)
-                    .strokeBorder(borderColor, lineWidth: 1)
-            }
             .overlay(alignment: .topTrailing) {
                 if let betCount {
                     HStack(spacing: 4) {
@@ -56,14 +52,6 @@ struct GroupGameCard: View {
         .accessibilityIdentifier("groupDetail.games.card.\(game.id)")
     }
 
-    private var borderColor: Color {
-        switch GroupGameCardLogic.border(game: game, betted: betted) {
-        case .urgent: Palette.orange
-        case .betDone: theme.colors.accentPositive
-        case .none: .clear
-        }
-    }
-
     private var infoRow: some View {
         HStack {
             if game.isLive() {
@@ -73,18 +61,6 @@ struct GroupGameCard: View {
                     .kicker(theme.colors.textMuted)
             }
             Spacer()
-            if let awardedPoints {
-                HStack(spacing: 4) {
-                    Text("\(awardedPoints)P")
-                        .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
-                    if awardedBoosted && awardedPoints > 0 {
-                        // Post-eval rocket (spec §3.4, §2.5 — suppress on 0-point bets).
-                        Text("🚀")
-                            .font(.betty(12, .regular))
-                            .accessibilityLabel("Boosted")
-                    }
-                }
-            }
         }
     }
 
@@ -113,6 +89,18 @@ struct GroupGameCard: View {
                     .padding(.horizontal, 8)
                     .background(Palette.orangeTint15, in: RoundedRectangle(cornerRadius: Radius.sharp))
                     .accessibilityLabel("Your bet \(placedHome) to \(placedAway)")
+                }
+                if let awardedPoints {
+                    HStack(spacing: 4) {
+                        Text("\(awardedPoints)P")
+                            .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                        if awardedBoosted && awardedPoints > 0 {
+                            // Post-eval rocket (spec §3.4, §2.5 — suppress on 0-point bets).
+                            Text("🚀")
+                                .font(.betty(12, .regular))
+                                .accessibilityLabel("Boosted")
+                        }
+                    }
                 }
             }
             .padding(.top, Space.m)

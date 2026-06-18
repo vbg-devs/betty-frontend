@@ -178,7 +178,7 @@ const showUserMenu = ref(false);
 const showModal = ref(false);
 const showCreateGroupModal = ref(false);
 const showMobileMenu = ref(false);
-const hideNotifications = ref(false);
+const hideNotifications = useNotificationsPref();
 
 watch(
   () => route.path,

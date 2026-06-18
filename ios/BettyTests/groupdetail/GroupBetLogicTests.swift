@@ -123,10 +123,14 @@ struct GroupBetRowLogicTests {
 
 @Suite("Member bet history (UserHistory.vue pins)")
 struct GroupUserHistoryLogicTests {
+    // game 2 starts first (2026-06-05), then game 1 (2026-06-07). The two `now` values
+    // bracket those: `beforeAll` is pre-kickoff for both, `afterAll` is post-kickoff for both.
     private let games = [
         GroupDetailFixtures.game(id: 1, start: GroupDetailFixtures.date("2026-06-07T12:00:00Z")),
         GroupDetailFixtures.game(id: 2, start: GroupDetailFixtures.date("2026-06-05T12:00:00Z")),
     ]
+    private let beforeAll = GroupDetailFixtures.date("2026-06-05T11:00:00Z")
+    private let afterAll = GroupDetailFixtures.date("2026-06-10T12:00:00Z")
 
     @Test func filtersJoinsAndSortsByKickoff() {
         let bets = [
@@ -134,9 +138,9 @@ struct GroupUserHistoryLogicTests {
             GroupDetailFixtures.bet(id: 11, userID: "other", gameID: 1, userPoints: 5, processed: true),
             GroupDetailFixtures.bet(id: 12, userID: "me", gameID: 2, userPoints: nil),
         ]
-        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games)
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: beforeAll)
         // Other members' bets excluded; sorted ascending by game start (game 2 first).
-        #expect(entries.map(\.bet.id) == [12, 10])
+        #expect(entries.compactMap { $0.bet?.id } == [12, 10])
         #expect(entries.map(\.game.id) == [2, 1])
     }
 
@@ -145,8 +149,8 @@ struct GroupUserHistoryLogicTests {
             GroupDetailFixtures.bet(id: 10, userID: "me", gameID: 1, userPoints: 3, processed: true),
             GroupDetailFixtures.bet(id: 13, userID: "me", gameID: 999, userPoints: 7, processed: true),
         ]
-        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games)
-        #expect(entries.map(\.bet.id) == [10])
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: beforeAll)
+        #expect(entries.compactMap { $0.bet?.id } == [10])
         #expect(GroupUserHistoryLogic.totalPoints(entries) == 3)
     }
 
@@ -155,13 +159,56 @@ struct GroupUserHistoryLogicTests {
             GroupDetailFixtures.bet(id: 10, userID: "me", gameID: 1, userPoints: 3, processed: true),
             GroupDetailFixtures.bet(id: 12, userID: "me", gameID: 2, userPoints: nil),
         ]
-        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games)
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: beforeAll)
         #expect(GroupUserHistoryLogic.totalPoints(entries) == 3)
     }
 
-    @Test func emptyWhenMemberHasNoBets() {
-        let entries = GroupUserHistoryLogic.entries(bets: [], userID: "me", games: games)
+    @Test func emptyWhenMemberHasNoBetsAndNoGamesStarted() {
+        let entries = GroupUserHistoryLogic.entries(bets: [], userID: "me", games: games, now: beforeAll)
         #expect(entries.isEmpty)
         #expect(GroupUserHistoryLogic.totalPoints(entries) == 0)
+        #expect(GroupUserHistoryLogic.betsCount(entries) == 0)
+    }
+
+    @Test func startedGamesWithoutABetRenderAsSkippedRows() {
+        let bets = [
+            GroupDetailFixtures.bet(id: 10, userID: "me", gameID: 2, userPoints: 3, processed: true),
+        ]
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: afterAll)
+        // game 2 (bet) then game 1 (skipped) by kickoff order.
+        #expect(entries.map(\.game.id) == [2, 1])
+        #expect(entries[0].bet?.id == 10)
+        #expect(entries[1].bet == nil)
+        // betsCount and totalPoints only see actual bets.
+        #expect(GroupUserHistoryLogic.betsCount(entries) == 1)
+        #expect(GroupUserHistoryLogic.totalPoints(entries) == 3)
+    }
+
+    @Test func futureGamesWithoutABetAreOmitted() {
+        // beforeAll: both games are in the future. With zero bets, nothing renders —
+        // we don't leak who hasn't placed bets yet (the hidden-score / pre-kickoff pin).
+        let entries = GroupUserHistoryLogic.entries(bets: [], userID: "me", games: games, now: beforeAll)
+        #expect(entries.isEmpty)
+    }
+
+    @Test func futureGameWithABetIsStillIncluded() {
+        // beforeAll: game 1 future + bet on it. game 2 future + no bet. Only the bet row appears.
+        let bets = [
+            GroupDetailFixtures.bet(id: 10, userID: "me", gameID: 1, userPoints: nil),
+        ]
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: beforeAll)
+        #expect(entries.map(\.game.id) == [1])
+        #expect(entries[0].bet?.id == 10)
+    }
+
+    @Test func interleavesBetsAndSkippedRowsInChronologicalOrder() {
+        // afterAll: both games started. Bet on the earlier one, skipped the later.
+        let bets = [
+            GroupDetailFixtures.bet(id: 10, userID: "me", gameID: 2, userPoints: 1, processed: true),
+        ]
+        let entries = GroupUserHistoryLogic.entries(bets: bets, userID: "me", games: games, now: afterAll)
+        #expect(entries.map(\.game.id) == [2, 1])
+        #expect(entries[0].bet?.id == 10)
+        #expect(entries[1].bet == nil)
     }
 }

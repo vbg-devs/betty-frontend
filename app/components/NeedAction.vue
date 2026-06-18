@@ -68,7 +68,6 @@ const emit = defineEmits<{
 }>();
 
 const userStore = useUserStore();
-const teamStore = useTeamStore();
 
 const userId = computed(() => userStore.id);
 
@@ -82,59 +81,13 @@ const allGames = computed(() => {
   );
 });
 
-const fakeUrgentGames = computed(() => {
-  if (!import.meta.dev) return [];
-  const teams = (teamStore as any).all ?? [];
-  if (teams.length < 6) return [];
-
-  const now = Date.now();
-  const hour = 60 * 60 * 1000;
-  return [
-    {
-      id: 9990001,
-      home_team_id: teams[0].id,
-      away_team_id: teams[1].id,
-      home_team_score: null,
-      away_team_score: null,
-      start_date: new Date(now + 2 * hour).toISOString(),
-      status: 0,
-      pool_id: 0,
-      poolName: 'DEV',
-    },
-    {
-      id: 9990002,
-      home_team_id: teams[2].id,
-      away_team_id: teams[3].id,
-      home_team_score: null,
-      away_team_score: null,
-      start_date: new Date(now + 8 * hour).toISOString(),
-      status: 0,
-      pool_id: 0,
-      poolName: 'DEV',
-    },
-    {
-      id: 9990003,
-      home_team_id: teams[4].id,
-      away_team_id: teams[5].id,
-      home_team_score: null,
-      away_team_score: null,
-      start_date: new Date(now + 20 * hour).toISOString(),
-      status: 0,
-      pool_id: 0,
-      poolName: 'DEV',
-    },
-  ];
-});
-
 const gamesThatNeedsAttention = computed(() => {
-  const real = allGames.value
+  return allGames.value
     .filter((x: any) => {
       const hoursLeft = timeToBet(x);
       return x.status !== 1 && !hasBet(x) && hoursLeft > 0 && hoursLeft < 24;
     })
     .slice(0, 3);
-  if (real.length === 0) return fakeUrgentGames.value;
-  return real;
 });
 
 const todaysGames = computed(() => {
@@ -225,9 +178,15 @@ function placedBetAwayTeam(game: any) {
 
   @media (min-width: 768px) {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
+}
+
+:deep(.game) {
+  background:
+    linear-gradient(var(--surface-overlay-06), var(--surface-overlay-06)),
+    var(--indigo-dark);
 }
 
 .game__bets-info {

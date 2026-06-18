@@ -33,6 +33,7 @@ function makeUser(isAdmin: boolean): UserProfile {
     image_url: null,
     firebase_image_url: null,
     country: null,
+    allow_marketing: true,
     is_admin: isAdmin,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',

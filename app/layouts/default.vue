@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <HeaderBar :user="user" @toggle-notifications="showNotifications = !showNotifications" />
+    <HeaderBar :user="user" />
     <template v-if="!loading">
       <CompleteProfileModal @set-user="setUser" />
       <SideBar v-if="user" :show="showNotifications" />
@@ -28,6 +28,7 @@
     </Transition>
     <NotificationProvider />
     <NotificationTester v-if="user && isDev" />
+    <IosAppBanner />
   </div>
 </template>
 
@@ -101,7 +102,7 @@ const groupStore = useGroupStore();
 const { alert } = useNotify();
 
 const user = ref<UserProfile | null>(null);
-const showNotifications = ref(false);
+const showNotifications = useNotificationsPref();
 const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {

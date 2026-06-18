@@ -53,6 +53,7 @@ const me: UserProfile = {
   image_url: null,
   firebase_image_url: null,
   country: null,
+  allow_marketing: true,
   is_admin: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -222,42 +223,10 @@ describe('Game', () => {
     });
   });
 
-  describe('urgency classes', () => {
-    it('marks neither urgent nor danger 25 hours before kickoff', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(25) } });
-      expect(wrapper.classes()).not.toContain('game--bet-urgent');
-      expect(wrapper.classes()).not.toContain('game--bet-danger');
-    });
-
-    it('marks urgent but not danger exactly 24 hours before kickoff', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(24) } });
-      expect(wrapper.classes()).toContain('game--bet-urgent');
-      expect(wrapper.classes()).not.toContain('game--bet-danger');
-    });
-
-    it('marks urgent but not danger 13 hours before kickoff', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(13) } });
-      expect(wrapper.classes()).toContain('game--bet-urgent');
-      expect(wrapper.classes()).not.toContain('game--bet-danger');
-    });
-
-    it('marks urgent and danger exactly 12 hours before kickoff', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(12) } });
-      expect(wrapper.classes()).toContain('game--bet-urgent');
-      expect(wrapper.classes()).toContain('game--bet-danger');
-    });
-
-    it('does not mark past unfinished games as urgent or danger', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-72) } });
-      expect(wrapper.classes()).not.toContain('game--bet-urgent');
-      expect(wrapper.classes()).not.toContain('game--bet-danger');
-    });
-
-    it('marks finished games as over without urgency borders', async () => {
+  describe('finished games', () => {
+    it('marks finished games as over', async () => {
       const wrapper = await mountSuspended(Game, { props: { game: finishedGame() } });
       expect(wrapper.classes()).toContain('game--over');
-      expect(wrapper.classes()).not.toContain('game--bet-urgent');
-      expect(wrapper.classes()).not.toContain('game--bet-danger');
     });
   });
 
@@ -316,12 +285,11 @@ describe('Game', () => {
       expect(scores.map((s) => s.text())).toEqual(['3', '1']);
     });
 
-    it('shows the placed bet with the bet-done border when betted', async () => {
+    it('shows the placed bet when betted', async () => {
       const wrapper = await mountSuspended(Game, {
         props: { game: makeGame(2), betted: true, placedBetHomeTeam: 2, placedBetAwayTeam: 1 },
       });
 
-      expect(wrapper.classes()).toContain('game--bet-done');
       const myScore = wrapper.find('.my-score');
       expect(myScore.exists()).toBe(true);
       expect(myScore.findAll('.score__label').map((s) => s.text())).toEqual(['2', '1']);
@@ -329,7 +297,6 @@ describe('Game', () => {
 
     it('hides the placed bet when not betted', async () => {
       const wrapper = await mountSuspended(Game, { props: { game: makeGame(2) } });
-      expect(wrapper.classes()).not.toContain('game--bet-done');
       expect(wrapper.find('.my-score').exists()).toBe(false);
     });
   });

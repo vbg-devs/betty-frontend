@@ -1,10 +1,8 @@
 import SwiftUI
 
-/// Web `Game.vue` (default layout): kicker info row (LIVE badge or kickoff label, awarded
-/// points), two teams flanking the big `H - A` score, optional own-bet chip. Border:
-/// orange when kickoff is 0 < h <= 24 truncated hours away, green when the user has bet,
-/// clear otherwise (urgency wins over bet-done, matching the web cascade). Finished games
-/// dim to 45%.
+/// Web `Game.vue` (default layout): kicker info row (LIVE badge or kickoff label), two
+/// teams flanking the big `H - A` score, optional own-bet chip with awarded points
+/// underneath it. Finished games dim to 45%.
 struct TournamentGameCard: View {
     var game: Game
     var bets: [Bet] = []
@@ -26,13 +24,6 @@ struct TournamentGameCard: View {
         return ownBet?.userPoints
     }
 
-    private var borderColor: Color {
-        let hours = GameClock.wholeHoursUntilStart(of: game)
-        if hours > 0 && hours <= 24 { return Palette.orange }
-        if ownBet != nil { return theme.colors.accentPositive }
-        return .clear
-    }
-
     var body: some View {
         VStack(spacing: Space.s) {
             infoRow
@@ -41,6 +32,12 @@ struct TournamentGameCard: View {
                 VStack(spacing: Space.xxs) {
                     scoreRow
                     if let bet = ownBet { betChip(bet) }
+                    if let points = awardedPoints {
+                        Text("\(points)P")
+                            .font(.bettyKicker)
+                            .kerning(1.4)
+                            .foregroundStyle(points > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                    }
                 }
                 teamColumn(awayTeam)
             }
@@ -48,10 +45,6 @@ struct TournamentGameCard: View {
         .padding(Space.m)
         .frame(maxWidth: .infinity)
         .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: Radius.sharp))
-        .overlay {
-            RoundedRectangle(cornerRadius: Radius.sharp)
-                .strokeBorder(borderColor, lineWidth: 1)
-        }
         .opacity(game.isFinished ? 0.45 : 1)
         .contentShape(Rectangle())
         .onTapGesture { onTap?(game) }
@@ -66,12 +59,6 @@ struct TournamentGameCard: View {
                     .kicker(theme.colors.textMuted)
             }
             Spacer()
-            if let points = awardedPoints {
-                Text("\(points)P")
-                    .font(.bettyKicker)
-                    .kerning(1.4)
-                    .foregroundStyle(points > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
-            }
         }
     }
 

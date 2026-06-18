@@ -6,6 +6,7 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
 import type { VueWrapper } from '@vue/test-utils';
 import HeaderBar from './HeaderBar.vue';
 import UserBadge from './UserBadge.vue';
+import { useNotificationsPref } from '~/composables/useNotificationsPref';
 
 const { signOut, fakeAuth } = vi.hoisted(() => ({
   signOut: vi.fn(),
@@ -57,6 +58,8 @@ function activeLinkTexts(wrapper: VueWrapper) {
 beforeEach(() => {
   signOut.mockReset();
   document.body.classList.remove('no-scroll');
+  window.localStorage.clear();
+  useNotificationsPref().value = false;
 });
 
 describe('HeaderBar rendering', () => {

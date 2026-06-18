@@ -30,6 +30,7 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
     image_url: 'https://cdn.example/jane.png',
     firebase_image_url: null,
     country: 'SE',
+    allow_marketing: true,
     is_admin: false,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
@@ -176,6 +177,7 @@ describe('UpdateProfileModal', () => {
           name: 'New Name',
           image_url: 'https://cdn.example/jane.png',
           country: 'XX',
+          allow_marketing: true,
         },
       });
       const putBody = authFetch.mock.calls.at(-1)![1].body;
@@ -223,6 +225,35 @@ describe('UpdateProfileModal', () => {
       const button = wrapper.find('button[type="submit"]');
       expect(button.text()).toBe('SAVE PROFILE');
       expect(button.attributes('disabled')).toBeUndefined();
+    });
+  });
+
+  describe('marketing consent', () => {
+    it('prefills the checkbox from the loaded profile and sends the toggled value', async () => {
+      const wrapper = await mountModal(makeProfile({ allow_marketing: true }));
+      const checkbox = wrapper.find<HTMLInputElement>('input[type="checkbox"]');
+      expect(checkbox.element.checked).toBe(true);
+
+      await checkbox.setValue(false);
+      authFetch.mockResolvedValueOnce({});
+      await wrapper.find('form').trigger('submit');
+      await flushPromises();
+
+      expect(authFetch).toHaveBeenLastCalledWith('/user/me', {
+        method: 'PUT',
+        body: {
+          name: 'Jane Doe',
+          image_url: 'https://cdn.example/jane.png',
+          country: 'SE',
+          allow_marketing: false,
+        },
+      });
+    });
+
+    it('starts unchecked when the user has previously opted out', async () => {
+      const wrapper = await mountModal(makeProfile({ allow_marketing: false }));
+      const checkbox = wrapper.find<HTMLInputElement>('input[type="checkbox"]');
+      expect(checkbox.element.checked).toBe(false);
     });
   });
 

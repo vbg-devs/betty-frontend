@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Web `/dashboard` — feedback banner, hero (headline + first-kickoff countdown +
-/// create/browse CTAs), need-action games, Running/Ended tabs with grouped/list group
-/// cards, per-tab and global empty states. Pull-to-refresh re-fetches everything.
+/// Web `/dashboard` — feedback pill, need-action games, Running/Ended tabs with
+/// grouped/list group cards, hero (headline + first-kickoff countdown + create/browse
+/// CTAs) below the list, per-tab and global empty states. Pull-to-refresh re-fetches
+/// everything.
 struct HomeView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(ThemeStore.self) private var theme
@@ -74,10 +75,12 @@ private struct HomeContent: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Space.cardGap) {
-                HomeFeedbackBanner()
-                HomeHeroCard(viewModel: viewModel)
+                HomeFeedbackPill()
                 HomeNeedActionSection(viewModel: viewModel)
                 groupsSection
+                if viewModel.isLoaded, !viewModel.placements.isEmpty {
+                    HomeHeroCard(viewModel: viewModel)
+                }
             }
             .padding(Space.m)
         }
@@ -169,28 +172,34 @@ private struct HomeContent: View {
     }
 }
 
-/// Web feedback banner — inset panel linking to Support.
-private struct HomeFeedbackBanner: View {
+/// Subtle right-aligned pill linking to Support — quieter entry point than the
+/// old full-width banner so the dashboard leads with content, not chrome.
+private struct HomeFeedbackPill: View {
     @Environment(ThemeStore.self) private var theme
 
     var body: some View {
-        NavigationLink(value: Destination.support) {
-            BettyInsetPanel {
-                HStack(spacing: Space.s) {
-                    Text("● FEEDBACK")
-                        .kicker(theme.colors.accentPositive)
-                    Text("Got feedback or a feature request? Betty's listening.")
-                        .font(.bettySubhead)
+        HStack {
+            Spacer(minLength: 0)
+            NavigationLink(value: Destination.support) {
+                HStack(spacing: Space.xs) {
+                    Circle()
+                        .fill(theme.colors.accentPositive)
+                        .frame(width: 6, height: 6)
+                    Text("Feedback? Betty's listening")
+                        .font(.bettyKicker)
                         .foregroundStyle(theme.colors.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "arrow.right")
-                        .font(.bettySubhead)
+                        .font(.bettyKicker)
                         .foregroundStyle(theme.colors.textSecondary)
                 }
+                .padding(.vertical, 6)
+                .padding(.horizontal, Space.s)
+                .background(theme.colors.overlay08, in: Capsule())
+                .overlay(Capsule().stroke(theme.colors.overlay08, lineWidth: 1))
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home.feedback.pill")
         }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home.feedback.banner")
     }
 }
 

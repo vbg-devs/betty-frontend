@@ -25,21 +25,9 @@ fun firstOwnBet(bets: List<Bet>, gameId: Int, userId: String?): Bet? {
 fun betCount(bets: List<Bet>, gameId: Int): Int = bets.count { it.gameId == gameId }
 
 object GroupGameCardLogic {
-    /** Truncated whole hours until kickoff (negative when past), web `differenceInHours`. */
-    fun wholeHoursUntilStart(game: Game, now: Instant): Long {
-        val start = game.startDate ?: return Long.MIN_VALUE
-        return (start.epochSecond - now.epochSecond) / 3600
-    }
-
-    /** Urgent border window: 0 < h <= 24. */
-    fun isUrgent(game: Game, now: Instant): Boolean {
-        val h = wholeHoursUntilStart(game, now)
-        return h in 1..24
-    }
-
     /**
-     * Top-right awarded points: finished games only, from the FIRST own bet; null when
-     * unfinished, no own bet, the bet is unevaluated, or logged out.
+     * Awarded points (below the placed-bet chip): finished games only, from the FIRST own
+     * bet; null when unfinished, no own bet, the bet is unevaluated, or logged out.
      */
     fun awardedPoints(game: Game, bets: List<Bet>, userId: String?): Int? {
         if (!game.isFinished) return null
@@ -54,15 +42,6 @@ object GroupGameCardLogic {
         if (!game.isFinished) return false
         val bet = firstOwnBet(bets, game.id, userId) ?: return false
         return bet.boosted && (bet.userPoints ?: 0) > 0
-    }
-
-    enum class Border { NONE, BET_DONE, URGENT }
-
-    /** Urgent overrides the green "bet placed" border (CSS source-order pin). */
-    fun border(game: Game, betted: Boolean, now: Instant): Border = when {
-        isUrgent(game, now) -> Border.URGENT
-        betted -> Border.BET_DONE
-        else -> Border.NONE
     }
 }
 
@@ -208,17 +187,37 @@ object GroupBetRowLogic {
     }
 }
 
-/** Member bet-history entries (web `UserHistory.vue`). */
-data class UserHistoryEntry(val bet: Bet, val game: Game)
+/**
+ * Member bet-history row (web `UserHistory.vue`). A null `bet` is a "NO BET" row for a
+ * game the member skipped — only included once the game has started (so we don't leak
+ * who hasn't placed bets yet on upcoming games).
+ */
+data class UserHistoryEntry(val bet: Bet?, val game: Game)
 
 object GroupUserHistoryLogic {
-    /** Member's bets joined to games (orphans dropped), sorted ascending by kickoff. */
-    fun entries(bets: List<Bet>, userId: String, games: List<Game>): List<UserHistoryEntry> {
-        val byId = games.associateBy { it.id }
-        return bets
+    /**
+     * One row per game: bet-row if the member bet on it, skipped-row ("NO BET") if the
+     * game has already started. Future games the member hasn't bet on are omitted
+     * (the hidden-score / pre-kickoff pin — don't leak un-placed bets). Sorted ascending
+     * by kickoff, stable.
+     */
+    fun entries(
+        bets: List<Bet>,
+        userId: String,
+        games: List<Game>,
+        now: Instant = Instant.now(),
+    ): List<UserHistoryEntry> {
+        val betByGameId = bets.asSequence()
             .filter { it.userId == userId }
-            .mapNotNull { bet -> byId[bet.gameId]?.let { UserHistoryEntry(bet, it) } }
-            .withIndex()
+            .associateBy { it.gameId }
+
+        val rows = games.mapNotNull { game ->
+            betByGameId[game.id]?.let { return@mapNotNull UserHistoryEntry(it, game) }
+            val start = game.startDate
+            if (start != null && now.isAfter(start)) UserHistoryEntry(null, game) else null
+        }
+
+        return rows.withIndex()
             .sortedWith(
                 compareBy<IndexedValue<UserHistoryEntry>> {
                     it.value.game.startDate ?: Instant.EPOCH
@@ -227,9 +226,12 @@ object GroupUserHistoryLogic {
             .map { it.value }
     }
 
-    /** Σ user_points over the joined entries (null counts as 0). */
+    /** "<N> BETS" — only actual bets, not skipped rows. */
+    fun betsCount(entries: List<UserHistoryEntry>): Int = entries.count { it.bet != null }
+
+    /** Σ user_points over the bets only (null/skipped count as 0). */
     fun totalPoints(entries: List<UserHistoryEntry>): Int =
-        entries.sumOf { it.bet.userPoints ?: 0 }
+        entries.sumOf { it.bet?.userPoints ?: 0 }
 }
 
 object GroupStandings {
