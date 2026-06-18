@@ -91,6 +91,34 @@
               </label>
             </div>
 
+            <div class="field__row">
+              <label class="field">
+                <span class="field__label">Boosters per user</span>
+                <input
+                  v-model="boostCount"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  class="field__input"
+                />
+              </label>
+              <label class="field">
+                <span class="field__label">Booster multiplier</span>
+                <input
+                  v-model="boostMultiplier"
+                  type="number"
+                  min="1"
+                  placeholder="2"
+                  class="field__input"
+                  :disabled="!boostersEnabled"
+                />
+              </label>
+            </div>
+            <p class="field__help">
+              Members can apply a booster to multiply a single bet's points. Set count to 0 to
+              disable.
+            </p>
+
             <label class="check">
               <input v-model="peak" type="checkbox" class="check__input" />
               <span class="check__box" aria-hidden="true">
@@ -211,6 +239,8 @@ const isPublic = ref(false);
 const winPoints = ref('');
 const exactScorePoints = ref('');
 const peak = ref(false);
+const boostCount = ref('0');
+const boostMultiplier = ref('2');
 const tournamentId = ref<number | null>(null);
 const loading = ref(false);
 const group = ref<Record<string, any> | null>(null);
@@ -228,11 +258,20 @@ const selectedTournament = computed(() => {
   return tournaments.value.find((x: any) => x.id === tournamentId.value);
 });
 
+const boostersEnabled = computed(() => {
+  const parsed = parseInt(boostCount.value, 10);
+  return Number.isFinite(parsed) && parsed > 0;
+});
+
 const canSave = computed(() => {
   if (!selectedTournament.value) return false;
   if (name.value.length === 0) return false;
   if (winPoints.value.length === 0) return false;
   if (exactScorePoints.value.length === 0) return false;
+  const count = parseInt(boostCount.value, 10);
+  if (!Number.isFinite(count) || count < 0) return false;
+  const mult = parseInt(boostMultiplier.value, 10);
+  if (!Number.isFinite(mult) || mult < 1) return false;
   return true;
 });
 
@@ -261,6 +300,8 @@ async function create() {
     correct_team_points: parseFloat(winPoints.value),
     exact_result_points: parseFloat(exactScorePoints.value),
     allow_sneak_peek: peak.value,
+    boost_count: parseInt(boostCount.value, 10),
+    boost_multiplier: parseInt(boostMultiplier.value, 10),
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
     description: isPublic.value ? trimmedDescription || null : null,
@@ -527,6 +568,13 @@ async function create() {
 
 .field__count--limit {
   color: var(--orange);
+}
+
+.field__help {
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
+  margin: -10px 0 16px;
 }
 
 /* ===== Checkbox ===== */
