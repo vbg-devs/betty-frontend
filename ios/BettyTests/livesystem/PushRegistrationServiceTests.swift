@@ -8,6 +8,8 @@ private final class PushRecorder {
     var registerCalls = 0
     var grantAuthorization = true
     var sendError: Error?
+    /// Simulates the token returned by Messaging.messaging().token { } on the current install.
+    var fcmTokenFromCache: String?
 }
 
 private struct StubError: Error {}
@@ -34,7 +36,8 @@ private struct StubError: Error {}
                 recorder.authorizationCalls += 1
                 return recorder.grantAuthorization
             },
-            registerWithAPNs: { recorder.registerCalls += 1 }
+            registerWithAPNs: { recorder.registerCalls += 1 },
+            fetchFCMToken: { recorder.fcmTokenFromCache }
         )
     }
 
@@ -103,13 +106,36 @@ private struct StubError: Error {}
     }
 
     @Test func signOutResetResendsForTheNextAccount() async {
-        await service.handleFCMToken("fcm-X")
+        recorder.fcmTokenFromCache = "fcm-X"
+        await service.registerIfNeeded()   // user A: auth + APNs kick-off + cache fetch → POST
         service.resetForSignOut()
         #expect(service.phase == .idle)
 
-        // After reset, the next handleFCMToken POSTs again.
-        await service.handleFCMToken("fcm-X")
+        // User B signs in on the same install — same FCM token, but the sent
+        // marker was cleared so registerIfNeeded must POST again.
+        await service.registerIfNeeded()
 
         #expect(recorder.sentTokens == ["fcm-X", "fcm-X"])
+    }
+
+    /// Regression: same install, account switch — FCM delegate never re-fires
+    /// because the token is unchanged. registerIfNeeded must fetch the cached
+    /// token and POST it for the new user.
+    @Test func sameInstallSignInTriggersTokenPostFromCache() async {
+        // User A signs in and registers.
+        recorder.fcmTokenFromCache = "fcm-A"
+        await service.registerIfNeeded()
+        #expect(recorder.sentTokens == ["fcm-A"])
+
+        // Sign out — clears the sent-marker, resets phase to .idle.
+        service.resetForSignOut()
+
+        // User B signs in on the same device — FCM token is still "fcm-A"
+        // (same install, same token identifier). The delegate will NOT fire.
+        // registerIfNeeded must explicitly fetch and POST the cached token.
+        recorder.fcmTokenFromCache = "fcm-A"
+        await service.registerIfNeeded()
+
+        #expect(recorder.sentTokens == ["fcm-A", "fcm-A"])
     }
 }

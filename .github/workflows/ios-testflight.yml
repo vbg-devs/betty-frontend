@@ -114,8 +114,9 @@ jobs:
             echo "::error::GOOGLE_SERVICE_INFO_PLIST_BASE64 secret missing"
             exit 1
           fi
-          echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Betty/GoogleService-Info.plist
-          test "$(wc -c < ios/Betty/GoogleService-Info.plist)" -gt 200
+          echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > Betty/GoogleService-Info.plist
+          test "$(wc -c < Betty/GoogleService-Info.plist)" -gt 200
+          ls -la Betty/GoogleService-Info.plist
 
       - name: Generate project
         run: xcodegen generate

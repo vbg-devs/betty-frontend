@@ -1,8 +1,9 @@
 import Foundation
+import FirebaseCore
+import FirebaseMessaging
 import Observation
 import UIKit
 import UserNotifications
-import FirebaseMessaging
 
 /// Firebase Messaging registration + `POST /user/me/add_push_token`.
 ///
@@ -31,21 +32,26 @@ final class PushRegistrationService: NSObject, MessagingDelegate {
     private let sendToken: @MainActor (String) async throws -> Void
     private let requestAuthorization: @MainActor () async -> Bool
     private let registerWithAPNs: @MainActor () -> Void
+    private let fetchFCMToken: () async -> String?
 
     init(defaults: UserDefaults = .standard,
          sendToken: @escaping @MainActor (String) async throws -> Void,
          requestAuthorization: @escaping @MainActor () async -> Bool = PushRegistrationService.systemRequestAuthorization,
-         registerWithAPNs: @escaping @MainActor () -> Void = { UIApplication.shared.registerForRemoteNotifications() }) {
+         registerWithAPNs: @escaping @MainActor () -> Void = { UIApplication.shared.registerForRemoteNotifications() },
+         fetchFCMToken: @escaping () async -> String? = PushRegistrationService.systemFetchFCMToken) {
         self.defaults = defaults
         self.sendToken = sendToken
         self.requestAuthorization = requestAuthorization
         self.registerWithAPNs = registerWithAPNs
+        self.fetchFCMToken = fetchFCMToken
         super.init()
-        // FirebaseApp.configure() may not have been called yet at init time
-        // (e.g. plist missing). Setting the delegate on the singleton is safe
-        // either way — if Messaging isn't configured, the delegate never
-        // fires.
-        Messaging.messaging().delegate = self
+        // Guard against _FIRMessagingExceptionPlatformNotConfigured: if
+        // FirebaseApp.configure() was skipped (plist absent — the documented
+        // graceful-degrade path), Messaging.messaging() raises an exception.
+        // Only set the delegate when Firebase is actually configured.
+        if FirebaseApp.app() != nil {
+            Messaging.messaging().delegate = self
+        }
     }
 
     /// Post-onboarding trigger. Repeat calls retry an unsent token; iOS
@@ -63,6 +69,12 @@ final class PushRegistrationService: NSObject, MessagingDelegate {
             }
             phase = .awaitingToken
             registerWithAPNs()
+            // Same-install account switch: FCM won't fire the delegate again because the
+            // token didn't change. Fetch the cached token explicitly so the new user's
+            // token reaches the backend even when the underlying registration is stale.
+            if let token = await fetchFCMToken() {
+                await handleFCMToken(token)
+            }
         }
     }
 
@@ -109,5 +121,15 @@ final class PushRegistrationService: NSObject, MessagingDelegate {
     private static func systemRequestAuthorization() async -> Bool {
         (try? await UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .badge, .sound])) ?? false
+    }
+
+    private static func systemFetchFCMToken() async -> String? {
+        // Guard: Messaging.messaging() throws if Firebase is not configured.
+        guard FirebaseApp.app() != nil else { return nil }
+        return await withCheckedContinuation { continuation in
+            Messaging.messaging().token { token, _ in
+                continuation.resume(returning: token)
+            }
+        }
     }
 }
