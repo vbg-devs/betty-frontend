@@ -8,12 +8,14 @@ private final class PushRecorder {
     var registerCalls = 0
     var grantAuthorization = true
     var sendError: Error?
+    /// Simulates the token returned by Messaging.messaging().token { } on the current install.
+    var fcmTokenFromCache: String?
 }
 
 private struct StubError: Error {}
 
-/// Pins the APNs registration flow: post-onboarding prompt, hex token encoding, one POST
-/// per distinct token, retry-after-failure, simulator fallback, sign-out reset.
+/// Pins the FCM registration flow: post-onboarding prompt, one POST per
+/// distinct token, retry-after-failure, simulator fallback, sign-out reset.
 @Suite struct PushRegistrationServiceTests {
     private let recorder = PushRecorder()
     private let defaults: UserDefaults
@@ -34,13 +36,9 @@ private struct StubError: Error {}
                 recorder.authorizationCalls += 1
                 return recorder.grantAuthorization
             },
-            registerWithAPNs: { recorder.registerCalls += 1 }
+            registerWithAPNs: { recorder.registerCalls += 1 },
+            fetchFCMToken: { recorder.fcmTokenFromCache }
         )
-    }
-
-    @Test func hexTokenEncoding() {
-        #expect(PushRegistrationService.hexToken(from: Data([0x00, 0xAB, 0xFF])) == "00abff")
-        #expect(PushRegistrationService.hexToken(from: Data()) == "")
     }
 
     @Test func grantedAuthorizationRegistersWithAPNs() async {
@@ -62,30 +60,38 @@ private struct StubError: Error {}
         #expect(service.phase == .denied)
     }
 
-    @Test func deviceTokenIsSentOncePerValue() async {
-        await service.handleDeviceToken(Data([0x01, 0x02]))
-        await service.handleDeviceToken(Data([0x01, 0x02])) // same token — deduped
+    @Test func fcmTokenIsSentOncePerValue() async {
+        await service.handleFCMToken("fcm-token-A")
+        await service.handleFCMToken("fcm-token-A") // same token — deduped
 
-        #expect(recorder.sentTokens == ["0102"])
-        #expect(service.phase == .registered(token: "0102"))
+        #expect(recorder.sentTokens == ["fcm-token-A"])
+        #expect(service.phase == .registered(token: "fcm-token-A"))
+    }
+
+    @Test func nilOrEmptyFCMTokenIgnored() async {
+        await service.handleFCMToken(nil)
+        await service.handleFCMToken("")
+
+        #expect(recorder.sentTokens.isEmpty)
+        #expect(service.phase == .idle)
     }
 
     @Test func changedTokenIsSentAgain() async {
-        await service.handleDeviceToken(Data([0x01]))
-        await service.handleDeviceToken(Data([0x02]))
+        await service.handleFCMToken("fcm-1")
+        await service.handleFCMToken("fcm-2")
 
-        #expect(recorder.sentTokens == ["01", "02"])
+        #expect(recorder.sentTokens == ["fcm-1", "fcm-2"])
     }
 
     @Test func failedSendStaysUnsentAndRetries() async {
         recorder.sendError = StubError()
-        await service.handleDeviceToken(Data([0x0A]))
+        await service.handleFCMToken("fcm-X")
         #expect(recorder.sentTokens.isEmpty)
 
         recorder.sendError = nil
         await service.registerIfNeeded() // registered phase retries the unsent token
 
-        #expect(recorder.sentTokens == ["0a"])
+        #expect(recorder.sentTokens == ["fcm-X"])
         #expect(recorder.registerCalls == 0) // no re-registration needed
     }
 
@@ -100,12 +106,36 @@ private struct StubError: Error {}
     }
 
     @Test func signOutResetResendsForTheNextAccount() async {
-        await service.handleDeviceToken(Data([0x01]))
+        recorder.fcmTokenFromCache = "fcm-X"
+        await service.registerIfNeeded()   // user A: auth + APNs kick-off + cache fetch → POST
         service.resetForSignOut()
         #expect(service.phase == .idle)
 
-        await service.handleDeviceToken(Data([0x01]))
+        // User B signs in on the same install — same FCM token, but the sent
+        // marker was cleared so registerIfNeeded must POST again.
+        await service.registerIfNeeded()
 
-        #expect(recorder.sentTokens == ["01", "01"])
+        #expect(recorder.sentTokens == ["fcm-X", "fcm-X"])
+    }
+
+    /// Regression: same install, account switch — FCM delegate never re-fires
+    /// because the token is unchanged. registerIfNeeded must fetch the cached
+    /// token and POST it for the new user.
+    @Test func sameInstallSignInTriggersTokenPostFromCache() async {
+        // User A signs in and registers.
+        recorder.fcmTokenFromCache = "fcm-A"
+        await service.registerIfNeeded()
+        #expect(recorder.sentTokens == ["fcm-A"])
+
+        // Sign out — clears the sent-marker, resets phase to .idle.
+        service.resetForSignOut()
+
+        // User B signs in on the same device — FCM token is still "fcm-A"
+        // (same install, same token identifier). The delegate will NOT fire.
+        // registerIfNeeded must explicitly fetch and POST the cached token.
+        recorder.fcmTokenFromCache = "fcm-A"
+        await service.registerIfNeeded()
+
+        #expect(recorder.sentTokens == ["fcm-A", "fcm-A"])
     }
 }

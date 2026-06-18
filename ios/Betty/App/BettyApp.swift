@@ -1,6 +1,8 @@
 import SwiftUI
 import UIKit
 import UserNotifications
+import FirebaseCore
+import FirebaseMessaging
 
 @main
 struct BettyApp: App {
@@ -49,13 +51,15 @@ final class BettyAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
+            FirebaseApp.configure()
+        }
         UNUserNotificationCenter.current().delegate = self
         return true
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        guard let push = environment?.push else { return }
-        Task { await push.handleDeviceToken(deviceToken) }
+        Messaging.messaging().apnsToken = deviceToken
     }
 
     /// Expected on simulators without push support and when the `aps-environment`

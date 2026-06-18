@@ -53,12 +53,18 @@ Until then the Google button surfaces "Google sign-in isn't configured yet". App
 email/password sign-in work without any setup (Sign in with Apple additionally needs
 the capability/entitlement once a real signing team is configured).
 
-## Push notifications (dormant)
+## Push notifications
 
-`POST /user/me/add_push_token` exists server-side, but delivery goes through **Firebase
-Cloud Messaging** — a raw APNs device token is accepted but never receives a push.
-Wiring is in place (`UserStore.addPushToken`); enable only when an FCM bridge exists
-server-side.
+**Push delivery via Firebase Cloud Messaging.** The app registers for APNs
+and Firebase Messaging exchanges the device token for an FCM registration
+token (~163 chars). `POST /user/me/add_push_token` accepts the FCM token;
+backend dispatch uses `firebaseMessaging.SendAll`. Local dev requires a
+`GoogleService-Info.plist` placed at `ios/Betty/GoogleService-Info.plist`
+— download it from Firebase Console (project `betty-f676d`, iOS app
+bundle `social.betty.app`). The file is gitignored; CI decodes it from
+the `GOOGLE_SERVICE_INFO_PLIST_BASE64` GitHub secret. Without the plist,
+`FirebaseApp.configure()` is skipped at launch and the app degrades to
+push-disabled gracefully.
 
 ## Universal links (server-side task)
 

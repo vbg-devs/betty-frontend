@@ -34,15 +34,18 @@ enum AppTab: Hashable {
 /// Parsed deep link. Supported (mirroring `safeReturnUrl` strictness — only these
 /// patterns, everything else ignored):
 /// - `https://betty.social/dashboard/groups/join/<code>` (universal link)
+/// - `https://betty.social/groups/<groupID>/games/<gameID>` (reminder push universal link)
 /// - `betty://join/<code>`
 /// - `betty://group/<id>`
 /// - `betty://leaderboard/<tournamentId>`
 /// - `betty://dashboard`
+/// - `betty://bet/<groupID>/<gameID>`
 enum DeepLink: Equatable {
     case join(code: String)
     case group(id: Int)
     case leaderboard(tournamentID: Int)
     case dashboard
+    case bet(gameID: Int, groupID: Int)
 
     static func parse(_ url: URL) -> DeepLink? {
         if url.scheme == "betty" {
@@ -60,6 +63,9 @@ enum DeepLink: Equatable {
                 return .leaderboard(tournamentID: id)
             case "dashboard":
                 return .dashboard
+            case "bet":
+                guard parts.count == 2, let gid = Int(parts[0]), let gameid = Int(parts[1]) else { return nil }
+                return .bet(gameID: gameid, groupID: gid)
             default:
                 return nil
             }
@@ -70,6 +76,11 @@ enum DeepLink: Equatable {
             if parts.count == 4, parts[0] == "dashboard", parts[1] == "groups", parts[2] == "join",
                isValidInviteCode(parts[3]) {
                 return .join(code: parts[3])
+            }
+            // /groups/<groupID>/games/<gameID>  — reminder push universal link
+            if parts.count == 4, parts[0] == "groups", parts[2] == "games",
+               let gid = Int(parts[1]), let gameid = Int(parts[3]) {
+                return .bet(gameID: gameid, groupID: gid)
             }
         }
         return nil
@@ -131,6 +142,10 @@ final class Router {
         case .dashboard:
             selectedTab = .home
             homePath = []
+        case .bet(let gameID, let groupID):
+            selectedTab = .home
+            homePath = [.groupDetail(groupID: groupID)]
+            activeSheet = .bet(gameID: gameID, groupID: groupID)
         }
     }
 
