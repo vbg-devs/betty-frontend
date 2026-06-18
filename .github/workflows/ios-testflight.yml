@@ -20,9 +20,11 @@ concurrency:
 
 env:
   XCODE_VERSION: "26.5"
-  # Must match the in-flight version in App Store Connect
-  # (https://appstoreconnect.apple.com/apps/1636185602). Bump per release.
-  MARKETING_VERSION: "1.0.7"
+  # App Store Connect app id (https://appstoreconnect.apple.com/apps/1636185602).
+  # The marketing version is resolved per-run from ASC (see "Resolve TestFlight
+  # version" below) using ios/project.yml's MARKETING_VERSION as the floor —
+  # no hand-edit needed for routine patch releases.
+  ASC_APP_ID: "1636185602"
 
 jobs:
   changes:
@@ -127,6 +129,29 @@ jobs:
         run: |
           umask 077
           printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc_key.p8"
+
+      # Resolve the marketing version from App Store Connect so a released train
+      # (e.g. 1.0.5 once it ships) never trips error 90186 mid-archive. The
+      # script uses project.yml's MARKETING_VERSION as a floor and patch-bumps
+      # past any closed train; isolated venv keeps PyJWT off the system Python.
+      - name: Resolve TestFlight version
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_ID: ${{ env.ASC_APP_ID }}
+        run: |
+          set -euo pipefail
+          FLOOR=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | head -1 | sed -E 's/.*"([0-9.]+)".*/\1/')
+          if [ -z "$FLOOR" ]; then
+            echo "::error::could not read MARKETING_VERSION floor from ios/project.yml"
+            exit 1
+          fi
+          python3 -m venv "$RUNNER_TEMP/ascvenv"
+          "$RUNNER_TEMP/ascvenv/bin/pip" install --quiet pyjwt cryptography
+          VERSION=$(ASC_KEY_PATH="$RUNNER_TEMP/asc_key.p8" FLOOR_VERSION="$FLOOR" \
+            "$RUNNER_TEMP/ascvenv/bin/python" scripts/asc-marketing-version.py)
+          echo "Uploading as MARKETING_VERSION=$VERSION (project.yml floor $FLOOR)"
+          echo "MARKETING_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       # Cloud signing: Xcode fetches/creates cloud-managed certificates via
       # the ASC API at build time — no .p12 or provisioning profiles in CI.
