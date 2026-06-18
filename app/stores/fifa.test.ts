@@ -83,6 +83,26 @@ describe('useFifaStore', () => {
     });
   });
 
+  describe('loadSeasons()', () => {
+    it('GETs the curated season list and stores it', async () => {
+      authFetch.mockResolvedValue({ seasons: [{ label: 'FIFA World Cup 2026', season_id: '285023' }] });
+      const store = useFifaStore();
+
+      const result = await store.loadSeasons();
+
+      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/seasons');
+      expect(result).toEqual([{ label: 'FIFA World Cup 2026', season_id: '285023' }]);
+      expect(store.seasons).toHaveLength(1);
+    });
+
+    it('tolerates a missing seasons array', async () => {
+      authFetch.mockResolvedValue({});
+      const store = useFifaStore();
+      await store.loadSeasons();
+      expect(store.seasons).toEqual([]);
+    });
+  });
+
   describe('loadCompetition()', () => {
     it('GETs the link and stores the competition id', async () => {
       authFetch.mockResolvedValue({ competition_id: '285023', auto_apply: true, enabled: true });

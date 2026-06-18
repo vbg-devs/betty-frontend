@@ -2,6 +2,7 @@ import type {
   FifaLinkResult,
   FifaMappings,
   FifaResultProposal,
+  FifaSeason,
   FifaUnmappedResult,
 } from '~/types';
 
@@ -10,9 +11,17 @@ import type {
 // the most recently loaded lists in state for the admin screen to render.
 export const useFifaStore = defineStore('fifa', () => {
   const competitionId = ref('');
+  const seasons = ref<FifaSeason[]>([]);
   const suggestions = ref<FifaMappings['suggestions']>([]);
   const proposals = ref<FifaResultProposal[]>([]);
   const unmapped = ref<FifaUnmappedResult[]>([]);
+
+  async function loadSeasons() {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ seasons: FifaSeason[] }>('/admin/fifa/seasons');
+    seasons.value = data.seasons ?? [];
+    return seasons.value;
+  }
 
   // Monotonic token so a slow proposals response cannot overwrite a newer one
   // (rapid Pending<->Applied tab switching).
@@ -116,9 +125,11 @@ export const useFifaStore = defineStore('fifa', () => {
 
   return {
     competitionId,
+    seasons,
     suggestions,
     proposals,
     unmapped,
+    loadSeasons,
     linkCompetition,
     loadCompetition,
     setAutoApply,

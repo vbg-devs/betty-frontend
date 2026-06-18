@@ -29,8 +29,18 @@
             </select>
           </div>
           <div class="field">
+            <label class="field__label">FIFA SEASON</label>
+            <select v-model="seasonChoice" class="input">
+              <option value="" disabled>Pick a FIFA season…</option>
+              <option v-for="s in seasons" :key="s.season_id" :value="s.season_id">
+                {{ s.label }} ({{ s.season_id }})
+              </option>
+              <option :value="CUSTOM_SEASON">Other / enter ID…</option>
+            </select>
+          </div>
+          <div v-if="seasonChoice === CUSTOM_SEASON" class="field">
             <label class="field__label">FIFA SEASON ID</label>
-            <input v-model="seasonId" class="input" placeholder="e.g. 285023 (WC 2026)" />
+            <input v-model="customSeasonId" class="input" placeholder="e.g. 285023 (WC 2026)" />
           </div>
           <button
             class="btn btn--orange"
@@ -169,13 +179,17 @@
 <script setup lang="ts">
 import type { FifaLinkResult, FifaMappingSuggestion, FifaResultProposal } from '~/types';
 
+// Sentinel for the "enter an id by hand" option in the season dropdown.
+const CUSTOM_SEASON = '__custom__';
+
 const userStore = useUserStore();
 const tournamentStore = useTournamentStore();
 const fifaStore = useFifaStore();
 const { alert: notify, confirm: confirmDialog } = useNotify();
 
 const selectedTournamentId = ref<number | null>(null);
-const seasonId = ref('');
+const seasonChoice = ref(''); // dropdown: '' | a known season id | CUSTOM_SEASON
+const customSeasonId = ref(''); // free-text id when CUSTOM_SEASON is picked
 const linkResult = ref<FifaLinkResult | null>(null);
 const autoApply = ref(false);
 const linking = ref(false);
@@ -188,14 +202,32 @@ const tournaments = computed(() => tournamentStore.running);
 const suggestions = computed(() => fifaStore.suggestions);
 const proposals = computed(() => fifaStore.proposals);
 const unmapped = computed(() => fifaStore.unmapped);
+const seasons = computed(() => fifaStore.seasons);
 const isLinked = computed(() => fifaStore.competitionId.length > 0);
 
-const canLink = computed(() => selectedTournamentId.value !== null && seasonId.value.trim().length > 0);
+// The effective season id: a picked known id, or the hand-entered custom id.
+const seasonId = computed(() =>
+  seasonChoice.value === CUSTOM_SEASON ? customSeasonId.value.trim() : seasonChoice.value,
+);
+
+const canLink = computed(() => selectedTournamentId.value !== null && seasonId.value.length > 0);
 
 onMounted(() => {
+  fifaStore.loadSeasons().catch(() => {});
   fifaStore.loadProposals('pending').catch(() => {});
   fifaStore.loadUnmapped().catch(() => {});
 });
+
+// Map a season id back to the dropdown: select it if known, else fall to the
+// custom field pre-filled with the id.
+function applySeasonId(id: string) {
+  if (seasons.value.some((s) => s.season_id === id)) {
+    seasonChoice.value = id;
+  } else {
+    seasonChoice.value = CUSTOM_SEASON;
+    customSeasonId.value = id;
+  }
+}
 
 // On tournament change, clear stale per-tournament UI and load the real link
 // state (season id + auto-apply) so the screen never shows a previous
@@ -203,13 +235,14 @@ onMounted(() => {
 watch(selectedTournamentId, async (id) => {
   linkResult.value = null;
   mappingsLoaded.value = false;
-  seasonId.value = '';
+  seasonChoice.value = '';
+  customSeasonId.value = '';
   autoApply.value = false;
   fifaStore.reset();
   if (id === null) return;
   try {
     const link = await fifaStore.loadCompetition(id);
-    seasonId.value = link.competition_id;
+    applySeasonId(link.competition_id);
     autoApply.value = link.auto_apply;
   } catch {
     // not linked yet: leave the form blank for a fresh link

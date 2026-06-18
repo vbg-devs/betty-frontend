@@ -139,6 +139,11 @@ export interface GroupMessage {
 // Wire shapes from betty-api internal/fifa (admin /fifa endpoints). Admin-only
 // operator tooling; not part of the player wire contract or the native clients.
 
+export interface FifaSeason {
+  label: string;
+  season_id: string;
+}
+
 export interface FifaLinkResult {
   competition_id: string;
   match_count: number;
