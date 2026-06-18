@@ -43,6 +43,7 @@ struct GroupGameSchedule: View {
                                     bets: bets,
                                     userID: userID
                                 ),
+                                placedBoosted: ownBet?.boosted ?? false,
                                 betCount: showBets ? BetOwnership.betCount(in: bets, gameID: entry.game.id) : nil,
                                 onTap: { onGameTap(entry.game) }
                             )

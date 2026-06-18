@@ -19,6 +19,7 @@ data class GameAnnotation(
     val betCount: Int,
     val myHome: Int?,
     val myAway: Int?,
+    val myBoosted: Boolean = false,
 )
 
 data class DayGroup(
@@ -94,6 +95,7 @@ object GameSchedule {
                     betCount = gameBets.size,
                     myHome = mine?.homeTeamScore,
                     myAway = mine?.awayTeamScore,
+                    myBoosted = mine?.boosted == true,
                 )
             }
 

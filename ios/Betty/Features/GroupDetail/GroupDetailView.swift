@@ -503,6 +503,7 @@ struct GroupDetailView: View {
                             bets: bets,
                             userID: env.userStore.id
                         ),
+                        placedBoosted: ownBet?.boosted ?? false,
                         betCount: BetOwnership.betCount(in: bets, gameID: entry.game.id),
                         onTap: { openBetSheet(for: entry.game) }
                     )
@@ -772,6 +773,10 @@ struct GroupDetailView: View {
                         value: group.allowSneakPeek ? "Allowed" : "Closed",
                         valueColor: group.allowSneakPeek ? theme.colors.accentPositive : Palette.orange
                     )
+                    if group.boostCount > 0 {
+                        Divider().overlay(theme.colors.overlay06)
+                        boostRuleRow(count: group.boostCount, multiplier: group.boostMultiplier)
+                    }
                 }
             }
         }
@@ -786,6 +791,33 @@ struct GroupDetailView: View {
             Text(value)
                 .font(.betty(13, .heavy))
                 .foregroundStyle(valueColor)
+        }
+        .padding(.vertical, 10)
+    }
+
+    /// Mirrors the web `boost-chip`: count, muted `×`, then an orange-tinted pill with the
+    /// multiplier matching the placed-bet chip styling.
+    private func boostRuleRow(count: Int, multiplier: Int) -> some View {
+        HStack {
+            Text("Boosters 🚀")
+                .font(.betty(13, .regular))
+                .foregroundStyle(theme.colors.textSecondary)
+            Spacer()
+            HStack(spacing: 6) {
+                Text("\(count)")
+                    .font(.betty(13, .heavy))
+                    .foregroundStyle(theme.colors.textPrimary)
+                Text("×")
+                    .font(.betty(13, .regular))
+                    .foregroundStyle(theme.colors.textSecondary)
+                Text("\(multiplier)×")
+                    .font(.bettyKicker)
+                    .kerning(0.4)
+                    .foregroundStyle(Palette.orange)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Palette.orangeTint15, in: RoundedRectangle(cornerRadius: Radius.sharp))
+            }
         }
         .padding(.vertical, 10)
     }

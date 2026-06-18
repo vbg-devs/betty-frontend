@@ -331,6 +331,13 @@
                     {{ group.allow_sneak_peek ? 'Allowed' : 'Closed' }}
                   </span>
                 </div>
+                <div v-if="group.boost_count > 0" class="rules__row">
+                  <span class="rules__label">Boosters 🚀</span>
+                  <span class="rules__value rules__value--boost">
+                    {{ group.boost_count }}<span class="rules__times">×</span
+                    ><span class="boost-chip">{{ group.boost_multiplier }}×</span>
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1546,6 +1553,27 @@ onBeforeUnmount(() => {
 .rules__value {
   font-weight: 800;
   color: var(--cream);
+}
+
+.rules__value--boost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rules__times {
+  color: var(--muted-strong);
+  font-weight: 400;
+}
+
+.boost-chip {
+  background: rgba(255, 90, 58, 0.15);
+  color: var(--orange);
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
 }
 
 /* ===== Leave button ===== */

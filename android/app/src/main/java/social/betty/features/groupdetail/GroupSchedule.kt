@@ -61,6 +61,7 @@ fun GroupSchedule(
                             placedAway = annotation.myAway ?: 0,
                             awardedPoints = GroupGameCardLogic.awardedPoints(game, bets, userId),
                             awardedBoosted = GroupGameCardLogic.awardedBoosted(game, bets, userId),
+                            placedBoosted = annotation.myBoosted,
                             betCount = annotation.betCount,
                             onTap = { onGameTap(game) },
                             now = now,

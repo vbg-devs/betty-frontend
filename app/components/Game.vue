@@ -56,6 +56,12 @@
               <div class="score__divider">-</div>
               <div class="score__label">{{ placedBetAwayTeam }}</div>
             </div>
+            <span
+              v-if="placedBoosted"
+              class="my-score__rocket"
+              aria-label="Boosted"
+              >🚀</span
+            >
           </div>
           <div
             v-if="awardedScore !== null"
@@ -119,19 +125,18 @@ const teamStore = useTeamStore();
 
 const userId = computed(() => userStore.id);
 
-const myFinishedBet = computed(() => {
-  if (game.status !== 1) return null;
-  return (
-    bets.find((bet) => bet.user_id === userId.value && bet.game_id === game.id) ?? null
-  );
-});
+const myBet = computed(
+  () => bets.find((bet) => bet.user_id === userId.value && bet.game_id === game.id) ?? null,
+);
 
 const awardedScore = computed(() => {
-  const b = myFinishedBet.value;
-  return b ? b.user_points : null;
+  if (game.status !== 1) return null;
+  return myBet.value ? myBet.value.user_points : null;
 });
 
-const awardedBoosted = computed(() => !!myFinishedBet.value?.boosted);
+const awardedBoosted = computed(() => game.status === 1 && !!myBet.value?.boosted);
+
+const placedBoosted = computed(() => !!myBet.value?.boosted);
 
 const homeTeam = computed(() => teamStore.byId(game.home_team_id));
 const awayTeam = computed(() => teamStore.byId(game.away_team_id));
@@ -281,6 +286,13 @@ const isLive = computed(() => {
 .my-score {
   padding-top: 6px;
   text-align: center;
+}
+
+.my-score__rocket {
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .score--small {

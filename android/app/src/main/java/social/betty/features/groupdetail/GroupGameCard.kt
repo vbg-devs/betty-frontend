@@ -50,6 +50,9 @@ fun GroupGameCard(
     awardedPoints: Int?,
     /** Append 🚀 next to the awarded points (spec §3.4). Only honored when [awardedPoints] > 0. */
     awardedBoosted: Boolean = false,
+    /** Append 🚀 next to the placed-bet chip when the user's bet is boosted. No points
+     * suppression — that's only on the awarded-points rocket. */
+    placedBoosted: Boolean = false,
     /** null hides the chip (web `showBets == false`). */
     betCount: Int?,
     onTap: () -> Unit,
@@ -121,15 +124,25 @@ fun GroupGameCard(
                         )
                     }
                     if (betted) {
-                        Text(
-                            text = "$placedHome - $placedAway",
-                            style = type.kicker,
-                            color = Palette.orange,
-                            modifier = Modifier
-                                .clip(Radius.sharp)
-                                .background(Palette.orangeTint15)
-                                .padding(vertical = 3.dp, horizontal = 8.dp),
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "$placedHome - $placedAway",
+                                style = type.kicker,
+                                color = Palette.orange,
+                                modifier = Modifier
+                                    .clip(Radius.sharp)
+                                    .background(Palette.orangeTint15)
+                                    .padding(vertical = 3.dp, horizontal = 8.dp),
+                            )
+                            if (placedBoosted) {
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "🚀",
+                                    style = type.bodyRegular.copy(fontSize = type.caption.fontSize),
+                                    modifier = Modifier.testTag("group-game-card-placed-rocket"),
+                                )
+                            }
+                        }
                     }
                     if (awardedPoints != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
