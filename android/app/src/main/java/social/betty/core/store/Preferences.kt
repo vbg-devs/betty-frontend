@@ -20,7 +20,17 @@ class Preferences(context: Context) {
         prefs.edit().putBoolean(KEY_SHOW_GROUPED, value).apply()
     }
 
+    /** Last FCM token successfully POSTed — push-token dedup (iOS "betty:push-token-sent"). */
+    fun sentPushToken(): String? = prefs.getString(KEY_PUSH_TOKEN_SENT, null)
+
+    fun setSentPushToken(token: String?) {
+        prefs.edit().apply {
+            if (token == null) remove(KEY_PUSH_TOKEN_SENT) else putString(KEY_PUSH_TOKEN_SENT, token)
+        }.apply()
+    }
+
     private companion object {
         const val KEY_SHOW_GROUPED = "betty:show-grouped"
+        const val KEY_PUSH_TOKEN_SENT = "betty:push-token-sent"
     }
 }

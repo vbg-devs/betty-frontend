@@ -1,15 +1,21 @@
 package social.betty.app
 
 import android.content.Context
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.OkHttpClient
 import social.betty.core.auth.FirebaseAuthClient
 import social.betty.core.auth.SessionManager
 import social.betty.core.auth.TokenStore
 import social.betty.core.net.ApiClient
 import social.betty.core.net.BettyApi
+import social.betty.core.push.FirebaseAvailability
+import social.betty.core.push.PushPermission
+import social.betty.core.push.PushRegistrationService
+import social.betty.core.push.SentTokenStore
 import social.betty.core.store.ActivityFeedStore
 import social.betty.core.store.BetStore
 import social.betty.core.store.CountriesProvider
@@ -68,6 +74,36 @@ class AppContainer(context: Context) {
     val teamStore = TeamStore(api)
     val activityFeed = ActivityFeedStore()
     val countries = CountriesProvider(api)
+
+    // ── Push (FCM) — REST-only auth unaffected; only Messaging is linked (CLAUDE.md carve-out).
+    private val sentPushTokenStore = object : SentTokenStore {
+        override fun get(): String? = preferences.sentPushToken()
+        override fun set(token: String?) = preferences.setSentPushToken(token)
+    }
+
+    /** Set by MainActivity (only an Activity can prompt). Default = the real grant state and
+     *  never prompts, so registration off the main loop reports authorization truthfully. */
+    @Volatile
+    var notificationPermissionRequester: suspend () -> Boolean = { PushPermission.isGranted(appContext) }
+
+    val push = PushRegistrationService(
+        appScope = appScope,
+        sentTokenStore = sentPushTokenStore,
+        sendToken = { token -> api.addPushToken(token) },
+        requestAuthorization = { notificationPermissionRequester() },
+        fetchToken = { if (FirebaseAvailability.isConfigured(appContext)) fetchFcmToken() else null },
+        isFirebaseConfigured = { FirebaseAvailability.isConfigured(appContext) },
+    )
+
+    /** FCM registration token as a suspend value. suspendCancellableCoroutine avoids pulling in
+     *  kotlinx-coroutines-play-services, keeping the Messaging carve-out minimal. */
+    private suspend fun fetchFcmToken(): String? = runCatching {
+        suspendCancellableCoroutine { cont ->
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                cont.resumeWith(Result.success(if (task.isSuccessful) task.result else null))
+            }
+        }
+    }.getOrNull()
 
     /**
      * Wipes persisted + in-memory client state for a deterministic UI-test launch. The

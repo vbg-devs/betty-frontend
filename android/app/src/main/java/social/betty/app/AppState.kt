@@ -1,5 +1,8 @@
 package social.betty.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -23,6 +26,20 @@ class AppState(private val container: AppContainer) {
     /** A deep link captured before the app was Ready, replayed once boot completes. */
     @Volatile
     var pendingDeepLink: String? = null
+
+    /**
+     * Bumped on every notification-tap deep link so [RootScreen]'s replay effect re-applies even
+     * when the app is ALREADY Ready (a `LaunchedEffect(Unit)` would not re-run). The iOS
+     * `Router.handle(url:isReady:)` analogue. Compose-observable; mutate only on the main thread.
+     */
+    var pendingDeepLinkVersion by mutableStateOf(0)
+        private set
+
+    /** Enqueue a deep link from a notification tap (called on the main thread by MainActivity). */
+    fun enqueueDeepLink(raw: String) {
+        pendingDeepLink = raw
+        pendingDeepLinkVersion += 1
+    }
 
     fun start(scope: kotlinx.coroutines.CoroutineScope) {
         scope.launch { boot() }
@@ -54,6 +71,7 @@ class AppState(private val container: AppContainer) {
             container.sessionManager.signOut()
             container.socket.disconnect()
             container.userStore.set(null)
+            container.push.resetForSignOut() // clear the sent-token marker for the next account
             _phase.value = AppPhase.SignedOut
         }
     }
@@ -95,5 +113,10 @@ class AppState(private val container: AppContainer) {
         container.appScope.launch { runCatching { container.countries.load() } }
         container.socket.connect()
         _phase.value = AppPhase.Ready
+        // Post-Ready FCM registration (iOS onProfileReady → push.registerIfNeeded). Skipped under
+        // UI test; also a no-op when Firebase isn't configured (no google-services.json).
+        if (!LaunchOverrides.isUiTestRun()) {
+            container.appScope.launch { container.push.registerIfNeeded() }
+        }
     }
 }

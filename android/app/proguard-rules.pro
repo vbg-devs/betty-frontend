@@ -24,3 +24,7 @@
 -dontwarn com.google.api.client.**
 -dontwarn org.joda.time.**
 -keep class com.google.crypto.tink.** { *; }
+
+# FCM service is referenced only from the manifest, so R8 (assembleRelease, run on every
+# Android PR) could strip/rename it. Keep it. Firebase's own consumer rules cover the SDK.
+-keep class social.betty.core.push.BettyMessagingService { *; }

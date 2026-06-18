@@ -460,9 +460,19 @@ The `groupID` is chosen by the backend as the alphabetically-first group
 (by name) in which the user has an unplaced bet for this game.
 
 iOS reads `userInfo["url"]` and routes it through `DeepLink.parse` /
-`Router.handle` (DeepLink case `.bet(gameID:, groupID:)`). Android (when
-push is wired) should mirror this — the data payload is the source of
-truth for deep linking.
+`Router.handle` (DeepLink case `.bet(gameID:, groupID:)`). Android mirrors
+this: `BettyMessagingService` reads `data["url"]` → `DeepLink.parse` →
+`AppNavigator.apply(DeepLink.Bet(gameId, groupId))`; foreground messages are
+built + posted on the `betty.reminders` channel (FCM auto-renders only when
+backgrounded). The `data.url` payload is the source of truth for deep linking
+on both clients.
+
+Token registration is identical on both: an **FCM** registration token (not a
+raw APNs/GCM token) POSTed to `/user/me/add_push_token`. **Platform parity:**
+iOS shipped in #46; Android registers + receives via Firebase Messaging (the
+`google-services` plugin is applied only when `google-services.json` is present,
+so the build degrades to push-disabled without it); web push is server-driven
+and tracked separately.
 
 #### POST `/user/me/profile-image/upload-url`
 
