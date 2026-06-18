@@ -8,12 +8,10 @@ import Testing
 /// in BettyAppDelegate.userNotificationCenter(_:didReceive:withCompletionHandler:).
 /// If the field name drifts on either side, this test breaks first.
 ///
-/// `DeepLink.parse` is intentionally strict: it only accepts whitelisted
-/// patterns (`betty://` custom schemes, `https://betty.social/dashboard/groups/join/<code>`).
-/// The backend's `/games/<id>` URL is NOT currently routable as a deep link —
-/// that is expected behaviour. This test pins both sides of that contract:
-/// the payload shape is well-formed AND the parser correctly returns nil,
-/// preventing the handler from performing unintended navigation.
+/// The new URL shape (`https://betty.social/groups/<groupID>/games/<gameID>`)
+/// is fully routable: `DeepLink.parse` maps it to `.bet(gameID:groupID:)` and
+/// `Router.perform` switches to the home tab, pushes the group detail screen,
+/// and presents the bet sheet. Tests 1 and 2 below pin this end-to-end routing.
 @Suite struct PushPayloadDecodingTests {
 
     // MARK: - Payload shape
@@ -22,7 +20,7 @@ import Testing
         // Mirrors what FCM delivers into UNNotification.request.content.userInfo
         // for a reminder push (see internal/reminders/push.go buildMessage).
         let userInfo: [AnyHashable: Any] = [
-            "url": "https://betty.social/games/1234",
+            "url": "https://betty.social/groups/42/games/1234",
             "google.c.fid": "abc", // FCM-added metadata; ignored by the iOS handler.
             "aps": [
                 "alert": ["title": "⏰ Sweden vs Germany starts in 2h", "body": "tap to play"]
@@ -36,26 +34,29 @@ import Testing
         }
 
         // Wire-contract assertions: the URL is https, points at the canonical
-        // host, and carries the game ID segment.
+        // host, and carries the group + game ID segments.
         #expect(url.scheme == "https")
         #expect(url.host == "betty.social")
-        #expect(url.path == "/games/1234")
+        #expect(url.path == "/groups/42/games/1234")
     }
 
     // MARK: - DeepLink parser behaviour for game URLs
 
-    @Test func gameUrlIsNotCurrentlyRoutableAsDeepLink() {
-        // The backend's game URL is not in DeepLink.parse's whitelist (only
-        // betty:// custom schemes and the universal-link invite path are
-        // accepted). Returning nil means the notification tap is a no-op at
-        // the router level — intentional until a game-detail deep link is
-        // added to Router.swift.
-        //
-        // If this expectation flips to non-nil, update Router.perform(_:) and
-        // the screens spec in docs/mobile/ at the same time.
-        let gameURL = URL(string: "https://betty.social/games/1234")!
-        #expect(DeepLink.parse(gameURL) == nil,
-                "game URLs are not yet routable; add them to DeepLink and Router.perform before removing this nil guard")
+    @Test func gameReminderUrlRoutesToBetSheet() {
+        // The backend's reminder URL must parse to .bet(gameID:groupID:) so
+        // that Router.perform switches to home, pushes group detail, and presents
+        // the bet sheet. This test pins the routing contract.
+        let gameURL = URL(string: "https://betty.social/groups/42/games/1234")!
+        #expect(DeepLink.parse(gameURL) == .bet(gameID: 1234, groupID: 42),
+                "reminder push URL must route to the bet sheet")
+    }
+
+    @Test func customSchemeBetUrlRoutes() {
+        // betty://bet/<groupID>/<gameID> — custom-scheme equivalent of the
+        // universal-link reminder URL, for symmetry with other betty:// deep links.
+        let betURL = URL(string: "betty://bet/42/1234")!
+        #expect(DeepLink.parse(betURL) == .bet(gameID: 1234, groupID: 42),
+                "custom-scheme bet URL must route to the bet sheet")
     }
 
     // MARK: - Full pipeline: a routable push URL does navigate
