@@ -311,8 +311,12 @@ watch(
 
 watch(
   myBet,
-  (newVal) => {
-    if (newVal) {
+  (newVal, oldVal) => {
+    // Seed only when our bet first becomes available (initial render or async
+    // user-load). Re-seeding on every change would clobber in-progress edits
+    // when the bets list refreshes in the background — e.g. another player's
+    // bet arriving over WebSocket would silently flip the booster toggle back.
+    if (newVal && !oldVal) {
       homeScore.value = newVal.home_team_score;
       awayScore.value = newVal.away_team_score;
       boosted.value = !!newVal.boosted;
