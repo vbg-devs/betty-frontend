@@ -111,6 +111,21 @@ export interface Bet {
   user?: GroupMember;
 }
 
+export interface TeamPrediction {
+  team_id: number;
+  team_name: string;
+  team_image_url: string | null;
+  games_predicted: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  points: number;
+  position: number;
+}
+
 export interface Pool {
   id: number;
   name: string;
