@@ -55,7 +55,6 @@ fun showReminderNotification(context: Context, title: String, body: String, url:
     )
     val builder = NotificationCompat.Builder(context, REMINDERS_CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_stat_betty)
-        .setColor(ContextCompat.getColor(context, R.color.betty_orange)) // tints the small icon + accents
         .setContentTitle(title)
         .setContentText(body)
         .setStyle(NotificationCompat.BigTextStyle().bigText(body))
