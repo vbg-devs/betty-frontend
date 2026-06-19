@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import social.betty.R
 import social.betty.app.MainActivity
 
@@ -51,15 +53,19 @@ fun showReminderNotification(context: Context, title: String, body: String, url:
         // FLAG_IMMUTABLE is required on API 31+.
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
-    val notification = NotificationCompat.Builder(context, REMINDERS_CHANNEL_ID)
+    val builder = NotificationCompat.Builder(context, REMINDERS_CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_stat_betty)
+        .setColor(ContextCompat.getColor(context, R.color.betty_orange)) // tints the small icon + accents
         .setContentTitle(title)
         .setContentText(body)
         .setStyle(NotificationCompat.BigTextStyle().bigText(body))
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setAutoCancel(true)
         .setContentIntent(pending)
-        .build()
+    // Full-color Betty app icon as the large icon (the branded square, like iOS shows). Android
+    // status-bar small icons must stay monochrome, so the brand mark lives here instead.
+    ContextCompat.getDrawable(context, R.mipmap.ic_launcher)?.toBitmap(width = 128, height = 128)
+        ?.let { builder.setLargeIcon(it) }
     // Collapse repeated reminders for the same game (same url → same id).
-    NotificationManagerCompat.from(context).notify(url.hashCode(), notification)
+    NotificationManagerCompat.from(context).notify(url.hashCode(), builder.build())
 }
