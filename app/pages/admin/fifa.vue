@@ -217,8 +217,12 @@ const confirmingAll = ref(false);
 
 const isAdmin = computed(() => userStore.isAdmin);
 const tournaments = computed(() => tournamentStore.running);
-const suggestions = computed(() => fifaStore.suggestions);
-const proposals = computed(() => fifaStore.proposals);
+const suggestions = computed(() =>
+  [...fifaStore.suggestions].sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
+);
+const proposals = computed(() =>
+  [...fifaStore.proposals].sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
+);
 const unmapped = computed(() => fifaStore.unmapped);
 const seasons = computed(() => fifaStore.seasons);
 const isLinked = computed(() => fifaStore.competitionId.length > 0);
