@@ -75,9 +75,26 @@
             disable.
           </p>
           <div class="form-row">
+            <input
+              v-model="loneRangerPoints"
+              type="number"
+              min="0"
+              placeholder="Lone Ranger bonus points"
+              class="form-input form-input--with-icon icon--award"
+              :disabled="!loneRangerEnabled"
+            />
+          </div>
+          <div class="form-row">
             <label>
               <input v-model="peak" type="checkbox" /> Allow peeking (this will allow all members of
               the group to see the bets placed by others before the game has started)
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <input v-model="loneRangerEnabled" type="checkbox" /> Lone Ranger bonus — if exactly
+              one member predicts the winning side of a game, they earn bonus points. Draws don't
+              count.
             </label>
           </div>
           <div class="form-row">
@@ -109,6 +126,8 @@ const exactScorePoints = ref('');
 const peak = ref(false);
 const boostCount = ref('0');
 const boostMultiplier = ref('2');
+const loneRangerEnabled = ref(false);
+const loneRangerPoints = ref('0');
 const selectedTournament = ref<Tournament | null>(null);
 const loading = ref(false);
 
@@ -127,6 +146,10 @@ const canSave = computed(() => {
   if (!Number.isFinite(count) || count < 0) return false;
   const mult = parseInt(boostMultiplier.value, 10);
   if (!Number.isFinite(mult) || mult < 1) return false;
+  if (loneRangerEnabled.value) {
+    const lrPoints = parseInt(loneRangerPoints.value, 10);
+    if (!Number.isFinite(lrPoints) || lrPoints < 0) return false;
+  }
   return true;
 });
 
@@ -145,6 +168,8 @@ async function create() {
     allow_sneak_peek: peak.value,
     boost_count: parseInt(boostCount.value, 10),
     boost_multiplier: parseInt(boostMultiplier.value, 10),
+    lone_ranger_enabled: loneRangerEnabled.value,
+    lone_ranger_points: parseInt(loneRangerPoints.value, 10),
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
     mode: 0,

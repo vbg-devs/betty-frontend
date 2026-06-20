@@ -37,9 +37,12 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
 async function mountModal(group: Group = makeGroup()) {
   const wrapper = await mountSuspended(GroupSettingsModal, { props: { group } });
   const [welcome, description] = wrapper.findAll('textarea');
-  const [winPoints, exactPoints, boostCount, boostMultiplier] =
+  const [winPoints, exactPoints, boostCount, boostMultiplier, loneRangerPoints] =
     wrapper.findAll('input[type="number"]');
-  const peek = wrapper.find('input[type="checkbox"]');
+  const checkboxes = wrapper.findAll('input[type="checkbox"]');
+  // DOM order: lone-ranger toggle first, sneak-peek second.
+  const loneRangerEnabled = checkboxes[0]!;
+  const peek = checkboxes[checkboxes.length - 1]!;
   const saveButton = wrapper.find('.modal__footer button');
   return {
     wrapper,
@@ -49,6 +52,8 @@ async function mountModal(group: Group = makeGroup()) {
     exactPoints: exactPoints!,
     boostCount: boostCount!,
     boostMultiplier: boostMultiplier!,
+    loneRangerPoints: loneRangerPoints!,
+    loneRangerEnabled,
     peek,
     saveButton,
   };
@@ -169,6 +174,8 @@ describe('GroupSettingsModal', () => {
           allow_sneak_peek: true,
           boost_count: 0,
           boost_multiplier: 2,
+          lone_ranger_enabled: false,
+          lone_ranger_points: 0,
         },
       },
     ]);
@@ -337,6 +344,43 @@ describe('GroupSettingsModal', () => {
         boost_count: 3,
         boost_multiplier: 4,
       });
+    });
+  });
+
+  describe('lone ranger', () => {
+    it('disables the points input when the toggle is off', async () => {
+      const { loneRangerPoints } = await mountModal(
+        makeGroup({ lone_ranger_enabled: false, lone_ranger_points: 0 }),
+      );
+      expect(loneRangerPoints.attributes('disabled')).toBeDefined();
+    });
+
+    it('enables the points input when the toggle is on', async () => {
+      const { loneRangerPoints } = await mountModal(
+        makeGroup({ lone_ranger_enabled: true, lone_ranger_points: 5 }),
+      );
+      expect(loneRangerPoints.attributes('disabled')).toBeUndefined();
+    });
+
+    it('includes lone ranger fields in the save payload', async () => {
+      const { loneRangerEnabled, loneRangerPoints, saveButton } = await mountModal();
+      await loneRangerEnabled.setValue(true);
+      await loneRangerPoints.setValue('5');
+      await saveButton.trigger('click');
+      await flushPromises();
+
+      expect(authFetch.mock.calls[0]?.[1]?.body).toMatchObject({
+        lone_ranger_enabled: true,
+        lone_ranger_points: 5,
+      });
+    });
+
+    it('blocks save when points are negative and the feature is enabled', async () => {
+      const { loneRangerEnabled, loneRangerPoints, saveButton } = await mountModal();
+      await loneRangerEnabled.setValue(true);
+      await loneRangerPoints.setValue('-1');
+      expect(saveButton.attributes('disabled')).toBeDefined();
+      expect(saveButton.classes()).toContain('btn--disabled');
     });
   });
 
