@@ -71,6 +71,7 @@
         </div>
 
         <div class="actions-bar">
+          <span v-if="mappedCount > 0" class="mapped-pill">✓ {{ mappedCount }} mapped</span>
           <button class="btn btn--ghost" :disabled="loadingMappings" @click="reloadMappings">
             {{ loadingMappings ? 'Loading…' : 'Load suggestions' }}
           </button>
@@ -110,7 +111,7 @@
           </div>
         </div>
         <p v-else-if="mappingsLoaded" class="tab-empty__copy">
-          No suggestions. Every game is already mapped, or none matched within the kickoff window.
+          {{ mappedCount > 0 ? 'All matchable games are mapped. New ones (e.g. knockouts) appear here as teams are decided.' : 'No suggestions yet. None matched within the kickoff window.' }}
         </p>
       </section>
 
@@ -218,7 +219,9 @@ const confirmingAll = ref(false);
 const isAdmin = computed(() => userStore.isAdmin);
 const tournaments = computed(() => tournamentStore.running);
 const suggestions = computed(() =>
-  [...fifaStore.suggestions].sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
+  fifaStore.suggestions
+    .filter((s) => !s.confirmed)
+    .sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
 );
 const proposals = computed(() =>
   [...fifaStore.proposals].sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
@@ -231,6 +234,9 @@ const isLinked = computed(() => fifaStore.competitionId.length > 0);
 const confirmableCount = computed(
   () => suggestions.value.filter((s) => !s.ambiguous && !!s.match_id).length,
 );
+
+// Reassurance count of games already confirmed (hidden from the list above).
+const mappedCount = computed(() => fifaStore.suggestions.filter((s) => s.confirmed).length);
 
 // The effective season id: a picked known id, or the hand-entered custom id.
 const seasonId = computed(() =>
@@ -636,6 +642,13 @@ async function dismissProposal(p: FifaResultProposal) {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.mapped-pill {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: 0.5px;
 }
 
 .score {

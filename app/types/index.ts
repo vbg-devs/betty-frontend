@@ -154,6 +154,8 @@ export interface FifaMappingSuggestion {
   match_id: string;
   orientation_flipped: boolean;
   ambiguous: boolean;
+  // True when this game already has a confirmed mapping (hidden from the to-do list).
+  confirmed: boolean;
   // Display enrichment from the backend. game_* are always set; fifa_* are empty
   // for an ambiguous (unmatched) game.
   game_home_team: string;
