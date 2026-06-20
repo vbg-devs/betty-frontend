@@ -101,7 +101,9 @@ enum GroupMgmtFixtures {
         exactResultPoints: Int = 4,
         allowSneakPeek: Bool = true,
         boostCount: Int = 0,
-        boostMultiplier: Int = 2
+        boostMultiplier: Int = 2,
+        loneRangerEnabled: Bool = false,
+        loneRangerPoints: Int = 0
     ) throws -> Group {
         try decode(Group.self, from: """
         {
@@ -119,6 +121,8 @@ enum GroupMgmtFixtures {
           "mode": 0,
           "boost_count": \(boostCount),
           "boost_multiplier": \(boostMultiplier),
+          "lone_ranger_enabled": \(loneRangerEnabled),
+          "lone_ranger_points": \(loneRangerPoints),
           "public_at": null,
           "created_at": "2026-01-01T00:00:00Z",
           "updated_at": "2026-01-01T00:00:00Z",

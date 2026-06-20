@@ -22,6 +22,10 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
     var boostCount = "0"
     /// Multiplier (>= 1). Ignored server-side when count == 0.
     var boostMultiplier = "2"
+    /// Lone Ranger bonus toggle (off by default — spec §6.2).
+    var loneRangerEnabled = false
+    /// Bonus points (>= 0). Ignored server-side when the feature is disabled.
+    var loneRangerPoints = "0"
 
     func selectedTournament(in running: [Tournament]) -> Tournament? {
         guard let tournamentID else { return nil }
@@ -31,6 +35,11 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
     /// Whether the multiplier input is disabled (count <= 0 mirrors settings sheet).
     var isMultiplierDisabled: Bool {
         (Int(boostCount) ?? 0) <= 0
+    }
+
+    /// Whether the bonus-points input is disabled (toggle off → bonus has no effect).
+    var isLoneRangerPointsDisabled: Bool {
+        !loneRangerEnabled
     }
 
     /// Web `canSave`: tournament still running AND name + both point fields non-empty
@@ -43,6 +52,9 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
         else { return false }
         guard let count = Int(boostCount), count >= 0 else { return false }
         guard let multiplier = Int(boostMultiplier), multiplier >= 1 else { return false }
+        if loneRangerEnabled {
+            guard let lrPoints = Int(loneRangerPoints), lrPoints >= 0 else { return false }
+        }
         return true
     }
 
@@ -55,6 +67,13 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
               let count = Int(boostCount), count >= 0,
               let multiplier = Int(boostMultiplier), multiplier >= 1
         else { return nil }
+        let lrPoints: Int
+        if loneRangerEnabled {
+            guard let parsed = Int(loneRangerPoints), parsed >= 0 else { return nil }
+            lrPoints = parsed
+        } else {
+            lrPoints = 0
+        }
         let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
         return CreateGroupRequest(
             name: name,
@@ -68,7 +87,9 @@ nonisolated struct CreateGroupForm: Equatable, Sendable {
             isPublic: isPublic,
             mode: 0,
             boostCount: count,
-            boostMultiplier: multiplier
+            boostMultiplier: multiplier,
+            loneRangerEnabled: loneRangerEnabled,
+            loneRangerPoints: lrPoints
         )
     }
 }

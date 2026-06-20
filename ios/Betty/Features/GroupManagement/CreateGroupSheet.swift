@@ -108,6 +108,21 @@ struct CreateGroupSheet: View {
                         .accessibilityIdentifier("createGroup.form.boostHelp")
                 }
 
+                VStack(alignment: .leading, spacing: Space.xs) {
+                    GroupFormCheckRow(
+                        title: "Lone Ranger bonus",
+                        subtitle: "If exactly one member predicts the winning side of a game, they earn these bonus points. Draws don't count.",
+                        isOn: $form.loneRangerEnabled
+                    )
+                    .accessibilityIdentifier("createGroup.form.loneRangerToggle")
+                    GroupFormField(label: "Bonus points") {
+                        GroupFormTextField(placeholder: "0", text: $form.loneRangerPoints, keyboard: .numberPad)
+                            .accessibilityIdentifier("createGroup.form.loneRangerPointsField")
+                            .disabled(form.isLoneRangerPointsDisabled)
+                            .opacity(form.isLoneRangerPointsDisabled ? 0.55 : 1)
+                    }
+                }
+
                 GroupFormCheckRow(
                     title: "Allow sneak peek",
                     subtitle: "Members can see each other's bets before the game starts.",

@@ -165,6 +165,21 @@ struct GroupSettingsScreen: View {
                             .accessibilityIdentifier("groupSettings.form.boostHelp")
                     }
 
+                    VStack(alignment: .leading, spacing: Space.xs) {
+                        GroupFormCheckRow(
+                            title: "Lone Ranger bonus",
+                            subtitle: "If exactly one member predicts the winning side of a game, they earn these bonus points. Draws don't count.",
+                            isOn: formBinding.loneRangerEnabled
+                        )
+                        .accessibilityIdentifier("groupSettings.form.loneRangerToggle")
+                        GroupFormField(label: "Bonus points") {
+                            GroupFormTextField(placeholder: "0", text: formBinding.loneRangerPoints, keyboard: .numberPad)
+                                .accessibilityIdentifier("groupSettings.form.loneRangerPointsField")
+                                .disabled(formBinding.wrappedValue.isLoneRangerPointsDisabled)
+                                .opacity(formBinding.wrappedValue.isLoneRangerPointsDisabled ? 0.55 : 1)
+                        }
+                    }
+
                     GroupFormCheckRow(
                         title: "Allow sneak peek",
                         subtitle: "Members can see each other's bets before the game starts.",
