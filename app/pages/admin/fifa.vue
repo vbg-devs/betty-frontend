@@ -70,18 +70,32 @@
           <h2 class="section-head__title">CONFIRM THE MAPPING.</h2>
         </div>
 
-        <button class="btn btn--ghost" :disabled="loadingMappings" @click="reloadMappings">
-          {{ loadingMappings ? 'Loading…' : 'Load suggestions' }}
-        </button>
+        <div class="actions-bar">
+          <button class="btn btn--ghost" :disabled="loadingMappings" @click="reloadMappings">
+            {{ loadingMappings ? 'Loading…' : 'Load suggestions' }}
+          </button>
+          <button
+            v-if="confirmableCount > 0"
+            class="btn btn--green"
+            :disabled="confirmingAll"
+            @click="confirmAll"
+          >
+            {{ confirmingAll ? 'Confirming…' : `Confirm all (${confirmableCount})` }}
+          </button>
+        </div>
 
         <div v-if="suggestions.length > 0" class="rows">
           <div v-for="s in suggestions" :key="s.game_id" class="row">
             <div class="row__main">
-              <span class="mono">game #{{ s.game_id }}</span>
+              <span class="teams">{{ s.game_home_team }} <span class="vs">v</span> {{ s.game_away_team }}</span>
+              <span class="when">{{ fmtKickoff(s.game_start_date) }}</span>
               <span class="arrow">→</span>
-              <span class="mono">FIFA match {{ s.match_id || '?' }}</span>
-              <span v-if="s.orientation_flipped" class="badge badge--warn">flipped</span>
-              <span v-if="s.ambiguous" class="badge badge--danger">ambiguous</span>
+              <template v-if="s.match_id">
+                <span class="teams">{{ s.fifa_home_team }} <span class="vs">v</span> {{ s.fifa_away_team }}</span>
+                <span v-if="s.orientation_flipped" class="badge badge--warn">flipped</span>
+              </template>
+              <span v-if="s.ambiguous" class="badge badge--danger">no confident match</span>
+              <span class="mono mono--dim">#{{ s.game_id }} → {{ s.match_id || '?' }}</span>
             </div>
             <div class="row__actions">
               <button
@@ -128,12 +142,15 @@
           <div v-for="p in proposals" :key="p.id" class="row">
             <div class="row__main">
               <span class="badge" :class="kindBadge(p.kind)">{{ p.kind }}</span>
-              <span class="mono">game #{{ p.game_id }}</span>
+              <span class="teams">{{ p.game_home_team }}</span>
               <span class="score">{{ p.home_team_score }} – {{ p.away_team_score }}</span>
+              <span class="teams">{{ p.game_away_team }}</span>
+              <span class="when">{{ fmtKickoff(p.game_start_date) }}</span>
               <span v-if="p.kind === 'correction' && p.prev_home_score !== null" class="prev">
                 (was {{ p.prev_home_score }} – {{ p.prev_away_score }})
               </span>
               <span v-if="proposalTab === 'applied'" class="badge badge--muted">{{ p.source }}</span>
+              <span class="mono mono--dim">#{{ p.game_id }}</span>
             </div>
             <div v-if="proposalTab === 'pending'" class="row__actions">
               <button class="btn btn--green btn--sm" @click="confirmProposal(p)">Confirm</button>
@@ -196,6 +213,7 @@ const linking = ref(false);
 const loadingMappings = ref(false);
 const mappingsLoaded = ref(false);
 const proposalTab = ref<'pending' | 'applied'>('pending');
+const confirmingAll = ref(false);
 
 const isAdmin = computed(() => userStore.isAdmin);
 const tournaments = computed(() => tournamentStore.running);
@@ -204,6 +222,11 @@ const proposals = computed(() => fifaStore.proposals);
 const unmapped = computed(() => fifaStore.unmapped);
 const seasons = computed(() => fifaStore.seasons);
 const isLinked = computed(() => fifaStore.competitionId.length > 0);
+
+// Suggestions safe to bulk-confirm: unambiguous and actually matched to a FIFA match.
+const confirmableCount = computed(
+  () => suggestions.value.filter((s) => !s.ambiguous && !!s.match_id).length,
+);
 
 // The effective season id: a picked known id, or the hand-entered custom id.
 const seasonId = computed(() =>
@@ -248,6 +271,19 @@ watch(selectedTournamentId, async (id) => {
     // not linked yet: leave the form blank for a fresh link
   }
 });
+
+// Render an ISO kickoff as a short local "11 Jun 19:00".
+function fmtKickoff(iso: string) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 function kindBadge(kind: string) {
   if (kind === 'correction') return 'badge--warn';
@@ -295,6 +331,33 @@ async function reloadMappings() {
   }
 }
 
+function confirmAll() {
+  if (selectedTournamentId.value === null || confirmableCount.value === 0) return;
+  const n = confirmableCount.value;
+  confirmDialog({
+    question: `Confirm all ${n} mapping${n === 1 ? '' : 's'} for this tournament?`,
+    onConfirm: () => doConfirmAll(),
+  });
+}
+
+async function doConfirmAll() {
+  if (selectedTournamentId.value === null) return;
+  confirmingAll.value = true;
+  try {
+    const res = await fifaStore.confirmAllMappings(selectedTournamentId.value);
+    notify({
+      title: 'Mappings confirmed',
+      message: `${res.confirmed} confirmed, ${res.skipped_ambiguous} skipped.`,
+      state: 'success',
+    });
+    await fifaStore.loadMappings(selectedTournamentId.value);
+  } catch (err) {
+    notify({ title: 'Could not confirm all', message: `${err}`, state: 'error' });
+  } finally {
+    confirmingAll.value = false;
+  }
+}
+
 async function confirmMapping(s: FifaMappingSuggestion) {
   try {
     await fifaStore.confirmMapping({
@@ -302,7 +365,7 @@ async function confirmMapping(s: FifaMappingSuggestion) {
       match_id: s.match_id,
       orientation_flipped: s.orientation_flipped,
     });
-    notify({ title: 'Mapping confirmed', message: `game #${s.game_id} → ${s.match_id}`, state: 'success' });
+    notify({ title: 'Mapping confirmed', message: `${s.game_home_team} v ${s.game_away_team}`, state: 'success' });
   } catch (err) {
     notify({ title: 'Could not confirm', message: `${err}`, state: 'error' });
   }
@@ -325,7 +388,7 @@ function switchTab(tab: 'pending' | 'applied') {
 
 function confirmProposal(p: FifaResultProposal) {
   confirmDialog({
-    question: `Apply game #${p.game_id} result ${p.home_team_score} – ${p.away_team_score}? This distributes points.`,
+    question: `Apply ${p.game_home_team} ${p.home_team_score} – ${p.away_team_score} ${p.game_away_team}? This distributes points.`,
     onConfirm: () => doConfirmProposal(p),
   });
 }
@@ -333,7 +396,7 @@ function confirmProposal(p: FifaResultProposal) {
 async function doConfirmProposal(p: FifaResultProposal) {
   try {
     await fifaStore.confirmProposal(p.id);
-    notify({ title: 'Applied', message: `game #${p.game_id} evaluated.`, state: 'success' });
+    notify({ title: 'Applied', message: `${p.game_home_team} v ${p.game_away_team} evaluated.`, state: 'success' });
   } catch (err) {
     notify({ title: 'Could not apply', message: `${err}`, state: 'error' });
   }
@@ -541,6 +604,34 @@ async function dismissProposal(p: FifaResultProposal) {
 
 .arrow {
   color: var(--muted-strong);
+}
+
+.teams {
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.vs {
+  color: var(--muted-strong);
+  font-weight: 400;
+  padding: 0 2px;
+}
+
+.when {
+  font-size: 12px;
+  color: var(--muted-strong);
+}
+
+.mono--dim {
+  opacity: 0.55;
+  font-size: 11px;
+}
+
+.actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .score {

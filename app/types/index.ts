@@ -154,6 +154,14 @@ export interface FifaMappingSuggestion {
   match_id: string;
   orientation_flipped: boolean;
   ambiguous: boolean;
+  // Display enrichment from the backend. game_* are always set; fifa_* are empty
+  // for an ambiguous (unmatched) game.
+  game_home_team: string;
+  game_away_team: string;
+  game_start_date: string;
+  fifa_home_team: string;
+  fifa_away_team: string;
+  fifa_start_time: string;
 }
 
 export interface FifaMappings {
@@ -177,6 +185,11 @@ export interface FifaResultProposal {
   prev_home_score: number | null;
   prev_away_score: number | null;
   feed_hash: number;
+  // Display enrichment from the backend: the betty game's teams + kickoff. The
+  // score above is already oriented to betty's home/away.
+  game_home_team: string;
+  game_away_team: string;
+  game_start_date: string;
 }
 
 export interface FifaUnmappedResult {
