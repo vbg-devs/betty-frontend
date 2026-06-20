@@ -696,6 +696,56 @@ missing, **403** not a member, 400, 500.
 | POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. |
 | PUT | `/rollbackgame/:gameid` | Admin only (properly enforced). Reverts an evaluation. 200 `null`; **401** non-admin; 500. |
 
+### 3.11 FIFA result polling (admin)
+
+A background poller maps betty games to FIFA matches and stages results as
+admin-confirmable proposals; confirming applies through the same seam as
+`/evaluategame`. All routes are admin-only (Firebase token + `is_admin`) and
+mounted under `/admin/fifa`. The poller is opt-in (`FIFA_POLL_ENABLED`, default
+off), so deploying never starts polling on its own.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/admin/fifa/seasons` | Curated season list `{ "seasons": [{ "label", "season_id" }] }`. |
+| POST | `/admin/fifa/competitions` | Link a tournament to a FIFA season. Body `{ "tournament_id", "competition_id" }`. 200 `{ "competition_id", "match_count" }`; **502** FIFA feed unreachable. |
+| GET | `/admin/fifa/competitions/:tournamentId` | `{ "competition_id", "auto_apply", "enabled" }`; 404 unlinked. |
+| PUT | `/admin/fifa/competitions/:tournamentId/auto-apply` | Body `{ "auto_apply": bool }`. |
+| POST | `/admin/fifa/competitions/:tournamentId/confirm-all` | Confirm every unambiguous mapping suggestion. 200 `{ "confirmed", "skipped_ambiguous" }`. |
+| GET | `/admin/fifa/mappings?tournament_id=N` | Suggested game↔match links. |
+| POST | `/admin/fifa/mappings/:gameId/confirm` | Body `{ "competition_id", "match_id", "orientation_flipped" }`. |
+| POST | `/admin/fifa/mappings/:gameId/reject` | |
+| GET | `/admin/fifa/proposals?status=pending\|applied` | `{ "proposals": [ProposalView] }` (Go may send `null` → treat as `[]`). |
+| POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; **410** already processed; **409** apply racing. |
+| POST | `/admin/fifa/proposals/:id/dismiss` | 200 `null`. |
+| GET | `/admin/fifa/unmapped-results` | FIFA-final matches with no mapped betty game. |
+
+**ProposalView** (`GET /admin/fifa/proposals` items) — a staged result enriched
+with the betty game's teams + kickoff; the score is already oriented to betty
+home/away:
+
+```json
+{
+  "id": 1,
+  "game_id": 808,
+  "match_id": "400021440",
+  "home_team_score": 2,
+  "away_team_score": 1,
+  "kind": "initial",
+  "status": "pending",
+  "source": "proposal",
+  "prev_home_score": null,
+  "prev_away_score": null,
+  "game_home_team": "Netherlands",
+  "game_away_team": "Sweden",
+  "game_start_date": "2026-06-20T17:00:00Z"
+}
+```
+
+`kind`: `initial | correction | rollback`. `status`: `pending | applied |
+dismissed | superseded`. `source`: `proposal | auto`. Web model
+`FifaResultProposal` (`app/types/index.ts`); iOS `FIFAProposal`. No Android model
+yet (parity follow-up).
+
 ---
 
 ## 4. WebSocket protocol

@@ -78,6 +78,8 @@ struct MainTabView: View {
                 AboutView()
             case .adminEvaluate:
                 AdminEvaluateView()
+            case .adminFIFAProposals:
+                FIFAProposalsView()
             }
         }
         .modifier(BrandedBarChrome())

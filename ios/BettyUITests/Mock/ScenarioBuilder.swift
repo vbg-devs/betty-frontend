@@ -167,6 +167,24 @@ struct MockArena {
     var imageURL: String
 }
 
+/// A staged FIFA result proposal (admin `/admin/fifa/proposals`), enriched with the
+/// betty game's team names + kickoff exactly as the betty-api `ProposalView` wire shape.
+struct MockFIFAProposal {
+    var id: Int
+    var gameID: Int
+    var matchID: String
+    var homeTeamScore: Int
+    var awayTeamScore: Int
+    var kind: String = "initial"
+    var status: String = "pending"
+    var source: String = "proposal"
+    var prevHomeScore: Int?
+    var prevAwayScore: Int?
+    var gameHomeTeam: String
+    var gameAwayTeam: String
+    var gameStartDate: Date
+}
+
 /// The whole mock-backend state. Routes resolve from it, mutations (POST /bet, join,
 /// message, ...) write back into it, so subsequent GETs reflect every change.
 struct MockScenario {
@@ -180,6 +198,7 @@ struct MockScenario {
     var categories: [MockCategory] = []
     var countries: [MockCountry] = []
     var arenas: [MockArena] = []
+    var fifaProposals: [MockFIFAProposal] = []
 
     /// `accounts:signInWithIdp` signs in this user (defaults to the first user).
     var idpUserID: String?
@@ -208,6 +227,7 @@ struct MockScenario {
         }
         return nil
     }
+    func fifaProposal(_ id: Int) -> MockFIFAProposal? { fifaProposals.first { $0.id == id } }
 
     // MARK: - Mutations
 
@@ -228,6 +248,11 @@ struct MockScenario {
                 return
             }
         }
+    }
+
+    mutating func updateFIFAProposal(_ id: Int, _ change: (inout MockFIFAProposal) -> Void) {
+        guard let index = fifaProposals.firstIndex(where: { $0.id == id }) else { return }
+        change(&fifaProposals[index])
     }
 
     mutating func updateMember(groupID: Int, userID: String, _ change: (inout MockMember) -> Void) {

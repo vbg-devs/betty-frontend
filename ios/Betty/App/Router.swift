@@ -10,6 +10,7 @@ enum Destination: Hashable {
     case support
     case about
     case adminEvaluate
+    case adminFIFAProposals
 }
 
 /// Modal flows (web modals → sheets).

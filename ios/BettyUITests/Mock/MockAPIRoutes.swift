@@ -15,6 +15,7 @@ extension BettyMockBackend {
         registerReferenceRoutes()
         registerMessageBoardRoutes()
         registerAnnouncementRoutes()
+        registerFIFARoutes()
         registerUploadCatchAll()
     }
 
@@ -512,6 +513,46 @@ extension BettyMockBackend {
                 scenario.bets[index].userPoints = nil
                 scenario.bets[index].processedAt = nil
             }
+            return .null()
+        }
+    }
+
+    // MARK: - FIFA admin (result proposals)
+
+    private func registerFIFARoutes() {
+        api("GET", "/admin/fifa/proposals") { request, _, uid, scenario in
+            guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
+            let status = request.query["status"] ?? "pending"
+            let proposals = scenario.fifaProposals
+                .filter { $0.status == status }
+                .map { MockWire.fifaProposal($0) }
+            return .json(["proposals": proposals])
+        }
+
+        api("POST", "/admin/fifa/proposals/:id/confirm") { _, params, uid, scenario in
+            guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
+            guard let id = Int(params["id"] ?? ""), let proposal = scenario.fifaProposal(id) else {
+                return .empty(500)
+            }
+            guard proposal.status == "pending" else { return .empty(410) } // already processed → Gone
+            // Apply like manual evaluation: finalize the game, then move the proposal to
+            // applied so the Pending tab no longer returns it.
+            scenario.updateGame(proposal.gameID) {
+                $0.homeTeamScore = proposal.homeTeamScore
+                $0.awayTeamScore = proposal.awayTeamScore
+                $0.status = 1
+                $0.updatedAt = Date()
+            }
+            scenario.updateFIFAProposal(id) { $0.status = "applied" }
+            return .null()
+        }
+
+        api("POST", "/admin/fifa/proposals/:id/dismiss") { _, params, uid, scenario in
+            guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
+            guard let id = Int(params["id"] ?? ""), scenario.fifaProposal(id) != nil else {
+                return .empty(500)
+            }
+            scenario.updateFIFAProposal(id) { $0.status = "dismissed" }
             return .null()
         }
     }

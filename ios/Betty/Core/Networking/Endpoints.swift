@@ -70,6 +70,14 @@ extension Endpoint {
     static func evaluateGame(_ body: Data) -> Endpoint { .post("/evaluategame", body: body) }
     static func rollbackGame(gameID: Int) -> Endpoint { .put("/rollbackgame/\(gameID)") }
 
+    // MARK: FIFA admin (result proposals)
+
+    static func fifaProposals(status: String) -> Endpoint {
+        .get("/admin/fifa/proposals", query: [URLQueryItem(name: "status", value: status)])
+    }
+    static func confirmFIFAProposal(id: Int) -> Endpoint { .post("/admin/fifa/proposals/\(id)/confirm") }
+    static func dismissFIFAProposal(id: Int) -> Endpoint { .post("/admin/fifa/proposals/\(id)/dismiss") }
+
     // MARK: Reference data
 
     static let teams = Endpoint.get("/teams")

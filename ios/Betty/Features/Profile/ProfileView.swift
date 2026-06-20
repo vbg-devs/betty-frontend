@@ -303,6 +303,10 @@ struct ProfileView: View {
                         linkRow("Admin")
                     }
                     .accessibilityIdentifier("profile.links.admin")
+                    NavigationLink(value: Destination.adminFIFAProposals) {
+                        linkRow("FIFA results")
+                    }
+                    .accessibilityIdentifier("profile.links.adminFIFA")
                 }
             }
         }

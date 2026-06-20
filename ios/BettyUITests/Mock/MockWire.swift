@@ -185,6 +185,24 @@ enum MockWire {
         ["id": p.id, "tournament_id": p.tournamentID, "name": p.name]
     }
 
+    static func fifaProposal(_ p: MockFIFAProposal) -> [String: Any] {
+        [
+            "id": p.id,
+            "game_id": p.gameID,
+            "match_id": p.matchID,
+            "home_team_score": p.homeTeamScore,
+            "away_team_score": p.awayTeamScore,
+            "kind": p.kind,
+            "status": p.status,
+            "source": p.source,
+            "prev_home_score": orNull(p.prevHomeScore),
+            "prev_away_score": orNull(p.prevAwayScore),
+            "game_home_team": p.gameHomeTeam,
+            "game_away_team": p.gameAwayTeam,
+            "game_start_date": time(p.gameStartDate),
+        ]
+    }
+
     static func game(_ g: MockGame) -> [String: Any] {
         [
             "id": g.id,
