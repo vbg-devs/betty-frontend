@@ -79,6 +79,8 @@ enum MockWire {
             "mode": g.mode,
             "boost_count": g.boostCount,
             "boost_multiplier": g.boostMultiplier,
+            "lone_ranger_enabled": g.loneRangerEnabled,
+            "lone_ranger_points": g.loneRangerPoints,
             "is_public": false, // db:"-" — ALWAYS false on reads; derive from public_at
             "public_at": time(g.publicAt),
             "created_at": time(g.createdAt),

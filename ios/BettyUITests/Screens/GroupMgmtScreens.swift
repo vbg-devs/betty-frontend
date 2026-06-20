@@ -73,6 +73,8 @@ struct GroupSettingsPage {
     var exactPointsField: XCUIElement { element(app, id: "groupSettings.form.exactPointsField") }
     var boostCountField: XCUIElement { element(app, id: "groupSettings.form.boostCountField") }
     var boostMultiplierField: XCUIElement { element(app, id: "groupSettings.form.boostMultiplierField") }
+    var loneRangerToggle: XCUIElement { app.switches["groupSettings.form.loneRangerToggle"].firstMatch }
+    var loneRangerPointsField: XCUIElement { element(app, id: "groupSettings.form.loneRangerPointsField") }
     var sneakPeekToggle: XCUIElement { app.switches["groupSettings.form.sneakPeekToggle"].firstMatch }
     var saveButton: XCUIElement { app.buttons["groupSettings.form.saveButton"] }
     var visibilityToggle: XCUIElement { app.switches["groupSettings.visibility.toggle"].firstMatch }

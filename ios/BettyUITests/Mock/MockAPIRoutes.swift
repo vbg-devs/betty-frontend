@@ -136,6 +136,12 @@ extension BettyMockBackend {
             guard boostCount >= 0, boostMultiplier >= 1 else {
                 return .json(["error": "invalid booster config"], status: 400)
             }
+            // Spec §3.1: lone_ranger_points >= 0 (no upper bound); enabled is a plain bool.
+            let loneRangerEnabled = body["lone_ranger_enabled"] as? Bool ?? false
+            let loneRangerPoints = body["lone_ranger_points"] as? Int ?? 0
+            guard loneRangerPoints >= 0 else {
+                return .json(["error": "lone_ranger_points must be >= 0"], status: 400)
+            }
             let id = scenario.nextGroupID
             scenario.nextGroupID += 1
             scenario.groups.append(MockGroup(
@@ -148,6 +154,7 @@ extension BettyMockBackend {
                 groupPlayDeadline: MockWire.parseTime(body["group_play_deadline"]),
                 mode: body["mode"] as? Int ?? 0,
                 boostCount: boostCount, boostMultiplier: boostMultiplier,
+                loneRangerEnabled: loneRangerEnabled, loneRangerPoints: loneRangerPoints,
                 publicAt: (body["is_public"] as? Bool ?? false) ? Date() : nil,
                 members: [MockMember(userID: uid, accessLevel: 0)]
             ))
@@ -234,6 +241,10 @@ extension BettyMockBackend {
             if let boostMultiplier = body["boost_multiplier"] as? Int, boostMultiplier < 1 {
                 return .json(["error": "invalid booster config"], status: 400)
             }
+            // Spec §3.1: reject negative lone_ranger_points BEFORE persisting anything.
+            if let loneRangerPoints = body["lone_ranger_points"] as? Int, loneRangerPoints < 0 {
+                return .json(["error": "lone_ranger_points must be >= 0"], status: 400)
+            }
             // Partial update: only PRESENT keys are written; explicit null clears the
             // two nullable ones.
             scenario.updateGroup(id) { group in
@@ -257,6 +268,12 @@ extension BettyMockBackend {
                 }
                 if let boostMultiplier = body["boost_multiplier"] as? Int, boostMultiplier >= 1 {
                     group.boostMultiplier = boostMultiplier
+                }
+                if let loneRangerEnabled = body["lone_ranger_enabled"] as? Bool {
+                    group.loneRangerEnabled = loneRangerEnabled
+                }
+                if let loneRangerPoints = body["lone_ranger_points"] as? Int, loneRangerPoints >= 0 {
+                    group.loneRangerPoints = loneRangerPoints
                 }
                 group.updatedAt = Date()
             }
@@ -564,7 +581,25 @@ extension BettyMockBackend {
                 $0.status = 1
                 $0.updatedAt = Date()
             }
+            // Lone Ranger Pass 1 (spec §3.3): tally correct-winning-side predictors per
+            // group, draws EXCLUDED (mirrors backend `IsCorrectWinningSide`). A drawn
+            // result has no winning side, and a draw-predicting bet never qualifies.
+            func isCorrectWinningSide(_ bet: MockBet) -> Bool {
+                if home == away { return false }
+                if home > away { return bet.homeTeamScore > bet.awayTeamScore }
+                return bet.awayTeamScore > bet.homeTeamScore
+            }
+            var correctSideCount: [Int: Int] = [:]
+            var loneCandidate: [Int: String] = [:]
+            for bet in scenario.bets where bet.gameID == gameID {
+                if isCorrectWinningSide(bet) {
+                    correctSideCount[bet.groupID, default: 0] += 1
+                    loneCandidate[bet.groupID] = bet.userID
+                }
+            }
+
             var exactUserIDs: [String] = []
+            var loneRangerUserIDs: [String] = []
             for index in scenario.bets.indices where scenario.bets[index].gameID == gameID {
                 let bet = scenario.bets[index]
                 let group = scenario.group(bet.groupID)
@@ -583,12 +618,24 @@ extension BettyMockBackend {
                 } else {
                     multiplier = 1
                 }
-                let points = basePoints * multiplier
+                let basePointsAfterBoost = basePoints * multiplier
+                // Lone Ranger Pass 2 (spec §5.5): additive bonus AFTER the boost multiply,
+                // for the sole correct-winning-side predictor when the feature is enabled.
+                var bonus = 0
+                if let group, group.loneRangerEnabled,
+                   correctSideCount[bet.groupID] == 1,
+                   loneCandidate[bet.groupID] == bet.userID {
+                    bonus = group.loneRangerPoints
+                    loneRangerUserIDs.append(bet.userID)
+                }
+                let points = basePointsAfterBoost + bonus
                 scenario.bets[index].userPoints = points
                 scenario.bets[index].processedAt = Date()
                 scenario.updateMember(groupID: bet.groupID, userID: bet.userID) {
                     $0.score += points
-                    $0.normalizedScore += Double(points)
+                    // Spec decision 5: the bonus touches RAW score only; normalized score
+                    // tracks the pre-bonus points (mirrors the backend).
+                    $0.normalizedScore += Double(basePointsAfterBoost)
                 }
                 if exact { exactUserIDs.append(bet.userID) }
             }
@@ -597,6 +644,12 @@ extension BettyMockBackend {
             if !exactUserIDs.isEmpty {
                 self?.pushEvent(type: "user_exact_score",
                                 message: ["game_id": gameID, "user_ids": exactUserIDs])
+            }
+            // Spec §3.5: emit the celebratory event once when at least one bonus is
+            // awarded; never on rollback. Mirrors the user_exact_score aggregate frame.
+            if !loneRangerUserIDs.isEmpty {
+                self?.pushEvent(type: "lone_ranger_awarded",
+                                message: ["game_id": gameID, "user_ids": loneRangerUserIDs])
             }
             return .null()
         }
