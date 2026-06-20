@@ -41,7 +41,7 @@ describe('useFifaStore', () => {
 
       const result = await store.linkCompetition({ tournament_id: 7, competition_id: '285023' });
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/competitions', {
+      expect(authFetch).toHaveBeenCalledWith('/fifa/competitions', {
         method: 'POST',
         body: { tournament_id: 7, competition_id: '285023' },
       });
@@ -56,7 +56,7 @@ describe('useFifaStore', () => {
 
       await store.setAutoApply({ tournament_id: 7, auto_apply: true });
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/competitions/7/auto-apply', {
+      expect(authFetch).toHaveBeenCalledWith('/fifa/competitions/7/auto-apply', {
         method: 'PUT',
         body: { auto_apply: true },
       });
@@ -70,7 +70,7 @@ describe('useFifaStore', () => {
 
       const data = await store.loadMappings(7);
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/mappings?tournament_id=7');
+      expect(authFetch).toHaveBeenCalledWith('/fifa/mappings?tournament_id=7');
       expect(store.suggestions).toHaveLength(1);
       expect(data.competition_id).toBe('285023');
     });
@@ -90,7 +90,7 @@ describe('useFifaStore', () => {
 
       const result = await store.loadSeasons();
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/seasons');
+      expect(authFetch).toHaveBeenCalledWith('/fifa/seasons');
       expect(result).toEqual([{ label: 'FIFA World Cup 2026', season_id: '285023' }]);
       expect(store.seasons).toHaveLength(1);
     });
@@ -110,7 +110,7 @@ describe('useFifaStore', () => {
 
       const data = await store.loadCompetition(7);
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/competitions/7');
+      expect(authFetch).toHaveBeenCalledWith('/fifa/competitions/7');
       expect(data.auto_apply).toBe(true);
       expect(store.competitionId).toBe('285023');
     });
@@ -125,7 +125,7 @@ describe('useFifaStore', () => {
 
       await store.confirmMapping({ game_id: 1, match_id: 'm1', orientation_flipped: true });
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/mappings/1/confirm', {
+      expect(authFetch).toHaveBeenCalledWith('/fifa/mappings/1/confirm', {
         method: 'POST',
         body: { competition_id: '285023', match_id: 'm1', orientation_flipped: true },
       });
@@ -142,7 +142,7 @@ describe('useFifaStore', () => {
 
       await store.rejectMapping(1);
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/mappings/1/reject', { method: 'POST' });
+      expect(authFetch).toHaveBeenCalledWith('/fifa/mappings/1/reject', { method: 'POST' });
       expect(store.suggestions).toEqual([]);
     });
   });
@@ -154,7 +154,7 @@ describe('useFifaStore', () => {
 
       const result = await store.loadProposals('pending');
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/proposals?status=pending');
+      expect(authFetch).toHaveBeenCalledWith('/fifa/proposals?status=pending');
       expect(result).toHaveLength(1);
       expect(store.proposals).toHaveLength(1);
     });
@@ -169,7 +169,7 @@ describe('useFifaStore', () => {
 
       await store.confirmProposal(1);
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/proposals/1/confirm', { method: 'POST' });
+      expect(authFetch).toHaveBeenCalledWith('/fifa/proposals/1/confirm', { method: 'POST' });
       expect(store.proposals.map((p) => p.id)).toEqual([2]);
     });
 
@@ -181,7 +181,7 @@ describe('useFifaStore', () => {
 
       await store.dismissProposal(1);
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/proposals/1/dismiss', { method: 'POST' });
+      expect(authFetch).toHaveBeenCalledWith('/fifa/proposals/1/dismiss', { method: 'POST' });
       expect(store.proposals).toEqual([]);
     });
   });
@@ -202,7 +202,7 @@ describe('useFifaStore', () => {
 
       const result = await store.loadUnmapped();
 
-      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/unmapped-results');
+      expect(authFetch).toHaveBeenCalledWith('/fifa/unmapped-results');
       expect(result).toEqual([u]);
       expect(store.unmapped).toEqual([u]);
     });
