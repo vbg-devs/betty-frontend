@@ -38,6 +38,8 @@ function makeItem(id: number, overrides: Partial<PublicGroupItem> = {}): PublicG
     group_play_deadline: null,
     boost_count: 0,
     boost_multiplier: 2,
+    lone_ranger_enabled: false,
+    lone_ranger_points: 0,
     public_at: '2026-01-01T00:00:00Z',
     created_at: '2026-01-01T00:00:00Z',
     member_count: 1,

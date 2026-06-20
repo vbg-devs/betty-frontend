@@ -21,6 +21,8 @@ function makeGroup(id: number, overrides: Partial<Group> = {}): Group {
     exact_result_points: 3,
     boost_count: 0,
     boost_multiplier: 2,
+    lone_ranger_enabled: false,
+    lone_ranger_points: 0,
     public_at: null,
     members: [],
     ...overrides,
@@ -121,6 +123,28 @@ describe('useGroupStore', () => {
       expect(authFetch).toHaveBeenCalledWith('/group', {
         method: 'POST',
         body: { name: 'Boosted group', tournament_id: 3, boost_count: 2, boost_multiplier: 5 },
+      });
+    });
+
+    it('forwards lone_ranger_enabled and lone_ranger_points when included in the payload', async () => {
+      authFetch.mockResolvedValue({ group_id: 99 });
+      const store = useGroupStore();
+
+      await store.create({
+        name: 'Lone group',
+        tournament_id: 3,
+        lone_ranger_enabled: true,
+        lone_ranger_points: 5,
+      });
+
+      expect(authFetch).toHaveBeenCalledWith('/group', {
+        method: 'POST',
+        body: {
+          name: 'Lone group',
+          tournament_id: 3,
+          lone_ranger_enabled: true,
+          lone_ranger_points: 5,
+        },
       });
     });
   });
@@ -250,6 +274,28 @@ describe('useGroupStore', () => {
         allow_sneak_peek: false,
         boost_count: 2,
         boost_multiplier: 4,
+      };
+
+      await store.updateSettings(3, payload);
+
+      expect(authFetch).toHaveBeenNthCalledWith(1, '/group/3/settings', {
+        method: 'PUT',
+        body: payload,
+      });
+    });
+
+    it('forwards lone_ranger_enabled and lone_ranger_points when given', async () => {
+      authFetch.mockImplementation(async (path: string) =>
+        path === '/groups'
+          ? [makeGroup(3, { lone_ranger_enabled: true, lone_ranger_points: 5 })]
+          : {},
+      );
+      const store = useGroupStore();
+      const payload = {
+        correct_team_points: 2,
+        exact_result_points: 5,
+        lone_ranger_enabled: true,
+        lone_ranger_points: 5,
       };
 
       await store.updateSettings(3, payload);

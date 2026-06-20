@@ -46,6 +46,8 @@ export interface Group {
   exact_result_points: number;
   boost_count: number;
   boost_multiplier: number;
+  lone_ranger_enabled: boolean;
+  lone_ranger_points: number;
   public_at: string | null;
   members: GroupMember[];
 }
@@ -65,6 +67,8 @@ export interface PublicGroupItem {
   group_play_deadline: string | null;
   boost_count: number;
   boost_multiplier: number;
+  lone_ranger_enabled: boolean;
+  lone_ranger_points: number;
   public_at: string;
   created_at: string;
   member_count: number;

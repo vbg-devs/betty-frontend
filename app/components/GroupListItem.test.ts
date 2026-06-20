@@ -43,6 +43,8 @@ function makeGroup(overrides: Partial<GroupWithTournament> = {}): GroupWithTourn
     exact_result_points: 3,
     boost_count: 0,
     boost_multiplier: 2,
+    lone_ranger_enabled: false,
+    lone_ranger_points: 0,
     public_at: null,
     members: [makeMember(1), makeMember(2)],
     tournament: makeTournament(),
