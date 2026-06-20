@@ -13,6 +13,7 @@ function suggestion(overrides: Partial<FifaMappingSuggestion> = {}): FifaMapping
     match_id: 'm1',
     orientation_flipped: false,
     ambiguous: false,
+    confirmed: false,
     game_home_team: 'Mexico',
     game_away_team: 'Canada',
     game_start_date: '2026-06-13T19:00:00Z',
