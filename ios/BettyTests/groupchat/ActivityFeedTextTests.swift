@@ -38,6 +38,10 @@ import Testing
         #expect(ActivityEventMeta.meta(for: exact).label == "★ EXACT SCORE")
         #expect(ActivityEventMeta.meta(for: exact).accent == .green)
 
+        let loneRanger = try event(#"{"type":"lone_ranger_awarded","message":{"game_id":9,"user_ids":["u1"]}}"#)
+        #expect(ActivityEventMeta.meta(for: loneRanger).label == "🤠 LONE RANGER")
+        #expect(ActivityEventMeta.meta(for: loneRanger).accent == .green)
+
         let joined = try event(#"{"type":"group_joined","message":{"group":{"id":1,"name":"G"},"who":"Anna"}}"#)
         #expect(ActivityEventMeta.meta(for: joined).label == "● JOINED GROUP")
         #expect(ActivityEventMeta.meta(for: joined).accent == .green)
@@ -87,6 +91,26 @@ import Testing
         #expect(ActivityFeedText.exactScore(userIDs: ["a", "b", "c"], currentUserID: "me") == "3 players had the exact score!")
         #expect(ActivityFeedText.exactScore(userIDs: [], currentUserID: nil) == "0 players had the exact score!")
         #expect(ActivityFeedText.exactScore(userIDs: ["a"], currentUserID: nil) == "1 players had the exact score!")
+    }
+
+    // MARK: - Lone Ranger copy
+
+    @Test func loneRangerYouVariantWhenSignedInUserWon() {
+        let text = ActivityFeedText.loneRanger(userIDs: ["me"], currentUserID: "me")
+        #expect(text.contains("You were the Lone Ranger"))
+    }
+
+    @Test func loneRangerCountVariantWhenSignedInUserDidNotWin() {
+        let text = ActivityFeedText.loneRanger(userIDs: ["a", "b"], currentUserID: "me")
+        #expect(!text.contains("You were the Lone Ranger"))
+        #expect(text.contains("2"))
+        #expect(text.contains("Lone Ranger"))
+    }
+
+    @Test func loneRangerCountVariantForLoggedOut() {
+        let text = ActivityFeedText.loneRanger(userIDs: ["a"], currentUserID: nil)
+        #expect(text.contains("1"))
+        #expect(!text.contains("You were the Lone Ranger"))
     }
 
     // MARK: - Group joined copy
