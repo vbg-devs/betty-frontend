@@ -1,16 +1,20 @@
 package social.betty.designsystem
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.core.view.WindowCompat
 
 private val LocalBettyColors = staticCompositionLocalOf { ThemeColors.dark }
 private val LocalBettyTypography = staticCompositionLocalOf { BettyTypography() }
@@ -39,6 +43,22 @@ fun BettyTheme(
         ThemeMode.SYSTEM -> !isSystemInDarkTheme()
     }
     val colors = if (isLight) ThemeColors.light else ThemeColors.dark
+
+    // Drive the system status / navigation bar ICON color from the in-app theme. The app
+    // forces its own theme (commonly DARK while the OS is in light mode), so we can't rely on
+    // enableEdgeToEdge()'s OS-driven default — dark status icons on Betty's dark indigo bar
+    // were invisible. isAppearanceLight* = true → dark icons (light bg); false → white icons.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        (view.context as? Activity)?.window?.let { window ->
+            SideEffect {
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = isLight
+                controller.isAppearanceLightNavigationBars = isLight
+            }
+        }
+    }
+
     // Wrap in MaterialTheme so stock M3 components inherit Betty's brand palette + sharp
     // corners (otherwise they fall back to the baseline M3 purple). Betty's own bespoke
     // tokens still flow through the composition locals below.
