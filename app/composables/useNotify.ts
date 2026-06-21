@@ -7,6 +7,8 @@ interface AlertOptions {
 interface ConfirmOptions {
   title?: string;
   question: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -16,6 +18,8 @@ interface Notification {
   title?: string;
   message: string;
   state?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm?: () => void | Promise<void>;
 }
 
@@ -42,6 +46,8 @@ export function useNotify() {
       type: 'confirm',
       title: options.title,
       message: options.question,
+      confirmLabel: options.confirmLabel,
+      cancelLabel: options.cancelLabel,
       onConfirm: options.onConfirm,
     });
   }

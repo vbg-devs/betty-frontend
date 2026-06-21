@@ -806,6 +806,27 @@ missing, **403** not a member, 400, 500.
 | POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. **Boosters:** when computing each bet's `user_points`, the server multiplies the base points by `group.boost_multiplier` iff `bet.boosted == true && group.boost_count > 0`. Both fields are read live from the group at eval time (so admin changes between apply and eval take effect). When `boost_count == 0` the multiplier is silently 1× regardless of the `boosted` flag. |
 | PUT | `/rollbackgame/:gameid` | Admin only (properly enforced). Reverts an evaluation. 200 `null`; **401** non-admin; 500. |
 
+### 3.11 FIFA result polling (admin)
+
+All admin-only (401 for non-admins). Wire types live in `app/types/index.ts` as the
+`Fifa*` interfaces (snake_case; mirrored in iOS models + both e2e mock backends).
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/admin/fifa/seasons` | Curated season dropdown. `{ "seasons": [{ "label", "season_id" }] }`. |
+| POST | `/admin/fifa/competitions` | Link a tournament to a FIFA season. Body `{ "tournament_id", "competition_id" }`. 200 `{ "competition_id", "match_count" }`; **502** feed unreachable. |
+| GET | `/admin/fifa/competitions/:tournamentId` | `{ "competition_id", "auto_apply", "enabled" }`; 404 unlinked. |
+| PUT | `/admin/fifa/competitions/:tournamentId/auto-apply` | Body `{ "auto_apply": bool }`. |
+| POST | `/admin/fifa/competitions/:tournamentId/confirm-all` | Confirm every unambiguous mapping. 200 `{ "confirmed", "skipped_ambiguous" }`. |
+| GET | `/admin/fifa/mappings?tournament_id=N` | `{ "competition_id", "suggestions": [FifaMappingSuggestion] }`. `confirmed=true` rows already have a confirmed link (hidden from the to-do list). |
+| POST | `/admin/fifa/mappings/:gameId/confirm` | Body `{ "competition_id", "match_id", "orientation_flipped" }`. |
+| POST | `/admin/fifa/mappings/:gameId/reject` | 200 `null`. |
+| GET | `/admin/fifa/proposals?status=pending\|applied` | `{ "proposals": [FifaResultProposal] }` (Go may send `null` -> treat as `[]`). Enriched with `game_home_team`/`game_away_team`/`game_start_date`; `prev_*_score` non-null only on corrections; `feed_hash` is informational (not echoed back on confirm). |
+| GET | `/admin/fifa/proposals/count?status=pending` | Pending count for the admin review badge/poll. 200 `{ "count": N }`. |
+| POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; idempotent (a superseded/already-applied id is a no-op); **410** already processed; **409** apply racing. |
+| POST | `/admin/fifa/proposals/:id/dismiss` | 200 `null`. |
+| GET | `/admin/fifa/unmapped-results` | FIFA finals with no mapped betty game. `{ "unmapped": [FifaUnmappedResult] }`. |
+
 ---
 
 ## 4. WebSocket protocol

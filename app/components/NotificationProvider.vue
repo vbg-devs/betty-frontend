@@ -9,10 +9,13 @@
       >
         <span class="notification__kicker">★ {{ kickerFor(n) }}</span>
         <div v-if="n.title" class="notification__title">{{ n.title }}</div>
-        <div class="notification__message" v-html="n.message"></div>
+        <!-- eslint-disable-next-line vue/no-v-html -- sanitized by renderMessage (escapes all HTML, re-allows only <strong>) -->
+        <div class="notification__message" v-html="renderMessage(n.message)"></div>
         <div v-if="n.type === 'confirm'" class="notification__actions">
-          <button class="btn btn--ghost" @click="dismiss(n.id)">CANCEL</button>
-          <button class="btn btn--orange" @click="handleConfirm(n)">YES, DO IT →</button>
+          <button class="btn btn--ghost" @click="dismiss(n.id)">{{ n.cancelLabel || 'CANCEL' }}</button>
+          <button class="btn btn--orange" @click="handleConfirm(n)">
+            {{ n.confirmLabel || 'YES, DO IT →' }}
+          </button>
         </div>
         <button
           v-else
@@ -42,6 +45,20 @@
 
 <script setup lang="ts">
 const { notifications, dismiss } = useNotify();
+
+// The message renders via v-html so toasts can emphasise with <strong>. Inputs are
+// not always trusted (team/group names, raw error strings flow in here), so escape
+// all HTML first, then re-allow only <strong>/</strong>. This keeps the emphasis
+// feature while neutralising any injected markup (stored-XSS guard).
+function renderMessage(raw: string) {
+  const escaped = (raw ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return escaped
+    .replace(/&lt;strong&gt;/g, '<strong>')
+    .replace(/&lt;\/strong&gt;/g, '</strong>');
+}
 
 async function handleConfirm(n: { id: number; onConfirm?: () => void | Promise<void> }) {
   if (n.onConfirm) await n.onConfirm();

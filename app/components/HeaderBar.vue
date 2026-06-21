@@ -124,12 +124,26 @@
         <div class="profile-wrap">
           <button class="profile-button" @click="showUserMenu = !showUserMenu">
             <UserBadge :user="user" :small="true" :clickable="false" />
+            <span
+              v-if="isAdmin && pendingCount > 0"
+              class="profile-button__dot"
+              aria-hidden="true"
+            ></span>
           </button>
           <div v-if="showUserMenu" class="dropdown">
             <div v-if="user" class="dropdown__header">
               <div class="dropdown__name">{{ user.name }}</div>
               <div class="dropdown__email">{{ user.email }}</div>
             </div>
+            <NuxtLink
+              v-if="isAdmin"
+              to="/admin/fifa"
+              class="dropdown__item dropdown__item--admin"
+              @click="showUserMenu = false"
+            >
+              Admin
+              <span v-if="pendingCount > 0" class="dropdown__badge">{{ pendingCount }}</span>
+            </NuxtLink>
             <button class="dropdown__item" @click="openModal">Edit profile</button>
             <button class="dropdown__item dropdown__item--danger" @click="logOut">Log out</button>
           </div>
@@ -163,6 +177,21 @@ const emit = defineEmits<{
 const firebaseAuth = useFirebaseAuth();
 const messageStore = useMessageStore();
 const route = useRoute();
+const userStore = useUserStore();
+const isAdmin = computed(() => !!userStore.isAdmin);
+
+// Admin-only: keep a live count of FIFA result proposals awaiting review for the
+// badge, and nudge when new ones land. Polling starts only for admins, so a
+// non-admin never hits the admin-guarded count endpoint.
+const {
+  pendingCount,
+  start: startProposalPoll,
+  stop: stopProposalPoll,
+} = useAdminProposals();
+watch(isAdmin, (admin) => (admin ? startProposalPoll() : stopProposalPoll()), {
+  immediate: true,
+});
+onUnmounted(stopProposalPoll);
 
 const navPaths = ['/dashboard', '/dashboard/groups/browse', '/leaderboard', '/about'];
 
@@ -597,5 +626,41 @@ a:hover {
 
 .user-name {
   margin-top: 15px;
+}
+.dropdown__item--admin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.dropdown__badge {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+.profile-button {
+  position: relative;
+}
+
+.profile-button__dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 2px solid var(--indigo);
+  box-sizing: content-box;
 }
 </style>
