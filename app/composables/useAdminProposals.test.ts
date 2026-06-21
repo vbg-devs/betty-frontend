@@ -45,9 +45,12 @@ describe('useAdminProposals', () => {
     authFetch.mockResolvedValue({ count: 3 });
     await refresh();
     expect(confirm).toHaveBeenCalledTimes(1);
-    const arg = confirm.mock.calls[0][0];
-    expect(arg.confirmLabel).toBe('Review \u2192');
-    expect(typeof arg.onConfirm).toBe('function');
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        confirmLabel: 'Review \u2192',
+        onConfirm: expect.any(Function),
+      }),
+    );
   });
 
   it('stays silent when the count drops (admin just confirmed some)', async () => {

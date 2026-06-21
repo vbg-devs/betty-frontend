@@ -29,7 +29,9 @@ export function useAdminProposals() {
           title: 'New FIFA results',
           question: `<strong>${next}</strong> result${next === 1 ? '' : 's'} ready to review.`,
           confirmLabel: 'Review \u2192',
-          onConfirm: () => navigateTo('/admin/fifa'),
+          onConfirm: () => {
+            navigateTo('/admin/fifa');
+          },
         });
       }
       lastCount = next;
