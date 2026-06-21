@@ -132,6 +132,20 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
   `MainActivity` (the Android analogue of the iOS launch-environment keys).
 - The Compose BOM / AGP / Kotlin versions live in `android/gradle/libs.versions.toml`.
 
+**Android dep carve-out — Firebase Messaging only.** Like iOS, the Android app links
+`firebase-messaging` (via the Firebase BOM) for FCM push — and ONLY Messaging. Auth stays
+REST-only: **`firebase-auth` is NOT linked.** `google-services.json` is gitignored; the
+`com.google.gms.google-services` plugin is applied **conditionally** in `android/app/
+build.gradle.kts` (only when the file is present) because it hard-fails the build when the
+file is absent — so local/PR builds without it stay green with push degraded to disabled
+(mirrors iOS gating `FirebaseApp.configure()` on the plist). CI decodes
+`GOOGLE_SERVICES_JSON_BASE64` (in the protected `release` environment) into
+`android/app/google-services.json` **only in `android-playstore.yml`**, never in the public
+`android-build` PR job. The Firebase project is the same as iOS (`betty-f676d`); both
+`social.betty.android` and `social.betty.android.debug` must be registered there (the `.debug`
+suffix needs its own client entry once a json is present locally). FCM service +
+token registration live in `android/app/src/main/java/social/betty/core/push/`.
+
 ## Deploy (iOS)
 
 - `.github/workflows/ios-testflight.yml` uploads to TestFlight after CI
@@ -155,8 +169,10 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
   path filtering for `android/` changes).
 - Required GitHub secrets (in the `release` environment): `PLAY_SERVICE_ACCOUNT_JSON`
   (Play Developer API service account), `ANDROID_KEYSTORE_BASE64`,
-  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
-  The first upload to a track must be done once manually in Play Console.
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, and
+  `GOOGLE_SERVICES_JSON_BASE64` (base64 of `google-services.json`, enables FCM push in
+  the release AAB — decoded only in `android-playstore.yml`; if unset the AAB still ships
+  with push disabled). The first upload to a track must be done once manually in Play Console.
 - `versionName` comes from the workflow env; `versionCode` is `100 + run_number`
   (never reuse/decrease), passed via `-PversionCode/-PversionName`.
 - applicationId `social.betty.android` (the existing Play/Firebase app; debug uses the

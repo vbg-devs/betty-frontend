@@ -53,5 +53,23 @@
                 <data android:scheme="com.googleusercontent.apps.812539187075-1ijbvedesug3dl8mtbvfnoh0rrvcblpe" />
             </intent-filter>
         </activity>
+
+        <!-- FCM message + registration-token delivery (the iOS MessagingDelegate analogue).
+             Only ever invoked when Firebase is configured (google-services.json present). -->
+        <service
+            android:name=".core.push.BettyMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Channel + monochrome icon for OS-rendered (backgrounded) tray notifications. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="betty.reminders" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_betty" />
     </application>
 </manifest>

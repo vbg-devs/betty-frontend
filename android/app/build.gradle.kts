@@ -5,6 +5,22 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    // NB: google-services is applied CONDITIONALLY below, never here — an eager apply
+    // hard-fails the build when the gitignored google-services.json is absent.
+}
+
+// Firebase carve-out (CLAUDE.md): the com.google.gms.google-services plugin HARD-FAILS the
+// build with "File google-services.json is missing" when the (gitignored) file is absent —
+// which is the state locally and on every PR runner until a maintainer decodes
+// GOOGLE_SERVICES_JSON_BASE64 (release env) in android-playstore.yml. Apply it ONLY when the
+// file is present, so builds stay green with push degraded to disabled. firebase-messaging
+// itself links fine with no json (its FirebaseInitProvider just no-ops at runtime). This
+// mirrors iOS gating FirebaseApp.configure() on the GoogleService-Info.plist's presence.
+if (file("google-services.json").exists()) {
+    pluginManager.apply(libs.plugins.google.services.get().pluginId)
+    logger.lifecycle("google-services.json present — Firebase Messaging enabled.")
+} else {
+    logger.lifecycle("google-services.json ABSENT — building without google-services; push disabled.")
 }
 
 android {
@@ -119,6 +135,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
+    // Firebase Messaging ONLY (the "Firebase Messaging carve-out", CLAUDE.md). Auth stays
+    // REST-only — DO NOT add com.google.firebase:firebase-auth here.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.browser)
 

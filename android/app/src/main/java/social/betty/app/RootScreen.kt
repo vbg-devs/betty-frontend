@@ -62,7 +62,9 @@ fun RootScreen(appState: AppState, container: AppContainer) {
                 AppPhase.SignedOut -> AuthScreen()
                 AppPhase.NeedsProfile -> CompleteProfileScreen()
                 AppPhase.Ready -> {
-                    LaunchedEffect(Unit) {
+                    // Keyed on the version counter so a warm notification tap (already Ready)
+                    // re-applies — LaunchedEffect(Unit) would only fire once on entering Ready.
+                    LaunchedEffect(appState.pendingDeepLinkVersion) {
                         appState.pendingDeepLink?.let { raw ->
                             DeepLink.parse(raw)?.let { navigator.applyDeepLink(it) }
                             appState.pendingDeepLink = null
