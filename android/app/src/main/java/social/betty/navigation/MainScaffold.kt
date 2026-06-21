@@ -30,9 +30,12 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import social.betty.R
 import social.betty.designsystem.BettyTheme
 import social.betty.designsystem.Palette
 import social.betty.features.activity.ActivityFeedScreen
@@ -99,10 +102,12 @@ private fun BettyTopBar(nav: AppNavigator) {
     CenterAlignedTopAppBar(
         title = {
             if (isHomeRoot) {
-                Text(
-                    text = "betty",
-                    style = type.title2,
-                    color = colors.textPrimary,
+                // Betty wordmark SVG (vector drawable). Tinted per theme: white in dark,
+                // bettyIndigo in light (design.md §1.1 light-theme logo tint).
+                Icon(
+                    painter = painterResource(R.drawable.betty_logo),
+                    contentDescription = "Betty",
+                    tint = if (colors.isLight) Palette.indigo else Color.White,
                     modifier = Modifier.testTag("topbar-logo"),
                 )
             } else {
