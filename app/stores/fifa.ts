@@ -76,7 +76,12 @@ export const useFifaStore = defineStore('fifa', () => {
         orientation_flipped: payload.orientation_flipped,
       },
     });
-    suggestions.value = suggestions.value.filter((s) => s.game_id !== payload.game_id);
+    // Mark confirmed rather than removing: the `suggestions` computed filters out
+    // confirmed rows (so it disappears from the to-do list) while `mappedCount`
+    // counts them, keeping the "N mapped" pill + empty-state copy correct.
+    suggestions.value = suggestions.value.map((s) =>
+      s.game_id === payload.game_id ? { ...s, confirmed: true } : s,
+    );
   }
 
   async function rejectMapping(gameId: number) {
@@ -109,6 +114,12 @@ export const useFifaStore = defineStore('fifa', () => {
     const { authFetch } = useApi();
     await authFetch(`/admin/fifa/proposals/${id}/dismiss`, { method: 'POST' });
     proposals.value = proposals.value.filter((p) => p.id !== id);
+  }
+
+  // Clear the list so a tab switch never leaves the previous tab's rows visible
+  // while the new fetch is in flight (or if it fails).
+  function clearProposals() {
+    proposals.value = [];
   }
 
   async function loadUnmapped() {
@@ -147,6 +158,7 @@ export const useFifaStore = defineStore('fifa', () => {
     rejectMapping,
     confirmAllMappings,
     loadProposals,
+    clearProposals,
     confirmProposal,
     dismissProposal,
     loadUnmapped,

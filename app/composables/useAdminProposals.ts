@@ -1,20 +1,22 @@
+// Module-level singleton state so the header badge and the admin screen share ONE
+// pending-proposal count (mirrors useNotify's module-singleton pattern). HeaderBar
+// drives the 60s poll; the admin screen calls refresh() after confirm/dismiss so the
+// badge reflects its own mutations immediately instead of lagging up to a poll cycle.
+const pendingCount = ref(0);
+// null until the first successful poll, so the first load never toasts.
+let lastCount: number | null = null;
+let timer: ReturnType<typeof setInterval> | null = null;
+
 /**
- * Admin-only live count of FIFA result proposals waiting for review.
+ * Admin-only live count of pending FIFA result proposals.
  *
- * Drives the badge on the Admin entry in the header and nudges the admin with a
- * toast when *new* proposals arrive (e.g. the poller stages a knockout result as
- * teams resolve). Polling is opt-in via start()/stop() so it only runs for
- * admins; non-admins never call the admin-guarded endpoint. Errors are
- * swallowed on purpose: a flaky count poll must never disrupt the rest of the app.
+ * Polling is opt-in via start()/stop() so it only runs for admins; non-admins never
+ * hit the admin-guarded endpoint. Errors are swallowed: a flaky count poll must never
+ * disrupt the app.
  */
 export function useAdminProposals() {
   const { authFetch } = useApi();
   const { confirm } = useNotify();
-
-  const pendingCount = ref(0);
-  // null until the first successful poll, so we never toast on initial load.
-  let lastCount: number | null = null;
-  let timer: ReturnType<typeof setInterval> | null = null;
 
   async function refresh() {
     try {

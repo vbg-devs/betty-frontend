@@ -20,6 +20,8 @@ beforeEach(() => {
   authFetch.mockReset();
   confirm.mockReset();
   vi.spyOn(console, 'error').mockImplementation(() => {});
+  // Reset the module-level singleton so each test starts from a clean count.
+  useAdminProposals().stop();
 });
 
 describe('useAdminProposals', () => {

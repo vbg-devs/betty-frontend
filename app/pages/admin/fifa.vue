@@ -111,12 +111,14 @@
             <div class="row__actions">
               <button
                 class="btn btn--green btn--sm"
-                :disabled="s.ambiguous || !s.match_id"
+                :disabled="s.ambiguous || !s.match_id || busy"
                 @click="confirmMapping(s)"
               >
                 Confirm
               </button>
-              <button class="btn btn--ghost btn--sm" @click="rejectMapping(s)">Reject</button>
+              <button class="btn btn--ghost btn--sm" :disabled="busy" @click="rejectMapping(s)">
+                Reject
+              </button>
             </div>
           </div>
         </div>
@@ -157,15 +159,22 @@
               <span class="score">{{ p.home_team_score }} – {{ p.away_team_score }}</span>
               <span class="teams">{{ p.game_away_team }}</span>
               <span class="when">{{ fmtKickoff(p.game_start_date) }}</span>
-              <span v-if="p.kind === 'correction' && p.prev_home_score !== null" class="prev">
+              <span
+                v-if="p.kind === 'correction' && p.prev_home_score !== null && p.prev_away_score !== null"
+                class="prev"
+              >
                 (was {{ p.prev_home_score }} – {{ p.prev_away_score }})
               </span>
               <span v-if="proposalTab === 'applied'" class="badge badge--muted">{{ p.source }}</span>
               <span class="mono mono--dim">#{{ p.game_id }}</span>
             </div>
             <div v-if="proposalTab === 'pending'" class="row__actions">
-              <button class="btn btn--green btn--sm" @click="confirmProposal(p)">Confirm</button>
-              <button class="btn btn--ghost btn--sm" @click="dismissProposal(p)">Dismiss</button>
+              <button class="btn btn--green btn--sm" :disabled="busy" @click="confirmProposal(p)">
+                Confirm
+              </button>
+              <button class="btn btn--ghost btn--sm" :disabled="busy" @click="dismissProposal(p)">
+                Dismiss
+              </button>
             </div>
           </div>
         </div>
@@ -214,6 +223,8 @@ const userStore = useUserStore();
 const tournamentStore = useTournamentStore();
 const fifaStore = useFifaStore();
 const { alert: notify, confirm: confirmDialog } = useNotify();
+// Shared singleton: refresh the header pending-count badge after confirm/dismiss.
+const { refresh: refreshProposalBadge } = useAdminProposals();
 
 const selectedTournamentId = ref<number | null>(null);
 const seasonChoice = ref(''); // dropdown: '' | a known season id | CUSTOM_SEASON
@@ -226,6 +237,8 @@ const mappingsLoaded = ref(false);
 const activeTab = ref<'proposals' | 'linking'>('proposals');
 const proposalTab = ref<'pending' | 'applied'>('pending');
 const confirmingAll = ref(false);
+// Guards confirm/dismiss/reject against double-submit while a mutation is in flight.
+const busy = ref(false);
 
 const isAdmin = computed(() => userStore.isAdmin);
 const tournaments = computed(() => tournamentStore.running);
@@ -257,6 +270,9 @@ const seasonId = computed(() =>
 const canLink = computed(() => selectedTournamentId.value !== null && seasonId.value.length > 0);
 
 onMounted(() => {
+  // Defense-in-depth: don't call the admin-guarded endpoints for a non-admin who
+  // reaches the route (the UI is already gated by v-if isAdmin).
+  if (!isAdmin.value) return;
   fifaStore.loadSeasons().catch(() => {});
   fifaStore.loadProposals('pending').catch(() => {});
   fifaStore.loadUnmapped().catch(() => {});
@@ -298,11 +314,14 @@ function fmtKickoff(iso: string) {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
+  // Include the zone (e.g. "13 Jun 19:00 GMT+2") so an admin in another timezone
+  // doesn't misread a kickoff and confirm the wrong match.
   return d.toLocaleString(undefined, {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
+    timeZoneName: 'short',
   });
 }
 
@@ -371,7 +390,12 @@ async function doConfirmAll() {
       message: `${res.confirmed} confirmed, ${res.skipped_ambiguous} skipped.`,
       state: 'success',
     });
-    await fifaStore.loadMappings(selectedTournamentId.value);
+    // Reload separately: a refresh failure must not surface as "Could not confirm all".
+    try {
+      await fifaStore.loadMappings(selectedTournamentId.value);
+    } catch {
+      // best-effort; the confirm already succeeded
+    }
   } catch (err) {
     notify({ title: 'Could not confirm all', message: `${err}`, state: 'error' });
   } finally {
@@ -380,6 +404,8 @@ async function doConfirmAll() {
 }
 
 async function confirmMapping(s: FifaMappingSuggestion) {
+  if (busy.value) return;
+  busy.value = true;
   try {
     await fifaStore.confirmMapping({
       game_id: s.game_id,
@@ -389,19 +415,29 @@ async function confirmMapping(s: FifaMappingSuggestion) {
     notify({ title: 'Mapping confirmed', message: `${s.game_home_team} v ${s.game_away_team}`, state: 'success' });
   } catch (err) {
     notify({ title: 'Could not confirm', message: `${err}`, state: 'error' });
+  } finally {
+    busy.value = false;
   }
 }
 
 async function rejectMapping(s: FifaMappingSuggestion) {
+  if (busy.value) return;
+  busy.value = true;
   try {
     await fifaStore.rejectMapping(s.game_id);
+    notify({ title: 'Mapping rejected', message: `${s.game_home_team} v ${s.game_away_team}`, state: 'success' });
   } catch (err) {
     notify({ title: 'Could not reject', message: `${err}`, state: 'error' });
+  } finally {
+    busy.value = false;
   }
 }
 
 function switchTab(tab: 'pending' | 'applied') {
   proposalTab.value = tab;
+  // Clear first so a slow/failed fetch never shows the other tab's rows under this
+  // header; the monotonic token in the store drops stale responses too.
+  fifaStore.clearProposals();
   fifaStore.loadProposals(tab).catch((err) => {
     notify({ title: 'Could not load proposals', message: `${err}`, state: 'error' });
   });
@@ -415,19 +451,33 @@ function confirmProposal(p: FifaResultProposal) {
 }
 
 async function doConfirmProposal(p: FifaResultProposal) {
+  if (busy.value) return;
+  busy.value = true;
   try {
     await fifaStore.confirmProposal(p.id);
     notify({ title: 'Applied', message: `${p.game_home_team} v ${p.game_away_team} evaluated.`, state: 'success' });
+    // Reconcile the list + header badge with the server (a no-op apply on a
+    // superseded row, or a freshly-staged correction, then shows truthfully).
+    // allSettled so a reconcile failure never reads as an apply failure.
+    await Promise.allSettled([fifaStore.loadProposals(proposalTab.value), refreshProposalBadge()]);
   } catch (err) {
     notify({ title: 'Could not apply', message: `${err}`, state: 'error' });
+  } finally {
+    busy.value = false;
   }
 }
 
 async function dismissProposal(p: FifaResultProposal) {
+  if (busy.value) return;
+  busy.value = true;
   try {
     await fifaStore.dismissProposal(p.id);
+    notify({ title: 'Dismissed', message: `${p.game_home_team} v ${p.game_away_team} dismissed.`, state: 'success' });
+    await Promise.allSettled([fifaStore.loadProposals(proposalTab.value), refreshProposalBadge()]);
   } catch (err) {
     notify({ title: 'Could not dismiss', message: `${err}`, state: 'error' });
+  } finally {
+    busy.value = false;
   }
 }
 </script>
