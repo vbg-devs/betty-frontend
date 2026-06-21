@@ -12,13 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -57,7 +56,6 @@ import social.betty.designsystem.components.SurfaceCard
 import social.betty.designsystem.components.TogglePills
 import social.betty.navigation.LocalAppContainer
 import social.betty.navigation.LocalNavigator
-import social.betty.navigation.Route
 import social.betty.navigation.Sheet
 import social.betty.navigation.Tab
 import java.time.Instant
@@ -104,7 +102,6 @@ fun HomeScreen() {
         onRefresh = doRefresh,
         onNewGroup = { nav.present(Sheet.CreateGroup) },
         onBrowse = { nav.selectTab(Tab.BROWSE) },
-        onSupport = { nav.push(Route.Support) },
     )
 }
 
@@ -120,7 +117,6 @@ private fun HomeScreenContent(
     onRefresh: () -> Unit,
     onNewGroup: () -> Unit,
     onBrowse: () -> Unit,
-    onSupport: () -> Unit,
 ) {
     val runningCards = remember(groups) { Dashboard.runningTab(groups) }
     val endedCards = remember(groups) { Dashboard.endedTab(groups) }
@@ -139,10 +135,7 @@ private fun HomeScreenContent(
                     .padding(Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
-                // 1. Feedback pill → Support (subtle right-aligned entry point)
-                FeedbackPill(onTap = onSupport)
-
-                // 2. Group list or global empty state
+                // Group list or global empty state
                 if (groups.isEmpty()) {
                     GlobalEmptyState(onNewGroup = onNewGroup, onBrowse = onBrowse)
                 } else {
@@ -178,48 +171,6 @@ private fun HomeScreenContent(
                 Spacer(Modifier.height(Space.xxl))
             }
         }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Feedback pill (subtle right-aligned entry point to Support)
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun FeedbackPill(onTap: () -> Unit) {
-    val colors = BettyTheme.colors
-    val type = BettyTheme.type
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        SuggestionChip(
-            onClick = onTap,
-            label = {
-                Text(
-                    text = "Feedback? Betty's listening  →",
-                    style = type.kicker,
-                    color = colors.textSecondary,
-                )
-            },
-            icon = {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(colors.accentPositive, shape = RoundedCornerShape(999.dp)),
-                )
-            },
-            shape = RoundedCornerShape(999.dp),
-            colors = SuggestionChipDefaults.suggestionChipColors(
-                containerColor = colors.overlay08,
-                labelColor = colors.textSecondary,
-                iconContentColor = colors.accentPositive,
-            ),
-            border = null,
-            modifier = Modifier.testTag("home-feedback-pill"),
-        )
     }
 }
 
@@ -459,6 +410,9 @@ private fun HomeTabButton(
 
     Column(
         modifier = modifier
+            // Size to content so the fillMaxWidth underline below spans only the tab's
+            // label+pill — not the whole row (which squeezed the ENDED tab to a vertical sliver).
+            .width(IntrinsicSize.Max)
             .clickable(onClick = onClick)
             .padding(vertical = Space.xs),
     ) {
