@@ -6,17 +6,27 @@
           <span class="kicker kicker--accent">★ ADMIN</span>
           <h1 class="hero__title">FIFA<br /><span class="hero__title--green">RESULTS.</span></h1>
           <p class="hero__lede">
-            Link a tournament to its FIFA season, confirm the game-to-match mapping, then review the
-            results Betty polls from FIFA before they distribute points. Turn on auto-apply once a
-            tournament is trusted.
+            Review the results Betty polls from FIFA and confirm them to distribute points. Set up
+            tournament links and game mappings under the Linking tab.
           </p>
         </div>
       </section>
 
+      <!-- ===== Top tabs: daily ops (Proposals) vs setup (Linking) ===== -->
+      <div class="tabs toptabs">
+        <button class="tab" :class="{ 'tab--active': activeTab === 'proposals' }" @click="activeTab = 'proposals'">
+          Proposals
+        </button>
+        <button class="tab" :class="{ 'tab--active': activeTab === 'linking' }" @click="activeTab = 'linking'">
+          Linking
+          <span v-if="confirmableCount > 0" class="tab-badge">{{ confirmableCount }}</span>
+        </button>
+      </div>
+
       <!-- ===== Link a tournament to a FIFA season ===== -->
-      <section class="section">
+      <section v-if="activeTab === 'linking'" class="section">
         <div class="section-head">
-          <span class="kicker kicker--accent">● STEP 1</span>
+          <span class="kicker kicker--accent">● LINK</span>
           <h2 class="section-head__title">LINK A TOURNAMENT.</h2>
         </div>
 
@@ -64,9 +74,9 @@
       </section>
 
       <!-- ===== Mapping review ===== -->
-      <section v-if="selectedTournamentId" class="section">
+      <section v-if="activeTab === 'linking' && selectedTournamentId" class="section">
         <div class="section-head">
-          <span class="kicker kicker--accent">● STEP 2</span>
+          <span class="kicker kicker--accent">● MAPPINGS</span>
           <h2 class="section-head__title">CONFIRM THE MAPPING.</h2>
         </div>
 
@@ -116,9 +126,9 @@
       </section>
 
       <!-- ===== Proposals inbox / history ===== -->
-      <section class="section">
+      <section v-if="activeTab === 'proposals'" class="section">
         <div class="section-head">
-          <span class="kicker kicker--accent">● STEP 3</span>
+          <span class="kicker kicker--accent">● RESULTS</span>
           <h2 class="section-head__title">REVIEW RESULTS.</h2>
         </div>
 
@@ -165,7 +175,7 @@
       </section>
 
       <!-- ===== Unmapped results ===== -->
-      <section v-if="unmapped.length > 0" class="section">
+      <section v-if="activeTab === 'linking' && unmapped.length > 0" class="section">
         <div class="section-head">
           <span class="kicker kicker--accent">○ HEADS UP</span>
           <h2 class="section-head__title">UNMAPPED RESULTS.</h2>
@@ -213,6 +223,7 @@ const autoApply = ref(false);
 const linking = ref(false);
 const loadingMappings = ref(false);
 const mappingsLoaded = ref(false);
+const activeTab = ref<'proposals' | 'linking'>('proposals');
 const proposalTab = ref<'pending' | 'applied'>('pending');
 const confirmingAll = ref(false);
 
@@ -574,6 +585,23 @@ async function dismissProposal(p: FifaResultProposal) {
 .tab--active {
   color: var(--cream);
   border-color: var(--orange);
+}
+
+.toptabs {
+  margin-top: 8px;
+}
+
+.tab-badge {
+  display: inline-block;
+  margin-left: 6px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
 }
 
 .rows {
