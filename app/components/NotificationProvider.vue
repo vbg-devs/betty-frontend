@@ -11,8 +11,10 @@
         <div v-if="n.title" class="notification__title">{{ n.title }}</div>
         <div class="notification__message" v-html="n.message"></div>
         <div v-if="n.type === 'confirm'" class="notification__actions">
-          <button class="btn btn--ghost" @click="dismiss(n.id)">CANCEL</button>
-          <button class="btn btn--orange" @click="handleConfirm(n)">YES, DO IT →</button>
+          <button class="btn btn--ghost" @click="dismiss(n.id)">{{ n.cancelLabel || 'CANCEL' }}</button>
+          <button class="btn btn--orange" @click="handleConfirm(n)">
+            {{ n.confirmLabel || 'YES, DO IT →' }}
+          </button>
         </div>
         <button
           v-else
