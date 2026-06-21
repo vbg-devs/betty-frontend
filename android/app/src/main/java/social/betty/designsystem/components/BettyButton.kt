@@ -110,6 +110,16 @@ fun BettyButton(
         BorderStroke(1.dp, colors.textPrimary.copy(alpha = if (isPressed) 0.5f else 0.25f))
     } else null
 
+    // Filled variants get a subtle M3 lift + pressed-state shadow; outline/ghost stay flat.
+    val elevation = when (variant) {
+        BettyButtonVariant.OUTLINE, BettyButtonVariant.GHOST -> null
+        else -> ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 6.dp,
+            disabledElevation = 0.dp,
+        )
+    }
+
     Box(
         modifier = modifier
             .then(if (block) Modifier.fillMaxWidth() else Modifier)
@@ -127,6 +137,7 @@ fun BettyButton(
                 disabledContentColor = contentColor.copy(alpha = 0.4f),
             ),
             border = border,
+            elevation = elevation,
             contentPadding = PaddingValues(
                 horizontal = horizontalPadding,
                 vertical = verticalPadding,

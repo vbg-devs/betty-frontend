@@ -2,35 +2,39 @@ package social.betty.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.betty.designsystem.BettyTheme
 import social.betty.designsystem.Palette
-import social.betty.designsystem.Space
 import social.betty.features.activity.ActivityFeedScreen
 import social.betty.features.admin.AdminEvaluateScreen
 import social.betty.features.browse.BrowseScreen
@@ -46,7 +50,11 @@ import social.betty.features.profile.AboutScreen
 import social.betty.features.profile.ProfileScreen
 import social.betty.features.profile.SupportScreen
 
-/** The 5-tab shell (screens.md §2): tab content + per-tab push stack + the active sheet. */
+/**
+ * The 5-tab shell (screens.md §2): an M3 [Scaffold] with a branded [TopAppBar] + [NavigationBar]
+ * around the active tab's content (per-tab push stack), plus the active modal sheet overlaid.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold() {
     val nav = LocalNavigator.current
@@ -57,14 +65,79 @@ fun MainScaffold() {
     }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        Scaffold(
+            topBar = { BettyTopBar(nav) },
+            bottomBar = { BettyBottomBar(nav) },
+            containerColor = colors.background,
+        ) { innerPadding ->
+            // consumeWindowInsets so each screen's BettyScaffold (WindowInsets.systemBars)
+            // doesn't re-apply the status/nav-bar inset the chrome already handled.
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .fillMaxSize(),
+            ) {
                 TabContent(nav)
             }
-            BettyBottomBar(nav)
         }
         SheetHost(nav)
     }
+}
+
+/** Tab/route title + back affordance. Pushed routes show a back arrow; tab roots show the tab name. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BettyTopBar(nav: AppNavigator) {
+    val colors = BettyTheme.colors
+    val type = BettyTheme.type
+    val top = nav.currentStack().lastOrNull()
+    // The Home tab root shows the Betty wordmark logo; every other destination shows a
+    // centered title. (Wordmark = lowercase "betty" in the display face, as on the auth/splash.)
+    val isHomeRoot = top == null && nav.currentTab == Tab.HOME
+
+    CenterAlignedTopAppBar(
+        title = {
+            if (isHomeRoot) {
+                Text(
+                    text = "betty",
+                    style = type.title2,
+                    color = colors.textPrimary,
+                    modifier = Modifier.testTag("topbar-logo"),
+                )
+            } else {
+                val title = when (top) {
+                    is Route.GroupDetail -> "Group"
+                    Route.AdminEvaluate -> "Evaluate"
+                    Route.Support -> "Support"
+                    Route.About -> "About"
+                    null -> nav.currentTab.title
+                }
+                Text(
+                    text = title.uppercase(),
+                    style = type.headline,
+                    color = colors.textPrimary,
+                )
+            }
+        },
+        navigationIcon = {
+            if (top != null) {
+                IconButton(onClick = { nav.pop() }, modifier = Modifier.testTag("topbar-back")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = colors.textPrimary,
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = colors.surfaceDeep,
+            titleContentColor = colors.textPrimary,
+            navigationIconContentColor = colors.textPrimary,
+        ),
+        modifier = Modifier.testTag("topbar"),
+    )
 }
 
 @Composable
@@ -89,6 +162,14 @@ private fun TabContent(nav: AppNavigator) {
     }
 }
 
+private fun iconFor(tab: Tab): ImageVector = when (tab) {
+    Tab.HOME -> Icons.Filled.Home
+    Tab.BROWSE -> Icons.Filled.Search
+    Tab.LEADERBOARD -> Icons.Filled.Star
+    Tab.ACTIVITY -> Icons.Filled.Notifications
+    Tab.PROFILE -> Icons.Filled.Person
+}
+
 @Composable
 private fun BettyBottomBar(nav: AppNavigator) {
     val colors = BettyTheme.colors
@@ -96,43 +177,38 @@ private fun BettyBottomBar(nav: AppNavigator) {
     val container = LocalAppContainer.current
     val unseen by container.activityFeed.unseen.collectAsStateWithLifecycle()
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surfaceDeep)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    NavigationBar(containerColor = colors.surfaceDeep) {
         Tab.entries.forEach { tab ->
             val active = nav.currentTab == tab && nav.currentStack().isEmpty()
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .testTag(tab.testTag)
-                    .clickable { nav.selectTab(tab) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = tab.title.uppercase(),
-                    style = type.caption.copy(
-                        color = if (active) Palette.orange else colors.textMuted,
-                    ),
-                    textAlign = TextAlign.Center,
-                )
-                if (tab == Tab.ACTIVITY && unseen > 0) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = Space.xs)
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Palette.alertRed)
-                            .testTag("activity-badge"),
-                    )
-                }
-            }
+            NavigationBarItem(
+                selected = active,
+                onClick = { nav.selectTab(tab) },
+                icon = {
+                    if (tab == Tab.ACTIVITY && unseen > 0) {
+                        BadgedBox(
+                            badge = {
+                                Badge(
+                                    containerColor = Palette.alertRed,
+                                    modifier = Modifier.testTag("activity-badge"),
+                                )
+                            },
+                        ) {
+                            Icon(iconFor(tab), contentDescription = tab.title)
+                        }
+                    } else {
+                        Icon(iconFor(tab), contentDescription = tab.title)
+                    }
+                },
+                label = { Text(tab.title.uppercase(), style = type.micro) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Palette.orange,
+                    selectedTextColor = Palette.orange,
+                    indicatorColor = Palette.orangeTint18,
+                    unselectedIconColor = colors.textMuted,
+                    unselectedTextColor = colors.textMuted,
+                ),
+                modifier = Modifier.testTag(tab.testTag),
+            )
         }
     }
 }

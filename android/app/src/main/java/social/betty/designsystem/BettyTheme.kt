@@ -2,6 +2,7 @@ package social.betty.designsystem
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -38,12 +39,20 @@ fun BettyTheme(
         ThemeMode.SYSTEM -> !isSystemInDarkTheme()
     }
     val colors = if (isLight) ThemeColors.light else ThemeColors.dark
-    CompositionLocalProvider(
-        LocalBettyColors provides colors,
-        LocalBettyTypography provides BettyTypography(),
-        LocalContentColor provides colors.textPrimary,
-        content = content,
-    )
+    // Wrap in MaterialTheme so stock M3 components inherit Betty's brand palette + sharp
+    // corners (otherwise they fall back to the baseline M3 purple). Betty's own bespoke
+    // tokens still flow through the composition locals below.
+    MaterialTheme(
+        colorScheme = bettyColorScheme(colors),
+        shapes = BettyShapes,
+    ) {
+        CompositionLocalProvider(
+            LocalBettyColors provides colors,
+            LocalBettyTypography provides BettyTypography(),
+            LocalContentColor provides colors.textPrimary,
+            content = content,
+        )
+    }
 }
 
 /**

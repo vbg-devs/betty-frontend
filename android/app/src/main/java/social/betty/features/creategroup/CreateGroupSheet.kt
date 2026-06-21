@@ -23,8 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -379,7 +379,7 @@ private fun BettyTextField(
     enabled: Boolean = true,
 ) {
     val colors = BettyTheme.colors
-    TextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
@@ -397,21 +397,19 @@ private fun BettyTextField(
         maxLines = if (singleLine) 1 else maxLines,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         textStyle = BettyTheme.type.body.copy(color = colors.textPrimary),
-        colors = TextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = colors.overlay06,
             unfocusedContainerColor = colors.overlay06,
             disabledContainerColor = colors.overlay04,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
+            focusedBorderColor = Palette.orange,
+            unfocusedBorderColor = colors.overlay10,
+            disabledBorderColor = colors.overlay10,
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
             disabledTextColor = colors.textMuted,
         ),
         shape = Radius.sharp,
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.overlay10, Radius.sharp),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 

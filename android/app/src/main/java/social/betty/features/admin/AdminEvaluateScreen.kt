@@ -17,8 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -620,7 +620,7 @@ private fun ScoreInput(
         verticalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         KickerText(text = label, color = colors.textSecondary)
-        TextField(
+        OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
@@ -645,17 +645,16 @@ private fun ScoreInput(
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
-            colors = TextFieldDefaults.colors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = colors.overlay06,
                 unfocusedContainerColor = colors.overlay06,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
+                focusedBorderColor = Palette.orange,
+                unfocusedBorderColor = colors.overlay10,
+                disabledBorderColor = colors.overlay10,
             ),
             shape = Radius.sharp,
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, colors.overlay10, Radius.sharp)
                 .testTag(testTag),
         )
     }
