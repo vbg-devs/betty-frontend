@@ -103,9 +103,10 @@ describe('pages/admin/fifa', () => {
       await flushPromises();
       const rows = wrapper.findAll('.row');
       expect(rows).toHaveLength(1);
-      expect(rows[0].text()).toContain('Spain');
-      expect(rows[0].text()).toContain('France');
-      expect(rows[0].find('.row__actions').exists()).toBe(true);
+      const row = rows[0]!;
+      expect(row.text()).toContain('Spain');
+      expect(row.text()).toContain('France');
+      expect(row.find('.row__actions').exists()).toBe(true);
     });
 
     it('opens a confirm dialog before applying a proposal', async () => {
