@@ -133,7 +133,7 @@ describe('useFifaStore', () => {
   });
 
   describe('confirmMapping()', () => {
-    it('POSTs the competition id from the loaded mappings and drops the suggestion', async () => {
+    it('POSTs the competition id from the loaded mappings and marks the suggestion confirmed', async () => {
       authFetch.mockResolvedValueOnce({ competition_id: '285023', suggestions: [suggestion({ game_id: 1 }), suggestion({ game_id: 2 })] });
       const store = useFifaStore();
       await store.loadMappings(7); // sets competitionId in the store
@@ -145,7 +145,11 @@ describe('useFifaStore', () => {
         method: 'POST',
         body: { competition_id: '285023', match_id: 'm1', orientation_flipped: true },
       });
-      expect(store.suggestions.map((s) => s.game_id)).toEqual([2]);
+      // confirmMapping marks the row confirmed (the screen's `suggestions` computed
+      // filters confirmed rows out of the to-do list) instead of dropping it, so the
+      // "N mapped" pill and empty-state copy stay correct.
+      expect(store.suggestions.find((s) => s.game_id === 1)?.confirmed).toBe(true);
+      expect(store.suggestions.map((s) => s.game_id)).toEqual([1, 2]);
     });
   });
 
