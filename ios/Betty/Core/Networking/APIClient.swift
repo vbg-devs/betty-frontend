@@ -314,6 +314,14 @@ final class APIClient {
         try await requestVoid(.dismissFIFAProposal(id: id))
     }
 
+    /// `GET /admin/fifa/proposals/count?status=pending` (admin) — pending count for the
+    /// review badge/poll (no list, no FIFA call).
+    func fifaPendingProposalsCount() async throws -> Int {
+        struct Response: Decodable { let count: Int }
+        let response: Response = try await request(.fifaProposalsCount)
+        return response.count
+    }
+
     // MARK: - Reference data
 
     /// `GET /teams` — all tournaments; filter by `tournamentID` client-side. 404 -> [].

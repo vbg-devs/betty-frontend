@@ -520,6 +520,13 @@ extension BettyMockBackend {
     // MARK: - FIFA admin (result proposals)
 
     private func registerFIFARoutes() {
+        api("GET", "/admin/fifa/proposals/count") { request, _, uid, scenario in
+            guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
+            let status = request.query["status"] ?? "pending"
+            let count = scenario.fifaProposals.filter { $0.status == status }.count
+            return .json(["count": count])
+        }
+
         api("GET", "/admin/fifa/proposals") { request, _, uid, scenario in
             guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
             let status = request.query["status"] ?? "pending"

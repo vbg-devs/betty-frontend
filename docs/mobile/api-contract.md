@@ -715,6 +715,7 @@ off), so deploying never starts polling on its own.
 | POST | `/admin/fifa/mappings/:gameId/confirm` | Body `{ "competition_id", "match_id", "orientation_flipped" }`. |
 | POST | `/admin/fifa/mappings/:gameId/reject` | |
 | GET | `/admin/fifa/proposals?status=pending\|applied` | `{ "proposals": [ProposalView] }` (Go may send `null` → treat as `[]`). |
+| GET | `/admin/fifa/proposals/count?status=pending` | Pending count for the admin review badge/poll. 200 `{ "count": N }`. Admin only (401 otherwise). |
 | POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; **410** already processed; **409** apply racing. |
 | POST | `/admin/fifa/proposals/:id/dismiss` | 200 `null`. |
 | GET | `/admin/fifa/unmapped-results` | FIFA-final matches with no mapped betty game. |
