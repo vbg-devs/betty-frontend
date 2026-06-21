@@ -21,9 +21,10 @@ nonisolated struct FIFAProposal: Decodable, Identifiable, Hashable, Sendable {
     let prevAwayScore: Int?
     let gameHomeTeam: String
     let gameAwayTeam: String
-    let gameStartDate: Date
-
-    var isCorrection: Bool { kind == "correction" }
+    /// Kickoff for the mapped betty game. Optional: the backend enrichment can omit it,
+    /// and Go's zero time serializes as `0001-01-01T00:00:00Z` — both mean "no kickoff"
+    /// and render nothing rather than a sentinel date.
+    let gameStartDate: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, kind, status, source
@@ -52,6 +53,14 @@ nonisolated struct FIFAProposal: Decodable, Identifiable, Hashable, Sendable {
         prevAwayScore = try c.decodeIfPresent(Int.self, forKey: .prevAwayScore)
         gameHomeTeam = try c.decodeIfPresent(String.self, forKey: .gameHomeTeam) ?? ""
         gameAwayTeam = try c.decodeIfPresent(String.self, forKey: .gameAwayTeam) ?? ""
-        gameStartDate = try c.decodeIfPresent(Date.self, forKey: .gameStartDate) ?? Date(timeIntervalSince1970: 0)
+        // Parse the raw string ourselves (not as `Date`) so a present-but-unparseable or
+        // Go zero-time kickoff degrades to `nil` instead of throwing and aborting the
+        // entire `[FIFAProposal]` decode over a single malformed row.
+        let rawStartDate = (try? c.decodeIfPresent(String.self, forKey: .gameStartDate)) ?? nil
+        if let rawStartDate, !rawStartDate.hasPrefix("0001-") {
+            gameStartDate = JSONCoding.parseRFC3339(rawStartDate)
+        } else {
+            gameStartDate = nil
+        }
     }
 }

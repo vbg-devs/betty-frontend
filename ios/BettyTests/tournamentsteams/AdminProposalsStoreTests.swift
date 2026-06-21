@@ -66,4 +66,28 @@ struct AdminProposalsStoreTests {
         #expect(notified().isEmpty)
         #expect(store.pendingCount == 9)
     }
+
+    @Test("decrement lowers the badge immediately and never goes negative")
+    func decrementLowersBadge() async {
+        let (store, _) = store(returning: [3])
+        await store.refresh()
+        store.decrement()
+        #expect(store.pendingCount == 2)
+        store.decrement()
+        store.decrement()
+        store.decrement()
+        #expect(store.pendingCount == 0) // floored, not negative
+    }
+
+    @Test("decrement lowers the toast baseline so a corrected poll does not re-toast")
+    func decrementLowersToastBaseline() async {
+        // Count is 3, admin confirms one (decrement → 2). The next poll returns the
+        // server-corrected 2: that must NOT read as an increase over the baseline.
+        let (store, notified) = store(returning: [3, 2])
+        await store.refresh()
+        store.decrement()
+        await store.refresh()
+        #expect(notified().isEmpty)
+        #expect(store.pendingCount == 2)
+    }
 }

@@ -53,6 +53,17 @@ final class AdminProposalsStore {
         }
     }
 
+    /// Optimistically reflect that one pending proposal was just resolved (confirmed or
+    /// dismissed) so the profile badge updates immediately instead of waiting up to a
+    /// full poll interval. Lowers the toast baseline too, so the next poll's corrected
+    /// server count never reads as an increase and double-toasts.
+    func decrement() {
+        pendingCount = max(0, pendingCount - 1)
+        if let last = lastCount {
+            lastCount = max(0, last - 1)
+        }
+    }
+
     /// Pause polling (e.g. on background) while keeping the last known count.
     func stopPolling() {
         pollTask?.cancel()

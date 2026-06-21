@@ -12,15 +12,28 @@ nonisolated enum JSONCoding {
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
             let string = try container.decode(String.self)
-            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
-                return date
+            guard let date = parseRFC3339(string) else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unparseable RFC3339 date: \(string)")
             }
-            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle()) {
-                return date
-            }
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unparseable RFC3339 date: \(string)")
+            return date
         }
         return decoder
+    }
+
+    /// Parse a Go RFC 3339 timestamp (with or without fractional seconds), returning
+    /// `nil` rather than throwing when the value can't be parsed. Required date fields
+    /// decode through `makeDecoder()`'s strategy, which throws on failure (a missing
+    /// `created_at` is a real problem). Optional enrichment fields that must degrade
+    /// gracefully — never fail the whole payload over one bad row — parse the raw string
+    /// through this directly instead.
+    static func parseRFC3339(_ string: String) -> Date? {
+        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+            return date
+        }
+        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle()) {
+            return date
+        }
+        return nil
     }
 
     static func makeEncoder() -> JSONEncoder {

@@ -227,8 +227,13 @@ final class AppEnvironment {
             title: "New FIFA results",
             question: "\(count) result\(count == 1 ? "" : "s") ready to review."
         ) { [weak self] in
-            self?.router.selectedTab = .profile
-            self?.router.profilePath.append(.adminFIFAProposals)
+            guard let self else { return }
+            self.router.selectedTab = .profile
+            // Don't stack a duplicate copy when the proposals screen is already on top
+            // (the toast can fire on a later poll while the admin is already reviewing).
+            if self.router.profilePath.last != .adminFIFAProposals {
+                self.router.profilePath.append(.adminFIFAProposals)
+            }
         }
     }
 

@@ -155,11 +155,16 @@ struct FIFAProposalsView: View {
                     .lineLimit(1)
             }
 
-            Text(kickoffText(proposal.gameStartDate))
-                .font(.bettySubhead)
-                .foregroundStyle(theme.colors.textMuted)
+            if let start = proposal.gameStartDate {
+                Text(kickoffText(start))
+                    .font(.bettySubhead)
+                    .foregroundStyle(theme.colors.textMuted)
+            }
 
-            if proposal.isCorrection, let prevHome = proposal.prevHomeScore, let prevAway = proposal.prevAwayScore {
+            // Show the prior score for any proposal that carries one — both corrections
+            // and rollbacks do (initial proposals leave prev_* null), so the admin sees
+            // what a rollback reverts from before applying it.
+            if let prevHome = proposal.prevHomeScore, let prevAway = proposal.prevAwayScore {
                 Text("was \(prevHome) – \(prevAway)")
                     .font(.bettySubhead)
                     .foregroundStyle(theme.colors.textMuted)
@@ -200,17 +205,23 @@ struct FIFAProposalsView: View {
         ) {
             do {
                 try await model.confirm(proposal)
+                env.adminProposals.decrement()
                 env.toasts.alert(
                     title: "Applied",
                     message: "\(proposal.gameHomeTeam) v \(proposal.gameAwayTeam) evaluated.",
                     state: .success
                 )
+            } catch APIError.gone {
+                // Already auto-applied by the poller — the stale pending row was dropped;
+                // keep the badge in sync.
+                env.adminProposals.decrement()
+                env.toasts.alert(title: "Already evaluated", message: "This game was already evaluated.", state: .warning)
+            } catch APIError.conflict {
+                // 409: another apply (admin or auto) is racing this game. Tell the admin
+                // rather than the generic "try again", which would invite a double-apply.
+                env.toasts.alert(title: "Being evaluated", message: "Another apply is in progress for this game. Refresh to see the result.", state: .warning)
             } catch let error as APIError {
-                if case .gone = error {
-                    env.toasts.alert(title: "Already evaluated", message: "This game was already evaluated.", state: .warning)
-                } else {
-                    env.toasts.alert(title: "Could not apply", message: error.serverMessage ?? "Please try again.", state: .error)
-                }
+                env.toasts.alert(title: "Could not apply", message: error.serverMessage ?? "Please try again.", state: .error)
             } catch {
                 env.toasts.alert(title: "Could not apply", message: "Please try again.", state: .error)
             }
@@ -221,6 +232,7 @@ struct FIFAProposalsView: View {
         Task {
             do {
                 try await model.dismiss(proposal)
+                env.adminProposals.decrement()
             } catch {
                 env.toasts.alert(title: "Could not dismiss", message: "Please try again.", state: .error)
             }
