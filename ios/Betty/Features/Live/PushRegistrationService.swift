@@ -123,6 +123,13 @@ final class PushRegistrationService: NSObject, MessagingDelegate {
             .requestAuthorization(options: [.alert, .badge, .sound])) ?? false
     }
 
+    /// Live FCM token from the Messaging SDK, regardless of phase.
+    /// Used by the hidden 5-tap revealer on the profile screen — ships in
+    /// Release so the token is reachable from TestFlight on physical devices.
+    static func debugCurrentFCMToken() async -> String? {
+        await systemFetchFCMToken()
+    }
+
     private static func systemFetchFCMToken() async -> String? {
         // Guard: Messaging.messaging() throws if Firebase is not configured.
         guard FirebaseApp.app() != nil else { return nil }
