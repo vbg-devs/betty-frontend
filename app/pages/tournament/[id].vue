@@ -126,12 +126,15 @@ function teamForRow(row: TeamPrediction) {
 onMounted(async () => {
   const id = route.params.id;
   try {
-    const [t, p] = await Promise.all([
+    // Tournament must succeed for the page to render. Predictions are a
+    // soft-fail: a tournament with no bets yet returns empty, and a transient
+    // backend hiccup shouldn't take down the whole page.
+    const [tournamentData, predictionsResult] = await Promise.all([
       authFetch<Tournament>(`/tournament/${id}`),
-      authFetch<TeamPrediction[]>(`/tournament/${id}/predictions`),
+      authFetch<TeamPrediction[]>(`/tournament/${id}/predictions`).catch(() => [] as TeamPrediction[]),
     ]);
-    tournament.value = t;
-    predictions.value = p ?? [];
+    tournament.value = tournamentData;
+    predictions.value = predictionsResult;
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Unknown error';
   }
