@@ -51,6 +51,20 @@ extension MockScenario {
         }
     }
 
+    /// Override a group's Lone Ranger config (spec §7.1 fixtures). When enabled and
+    /// exactly one member predicts the winning side of a game (draws excluded), that
+    /// member earns `points` on top of their base score at evaluation time.
+    mutating func groupDetailSetLoneRanger(
+        enabled: Bool,
+        points: Int = 5,
+        groupID: Int = DefaultScenario.groupSundayLegendsID
+    ) {
+        updateGroup(groupID) {
+            $0.loneRangerEnabled = enabled
+            $0.loneRangerPoints = points
+        }
+    }
+
     /// Overrides a member's score (drives dense-ranking/tie fixtures).
     mutating func groupDetailSetMemberScore(
         userID: String,

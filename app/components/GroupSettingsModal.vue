@@ -106,6 +106,41 @@
             disable.
           </p>
 
+          <div class="field__row">
+            <label class="check">
+              <input v-model="loneRangerEnabled" type="checkbox" class="check__input" />
+              <span class="check__box" aria-hidden="true">
+                <svg
+                  v-if="loneRangerEnabled"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path d="M5 12l5 5L20 6" />
+                </svg>
+              </span>
+              <span class="check__label">Lone Ranger bonus</span>
+            </label>
+            <label class="field">
+              <span class="field__label">Bonus points</span>
+              <input
+                v-model="loneRangerPoints"
+                type="number"
+                min="0"
+                placeholder="0"
+                class="field__input"
+                :disabled="!loneRangerEnabled"
+              />
+            </label>
+          </div>
+          <p class="field__help">
+            If exactly one member predicts the winning side of a game, they earn these bonus
+            points. Draws don't count.
+          </p>
+
           <label class="check">
             <input v-model="peek" type="checkbox" class="check__input" />
             <span class="check__box" aria-hidden="true">
@@ -170,6 +205,8 @@ const exactScorePoints = ref(String(group.exact_result_points));
 const peek = ref(group.allow_sneak_peek);
 const boostCount = ref(String(group.boost_count));
 const boostMultiplier = ref(String(group.boost_multiplier));
+const loneRangerEnabled = ref(group.lone_ranger_enabled);
+const loneRangerPoints = ref(String(group.lone_ranger_points));
 const loading = ref(false);
 
 const boostersEnabled = computed(() => {
@@ -188,6 +225,11 @@ const canSave = computed(() => {
   if (boostMultiplier.value.length === 0) return false;
   const mult = parseInt(boostMultiplier.value, 10);
   if (!Number.isFinite(mult) || mult < 1) return false;
+  if (loneRangerEnabled.value) {
+    if (loneRangerPoints.value.length === 0) return false;
+    const lrPoints = parseInt(loneRangerPoints.value, 10);
+    if (!Number.isFinite(lrPoints) || lrPoints < 0) return false;
+  }
   return true;
 });
 
@@ -199,7 +241,9 @@ const isDirty = computed(() => {
     parseFloat(exactScorePoints.value) !== group.exact_result_points ||
     peek.value !== group.allow_sneak_peek ||
     parseInt(boostCount.value, 10) !== group.boost_count ||
-    parseInt(boostMultiplier.value, 10) !== group.boost_multiplier
+    parseInt(boostMultiplier.value, 10) !== group.boost_multiplier ||
+    loneRangerEnabled.value !== group.lone_ranger_enabled ||
+    parseInt(loneRangerPoints.value, 10) !== group.lone_ranger_points
   );
 });
 
@@ -223,6 +267,8 @@ async function save() {
       allow_sneak_peek: peek.value,
       boost_count: parseInt(boostCount.value, 10),
       boost_multiplier: parseInt(boostMultiplier.value, 10),
+      lone_ranger_enabled: loneRangerEnabled.value,
+      lone_ranger_points: parseInt(loneRangerPoints.value, 10),
     });
     emit('saved');
     emit('close');

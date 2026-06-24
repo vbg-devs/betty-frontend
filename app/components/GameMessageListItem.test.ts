@@ -138,6 +138,8 @@ describe('GameMessageListItem', () => {
         exact_result_points: 3,
         boost_count: 2,
         boost_multiplier: 2,
+        lone_ranger_enabled: false,
+        lone_ranger_points: 0,
         public_at: null,
         members: [
           {

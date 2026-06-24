@@ -140,4 +140,65 @@ import Testing
         #expect(update.boostCount == 2)
         #expect(update.boostMultiplier == 3)
     }
+
+    // MARK: - Lone Ranger (spec §6.1)
+
+    @Test func prefillsLoneRangerFieldsFromGroup() throws {
+        let group = try GroupMgmtFixtures.group(loneRangerEnabled: true, loneRangerPoints: 5)
+        let form = GroupSettingsForm(group: group)
+        #expect(form.loneRangerEnabled)
+        #expect(form.loneRangerPoints == "5")
+        #expect(!form.isLoneRangerPointsDisabled)
+        #expect(!form.isDirty)
+    }
+
+    @Test func loneRangerPointsDisabledWhenToggleOff() throws {
+        let group = try GroupMgmtFixtures.group(loneRangerEnabled: false, loneRangerPoints: 0)
+        let form = GroupSettingsForm(group: group)
+        #expect(form.isLoneRangerPointsDisabled)
+    }
+
+    @Test func loneRangerFieldsContributeToIsDirty() throws {
+        let group = try GroupMgmtFixtures.group(loneRangerEnabled: false, loneRangerPoints: 0)
+        var form = GroupSettingsForm(group: group)
+
+        form.loneRangerEnabled = true
+        #expect(form.isDirty)
+        form.loneRangerEnabled = false
+        #expect(!form.isDirty)
+
+        form.loneRangerPoints = "5"
+        #expect(form.isDirty)
+        form.loneRangerPoints = "0"
+        #expect(!form.isDirty)
+    }
+
+    @Test func canSaveRequiresNonNegativeLoneRangerPointsWhenEnabled() throws {
+        let group = try GroupMgmtFixtures.group(loneRangerEnabled: false, loneRangerPoints: 0)
+        var form = GroupSettingsForm(group: group)
+
+        form.loneRangerEnabled = true
+        form.loneRangerPoints = "-1"
+        #expect(!form.canSave)
+        #expect(form.update == nil)
+
+        form.loneRangerPoints = "5"
+        #expect(form.canSave)
+
+        // When disabled, an unparseable / garbage value is ignored.
+        form.loneRangerEnabled = false
+        form.loneRangerPoints = "x"
+        #expect(form.canSave)
+    }
+
+    @Test func updateSendsLoneRangerFields() throws {
+        let group = try GroupMgmtFixtures.group(loneRangerEnabled: false, loneRangerPoints: 0)
+        var form = GroupSettingsForm(group: group)
+        form.loneRangerEnabled = true
+        form.loneRangerPoints = "5"
+
+        let update = try #require(form.update)
+        #expect(update.loneRangerEnabled == true)
+        #expect(update.loneRangerPoints == 5)
+    }
 }

@@ -52,6 +52,10 @@ struct MockGroup {
     var boostCount = 0
     /// Multiplier applied when a bet has `boosted == true`. Default 2.
     var boostMultiplier = 2
+    /// Lone Ranger bonus toggle. `false` disables the bonus (default).
+    var loneRangerEnabled = false
+    /// Bonus points for the sole correct-winning-side predictor. Default 0.
+    var loneRangerPoints = 0
     var publicAt: Date?
     var createdAt = Date()
     var updatedAt = Date()

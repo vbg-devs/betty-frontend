@@ -115,8 +115,9 @@ describe('pages/dashboard/groups/create', () => {
         'Points for exact score *',
         'Boosters per user (0 disables)',
         'Booster multiplier',
+        'Lone Ranger bonus points',
       ]);
-      expect(numberInputs.map((i) => i.attributes('min'))).toEqual(['0', '0', '0', '1']);
+      expect(numberInputs.map((i) => i.attributes('min'))).toEqual(['0', '0', '0', '1', '0']);
 
       const checkbox = wrapper.find('input[type="checkbox"]');
       expect((checkbox.element as HTMLInputElement).checked).toBe(false);
@@ -173,6 +174,8 @@ describe('pages/dashboard/groups/create', () => {
           allow_sneak_peek: false,
           boost_count: 0,
           boost_multiplier: 2,
+          lone_ranger_enabled: false,
+          lone_ranger_points: 0,
           group_play_deadline: '2026-06-11T00:00:00Z',
           welcome_message: 'Welcome everyone',
           mode: 0,
@@ -180,6 +183,32 @@ describe('pages/dashboard/groups/create', () => {
       });
       expect(authFetch.mock.calls.map((c) => c[0])).toEqual(['/group', '/groups']);
       expect(push).toHaveBeenCalledWith('/dashboard/groups/55');
+    });
+
+    it('sends lone ranger fields when the toggle is enabled with points', async () => {
+      authFetch.mockImplementation((url: string) =>
+        Promise.resolve(url === '/group' ? { group_id: 56 } : []),
+      );
+      const wrapper = await mountWithSelectedTournament(
+        makeTournament(5, { start_date: '2026-06-11T00:00:00Z' }),
+      );
+
+      const textInputs = wrapper.findAll('input[type="text"]');
+      await textInputs[0]!.setValue('Lone Group');
+      const numberInputs = wrapper.findAll('input[type="number"]');
+      await numberInputs[0]!.setValue('1');
+      await numberInputs[1]!.setValue('3');
+      const checkboxes = wrapper.findAll('input[type="checkbox"]');
+      await checkboxes[checkboxes.length - 1]!.setValue(true); // lone ranger toggle (enables the points input)
+      await numberInputs[4]!.setValue('5'); // lone ranger points
+
+      await wrapper.find('form').trigger('submit');
+      await flushPromises();
+
+      expect(authFetch.mock.calls[0]?.[1]?.body).toMatchObject({
+        lone_ranger_enabled: true,
+        lone_ranger_points: 5,
+      });
     });
 
     it('does not submit when the fields are left untouched, so no NaN points are sent', async () => {

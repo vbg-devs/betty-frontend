@@ -131,4 +131,46 @@ import Testing
         #expect(payload.boostCount == 2)
         #expect(payload.boostMultiplier == 3)
     }
+
+    // MARK: - Lone Ranger (spec §6.2)
+
+    @Test func loneRangerDefaultsAreDisabledZeroPoints() {
+        let form = CreateGroupForm()
+        #expect(!form.loneRangerEnabled)
+        #expect(form.loneRangerPoints == "0")
+        #expect(form.isLoneRangerPointsDisabled)
+    }
+
+    @Test func canSaveRejectsNegativeLoneRangerPointsWhenEnabled() throws {
+        let tournament = try GroupMgmtFixtures.tournament(id: 5)
+        let running = [tournament]
+        var form = CreateGroupForm()
+        form.tournamentID = 5
+        form.name = "G"
+        form.winPoints = "1"
+        form.exactPoints = "3"
+        #expect(form.canSave(running: running))
+
+        form.loneRangerEnabled = true
+        form.loneRangerPoints = "-1"
+        #expect(!form.canSave(running: running))
+
+        form.loneRangerPoints = "5"
+        #expect(form.canSave(running: running))
+    }
+
+    @Test func payloadCarriesLoneRangerFields() throws {
+        let tournament = try GroupMgmtFixtures.tournament(id: 5)
+        var form = CreateGroupForm()
+        form.tournamentID = 5
+        form.name = "G"
+        form.winPoints = "1"
+        form.exactPoints = "3"
+        form.loneRangerEnabled = true
+        form.loneRangerPoints = "5"
+
+        let payload = try #require(form.payload(running: [tournament]))
+        #expect(payload.loneRangerEnabled == true)
+        #expect(payload.loneRangerPoints == 5)
+    }
 }

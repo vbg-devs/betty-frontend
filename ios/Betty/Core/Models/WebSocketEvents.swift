@@ -56,6 +56,25 @@ nonisolated struct WSExactScore: Decodable, Hashable, Sendable {
     }
 }
 
+/// `lone_ranger_awarded`: `{ "game_id": 1, "user_ids": ["uid", ...] }`.
+/// Same wire shape as `user_exact_score` (a distinct event so the feed can render
+/// its own celebratory copy). Mirrors `WSExactScore` deliberately.
+nonisolated struct WSLoneRanger: Decodable, Hashable, Sendable {
+    let gameID: Int?
+    let userIDs: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case gameID = "game_id"
+        case userIDs = "user_ids"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        gameID = try c.decodeIfPresent(Int.self, forKey: .gameID)
+        userIDs = try c.decodeIfPresent([String].self, forKey: .userIDs) ?? []
+    }
+}
+
 nonisolated struct WSGameRef: Decodable, Hashable, Sendable {
     let id: Int
     let startDate: Date?
@@ -98,6 +117,9 @@ nonisolated enum BettyEvent: Hashable, Sendable {
     case groupVisibilityChanged(WSVisibilityChanged)
     case evaluateGame(WSEvaluateGame)
     case userExactScore(WSExactScore)
+    /// `lone_ranger_awarded` — the set of lone-ranger winners for a game (one per
+    /// qualifying group, aggregated across groups, like `user_exact_score`).
+    case loneRangerAwarded(WSLoneRanger)
     case gameStartingSoon(WSGameStartingSoon)
     case unknown(type: String, message: JSONValue?)
 
@@ -115,6 +137,7 @@ nonisolated enum BettyEvent: Hashable, Sendable {
         case .groupVisibilityChanged: "group_visibility_changed"
         case .evaluateGame: "evaluate_game"
         case .userExactScore: "user_exact_score"
+        case .loneRangerAwarded: "lone_ranger_awarded"
         case .gameStartingSoon: "game_starting_soon"
         case .unknown(let type, _): type
         }
@@ -163,6 +186,8 @@ nonisolated enum BettyEvent: Hashable, Sendable {
             return payload(WSEvaluateGame.self).map { .evaluateGame($0) } ?? fallback()
         case "user_exact_score":
             return payload(WSExactScore.self).map { .userExactScore($0) } ?? fallback()
+        case "lone_ranger_awarded":
+            return payload(WSLoneRanger.self).map { .loneRangerAwarded($0) } ?? fallback()
         case "game_starting_soon":
             return payload(WSGameStartingSoon.self).map { .gameStartingSoon($0) } ?? fallback()
         default:

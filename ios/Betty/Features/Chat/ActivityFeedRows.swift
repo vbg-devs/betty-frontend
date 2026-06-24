@@ -30,6 +30,9 @@ nonisolated struct ActivityEventMeta: Equatable, Sendable {
             ActivityEventMeta(label: "★ FULL TIME", accent: .cream, symbol: "flag.checkered")
         case .userExactScore:
             ActivityEventMeta(label: "★ EXACT SCORE", accent: .green, symbol: "star")
+        case .loneRangerAwarded:
+            // Emoji-in-label like the booster row, so leave the symbol nil.
+            ActivityEventMeta(label: "🤠 LONE RANGER", accent: .green, symbol: nil)
         case .groupJoined:
             ActivityEventMeta(label: "● JOINED GROUP", accent: .green, symbol: "person.crop.circle.badge.checkmark")
         case .groupLeft:
@@ -53,6 +56,13 @@ nonisolated enum ActivityFeedText {
             return "You and \(count - 1) other(s) had the exact score"
         }
         return "\(count) players had the exact score!"
+    }
+
+    static func loneRanger(userIDs: [String], currentUserID: String?) -> String {
+        if let currentUserID, userIDs.contains(currentUserID) {
+            return "🤠 You were the Lone Ranger — only you called it!"
+        }
+        return "🤠 \(userIDs.count) player(s) were the Lone Ranger!"
     }
 
     /// Empty/missing `who` falls back to "Someone" (web `||` semantics).
@@ -134,6 +144,8 @@ struct ActivityEventRow: View {
             FeedResultItem(gameID: payload.gameID)
         case .userExactScore(let payload):
             FeedExactScoreItem(payload: payload)
+        case .loneRangerAwarded(let payload):
+            FeedLoneRangerItem(payload: payload)
         case .groupJoined(let payload):
             FeedGroupJoinedItem(data: payload)
         case .groupVisibilityChanged(let payload):
@@ -351,6 +363,21 @@ struct FeedExactScoreItem: View {
 
     var body: some View {
         Text(ActivityFeedText.exactScore(userIDs: payload.userIDs, currentUserID: env.userStore.id))
+            .font(.betty(13, .medium))
+            .foregroundStyle(theme.colors.textPrimary)
+    }
+}
+
+/// `lone_ranger_awarded` — "🤠 You were the Lone Ranger…" for the signed-in winner,
+/// else the count variant.
+struct FeedLoneRangerItem: View {
+    let payload: WSLoneRanger
+
+    @Environment(AppEnvironment.self) private var env
+    @Environment(ThemeStore.self) private var theme
+
+    var body: some View {
+        Text(ActivityFeedText.loneRanger(userIDs: payload.userIDs, currentUserID: env.userStore.id))
             .font(.betty(13, .medium))
             .foregroundStyle(theme.colors.textPrimary)
     }

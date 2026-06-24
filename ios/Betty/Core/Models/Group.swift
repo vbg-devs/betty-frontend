@@ -77,6 +77,12 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
     /// Multiplier applied to a bet with `boosted == true` when boosters are enabled
     /// (`boostCount > 0`). Defaults to `2` if missing.
     let boostMultiplier: Int
+    /// Lone Ranger bonus toggle. `false` disables the bonus. Defaults to `false`
+    /// if missing (pre-feature backend) so the client still decodes.
+    let loneRangerEnabled: Bool
+    /// Extra raw-score points for the sole member who called the winning side of a
+    /// game (draws excluded). Ignored when `loneRangerEnabled == false`. Defaults to `0`.
+    let loneRangerPoints: Int
     let publicAt: Date?
     let createdAt: Date
     let updatedAt: Date
@@ -109,6 +115,8 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
         case groupPlayDeadline = "group_play_deadline"
         case boostCount = "boost_count"
         case boostMultiplier = "boost_multiplier"
+        case loneRangerEnabled = "lone_ranger_enabled"
+        case loneRangerPoints = "lone_ranger_points"
         case publicAt = "public_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -133,6 +141,8 @@ nonisolated struct Group: Decodable, Identifiable, Hashable, Sendable {
         mode = try c.decodeIfPresent(Int.self, forKey: .mode) ?? 0
         boostCount = try c.decodeIfPresent(Int.self, forKey: .boostCount) ?? 0
         boostMultiplier = try c.decodeIfPresent(Int.self, forKey: .boostMultiplier) ?? 2
+        loneRangerEnabled = try c.decodeIfPresent(Bool.self, forKey: .loneRangerEnabled) ?? false
+        loneRangerPoints = try c.decodeIfPresent(Int.self, forKey: .loneRangerPoints) ?? 0
         publicAt = try c.decodeIfPresent(Date.self, forKey: .publicAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
@@ -200,6 +210,8 @@ nonisolated struct PublicGroupItem: Decodable, Identifiable, Hashable, Sendable 
     let groupPlayDeadline: Date?
     let boostCount: Int
     let boostMultiplier: Int
+    let loneRangerEnabled: Bool
+    let loneRangerPoints: Int
     let publicAt: Date
     let createdAt: Date
     var memberCount: Int   // var: mutated optimistically on join
@@ -218,6 +230,8 @@ nonisolated struct PublicGroupItem: Decodable, Identifiable, Hashable, Sendable 
         case groupPlayDeadline = "group_play_deadline"
         case boostCount = "boost_count"
         case boostMultiplier = "boost_multiplier"
+        case loneRangerEnabled = "lone_ranger_enabled"
+        case loneRangerPoints = "lone_ranger_points"
         case publicAt = "public_at"
         case createdAt = "created_at"
         case memberCount = "member_count"
@@ -240,6 +254,8 @@ nonisolated struct PublicGroupItem: Decodable, Identifiable, Hashable, Sendable 
         groupPlayDeadline = try c.decodeIfPresent(Date.self, forKey: .groupPlayDeadline)
         boostCount = try c.decodeIfPresent(Int.self, forKey: .boostCount) ?? 0
         boostMultiplier = try c.decodeIfPresent(Int.self, forKey: .boostMultiplier) ?? 2
+        loneRangerEnabled = try c.decodeIfPresent(Bool.self, forKey: .loneRangerEnabled) ?? false
+        loneRangerPoints = try c.decodeIfPresent(Int.self, forKey: .loneRangerPoints) ?? 0
         publicAt = try c.decode(Date.self, forKey: .publicAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         memberCount = try c.decodeIfPresent(Int.self, forKey: .memberCount) ?? 0
@@ -303,6 +319,10 @@ nonisolated struct CreateGroupRequest: Encodable, Sendable {
     var boostCount: Int = 0
     /// Multiplier when a booster is applied. Default 2. Server rejects `< 1` with 400.
     var boostMultiplier: Int = 2
+    /// false = Lone Ranger bonus disabled in this group (default).
+    var loneRangerEnabled: Bool = false
+    /// Bonus points for the sole correct-side predictor. Default 0. Server rejects `< 0` with 400.
+    var loneRangerPoints: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case name, mode, description
@@ -315,6 +335,8 @@ nonisolated struct CreateGroupRequest: Encodable, Sendable {
         case isPublic = "is_public"
         case boostCount = "boost_count"
         case boostMultiplier = "boost_multiplier"
+        case loneRangerEnabled = "lone_ranger_enabled"
+        case loneRangerPoints = "lone_ranger_points"
     }
 }
 
@@ -333,6 +355,10 @@ nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
     var boostCount: Int? = nil
     /// nil = leave the group's current `boost_multiplier` alone. Server rejects `< 1` with 400.
     var boostMultiplier: Int? = nil
+    /// nil = leave the group's current `lone_ranger_enabled` alone.
+    var loneRangerEnabled: Bool? = nil
+    /// nil = leave the group's current `lone_ranger_points` alone. Server rejects `< 0` with 400.
+    var loneRangerPoints: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case description
@@ -342,6 +368,8 @@ nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
         case allowSneakPeek = "allow_sneak_peek"
         case boostCount = "boost_count"
         case boostMultiplier = "boost_multiplier"
+        case loneRangerEnabled = "lone_ranger_enabled"
+        case loneRangerPoints = "lone_ranger_points"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -355,6 +383,8 @@ nonisolated struct GroupSettingsUpdate: Encodable, Sendable {
         try c.encode(allowSneakPeek, forKey: .allowSneakPeek)
         if let boostCount { try c.encode(boostCount, forKey: .boostCount) }
         if let boostMultiplier { try c.encode(boostMultiplier, forKey: .boostMultiplier) }
+        if let loneRangerEnabled { try c.encode(loneRangerEnabled, forKey: .loneRangerEnabled) }
+        if let loneRangerPoints { try c.encode(loneRangerPoints, forKey: .loneRangerPoints) }
     }
 }
 

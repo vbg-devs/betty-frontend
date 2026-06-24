@@ -68,6 +68,8 @@ export const useGroupStore = defineStore('group', () => {
       allow_sneak_peek?: boolean;
       boost_count?: number;
       boost_multiplier?: number;
+      lone_ranger_enabled?: boolean;
+      lone_ranger_points?: number;
     },
   ) {
     const { authFetch } = useApi();

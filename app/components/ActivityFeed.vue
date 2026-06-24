@@ -159,6 +159,8 @@
           </svg>
           <!-- booster_applied -->
           <span v-else-if="message.type === 'booster_applied'" class="feed-item__emoji">🚀</span>
+          <!-- lone_ranger_awarded -->
+          <span v-else-if="message.type === 'lone_ranger_awarded'" class="feed-item__emoji">🤠</span>
         </div>
 
         <div class="feed-item__body">
@@ -195,6 +197,9 @@
             <template v-else-if="message.type === 'user_exact_score'">
               <ExactScoreListItem :message="message.message" />
             </template>
+            <template v-else-if="message.type === 'lone_ranger_awarded'">
+              <LoneRangerListItem :message="message.message" />
+            </template>
             <template v-else>
               <span v-text="message.type" />
             </template>
@@ -223,6 +228,7 @@ const TYPE_META: Record<
   game_starting_soon: { label: '● KICKING OFF', accent: 'yellow' },
   evaluate_game: { label: '★ FULL TIME', accent: 'cream' },
   user_exact_score: { label: '★ EXACT SCORE', accent: 'green' },
+  lone_ranger_awarded: { label: '🤠 LONE RANGER', accent: 'green' },
   group_joined: { label: '● JOINED GROUP', accent: 'green' },
   group_left: { label: '● LEFT GROUP', accent: 'cream' },
   group_created: { label: '★ NEW GROUP', accent: 'orange' },

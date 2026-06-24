@@ -196,6 +196,7 @@ ignore it; never decode it as `[String]` non-optional.
   "group_play_deadline": "time|null",
   "mode": 0,
   "boost_count": 0, "boost_multiplier": 2,
+  "lone_ranger_enabled": false, "lone_ranger_points": 0,
   "is_public": false,
   "public_at": "time|null",
   "created_at": "time", "updated_at": "time",
@@ -214,6 +215,14 @@ Booster fields (see "Boosters" subsection in §3.4):
 - `boost_multiplier` — int ≥1. Points multiplier applied to a bet with
   `boosted: true` when the group has boosters enabled. Defaults to `2`. Ignored
   at evaluation time when `boost_count == 0`.
+
+Lone Ranger fields (see "Lone Ranger" subsection in §3.4):
+- `lone_ranger_enabled` — bool. When `false` (the default on new groups) the bonus
+  never fires.
+- `lone_ranger_points` — int ≥0. Extra raw-score points awarded to the sole member
+  who called the winning side of a game (draws excluded). Defaults to `0`. Ignored
+  at evaluation time when `lone_ranger_enabled == false`. `enabled == true` with
+  `points == 0` is a permitted no-op.
 
 ### Member (`groups.Member`)
 
@@ -250,13 +259,15 @@ Booster fields (see "Boosters" subsection in §3.4):
   "correct_team_points": 1, "exact_result_points": 3, "allow_sneak_peek": true,
   "bet_mode": 0, "group_play_deadline": "time|null",
   "boost_count": 0, "boost_multiplier": 2,
+  "lone_ranger_enabled": false, "lone_ranger_points": 0,
   "public_at": "time (non-null here)", "created_at": "time",
   "member_count": 12, "is_member": false
 }
 ```
 
-`boost_count` / `boost_multiplier` mirror the `Group` fields — the browse UI uses
-them to hint whether boosters are enabled before joining.
+`boost_count` / `boost_multiplier` and `lone_ranger_enabled` / `lone_ranger_points`
+mirror the `Group` fields — the browse UI uses them to hint which optional scoring
+features are enabled before joining.
 
 ### GroupPeek (`GET /group/:code`)
 
@@ -498,12 +509,14 @@ Reverts to the Firebase snapshot. 200 → `{ "image_url": "string|null" }`. 503,
   "mode": 0,
   "boost_count": 0,              // optional, int ≥0; default 0 (boosters disabled)
   "boost_multiplier": 2,         // optional, int ≥1; default 2
+  "lone_ranger_enabled": false,  // optional, bool; default false
+  "lone_ranger_points": 0,       // optional, int ≥0; default 0 (400 if < 0)
   "is_public": false
 }
 ```
 
-**201** → `{ "group_id": 7 }`. 400 validation (incl. `boost_count < 0` or
-`boost_multiplier < 1`), 500.
+**201** → `{ "group_id": 7 }`. 400 validation (incl. `boost_count < 0`,
+`boost_multiplier < 1`, or `lone_ranger_points < 0`), 500.
 
 #### POST `/join/:code` — join by invite code
 
@@ -558,12 +571,14 @@ nullable ones:
   "exact_result_points": 5,     // ≥0
   "allow_sneak_peek": false,
   "boost_count": 0,             // int ≥0; 0 disables boosters in the group
-  "boost_multiplier": 2         // int ≥1
+  "boost_multiplier": 2,        // int ≥1
+  "lone_ranger_enabled": false, // bool; false disables the bonus in the group
+  "lone_ranger_points": 0       // int ≥0 (400 if < 0)
 }
 ```
 
 200 → full updated Group. 404 group missing, **401** not author, 400 validation
-(incl. `boost_count < 0` or `boost_multiplier < 1`), 500.
+(incl. `boost_count < 0`, `boost_multiplier < 1`, or `lone_ranger_points < 0`), 500.
 
 #### POST `/group/:id/join` — join a public group by numeric id
 
@@ -706,6 +721,33 @@ where boosters are enabled. The feature is opt-in per group (admin sets
   `booster_applied` (see §4). `true → true` no-ops and `true → false` un-applies are
   silent.
 
+#### Lone Ranger
+
+An opt-in, per-group bonus that rewards being the **only** member of a group who
+called the winning side of a game. Configured by the group admin via
+`lone_ranger_enabled` / `lone_ranger_points` on `Group` (see §3.3).
+
+- **Per-(game, group) aggregate.** Unlike boosters (a per-bet decoration), Lone
+  Ranger is computed across all of a game's bets per group: "did exactly one member
+  predict the winning side?" There is no per-bet wire flag — the bonus is derived at
+  evaluation time, never stored on a bet.
+- **Trigger.** At evaluation, for each group with `lone_ranger_enabled == true`, the
+  server counts members whose bet called the actual winning side (home or away).
+  **Draws are excluded** — a drawn result never awards the bonus, and a bet predicting
+  a draw never counts. If the count is **exactly one**, that lone member earns
+  `lone_ranger_points` added to their **raw `score` only** (normalized score is
+  unaffected). Zero or two-plus correct-side predictors → no bonus (strictly one).
+- **Additive after boost.** Ordering is `user_points = (base × boost?) + lone_ranger_points`.
+  The bonus is a flat add applied AFTER any boost multiply; it is never multiplied.
+- **Live-config-wins.** `lone_ranger_enabled` / `lone_ranger_points` are read live from
+  the group at eval and rollback time, same as base points and boost. Disabling the
+  feature or changing N between apply and a later rollback can leave membership drift —
+  an accepted tradeoff identical to base points and boost (no per-bet bonus column).
+- **WebSocket event.** When at least one bonus is awarded, evaluation emits a single
+  aggregated `lone_ranger_awarded` event `{ game_id, user_ids }` (see §4). One id per
+  qualifying group, aggregated across groups. Not emitted on rollback. A reapply
+  (rollback-then-apply) emits a fresh event for the new winners only.
+
 ### 3.5 Tournaments & games
 
 #### GET `/tournaments`
@@ -803,7 +845,7 @@ missing, **403** not a member, 400, 500.
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. **Boosters:** when computing each bet's `user_points`, the server multiplies the base points by `group.boost_multiplier` iff `bet.boosted == true && group.boost_count > 0`. Both fields are read live from the group at eval time (so admin changes between apply and eval take effect). When `boost_count == 0` the multiplier is silently 1× regardless of the `boosted` flag. |
+| POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. **Boosters:** when computing each bet's `user_points`, the server multiplies the base points by `group.boost_multiplier` iff `bet.boosted == true && group.boost_count > 0`. Both fields are read live from the group at eval time (so admin changes between apply and eval take effect). When `boost_count == 0` the multiplier is silently 1× regardless of the `boosted` flag. **Lone Ranger:** if a group has `lone_ranger_enabled == true` and exactly one member predicted the winning side (draws excluded), that member earns `lone_ranger_points` added to raw score (normalized unaffected), applied after any boost multiply. Recomputed symmetrically on rollback (see "Lone Ranger" subsection in §3.4). |
 | PUT | `/rollbackgame/:gameid` | Admin only (properly enforced). Reverts an evaluation. 200 `null`; **401** non-admin; 500. |
 
 ### 3.11 FIFA result polling (admin)
@@ -890,6 +932,7 @@ yet (parity follow-up).
 | `group_visibility_changed` | `{ "group_id": 1, "public_at": "time|null" }` |
 | `evaluate_game` | `{ "game_id": 1, "home_team_score": 2, "away_team_score": 1 }` — the web app treats this as "full time / refresh scores" |
 | `user_exact_score` | `{ "game_id": 1, "user_ids": ["uid", ...] }` |
+| `lone_ranger_awarded` | `{ "game_id": 1, "user_ids": ["uid", ...] }` — emitted at evaluation when the feature is enabled and exactly one group member called the winning side (draws excluded). One id per qualifying group, aggregated across groups like `user_exact_score`. Not emitted on rollback. |
 | `game_starting_soon` | `{ "Games": [ { "id": 1, "start_date": "time" }, ... ] }` — note the **capital-G `"Games"`** key (struct field has no json tag) |
 
 ---

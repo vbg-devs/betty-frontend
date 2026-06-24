@@ -80,6 +80,28 @@ import Testing
         }
         #expect(payload.userIDs.isEmpty)
     }
+
+    @Test func decodesLoneRangerAwarded() throws {
+        let json = #"{"type":"lone_ranger_awarded","message":{"game_id":1,"user_ids":["a"]}}"#
+        let event = BettyEvent.decode(from: Data(json.utf8))
+        guard case .loneRangerAwarded(let payload) = event else {
+            Issue.record("expected loneRangerAwarded, got \(String(describing: event))")
+            return
+        }
+        #expect(payload.gameID == 1)
+        #expect(payload.userIDs == ["a"])
+        #expect(event?.typeName == "lone_ranger_awarded")
+    }
+
+    @Test func loneRangerAwardedDefaultsMissingUserIDs() throws {
+        let json = #"{"type":"lone_ranger_awarded","message":{"game_id":9}}"#
+        let event = BettyEvent.decode(from: Data(json.utf8))
+        guard case .loneRangerAwarded(let payload) = event else {
+            Issue.record("expected loneRangerAwarded, got \(String(describing: event))")
+            return
+        }
+        #expect(payload.userIDs.isEmpty)
+    }
 }
 
 private extension WSEvaluateGame {

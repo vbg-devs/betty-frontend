@@ -222,6 +222,56 @@ import Testing
         #expect(group.boostMultiplier == 5)
     }
 
+    @Test func groupDecodesLoneRangerFieldsWhenPresent() throws {
+        // New wire fields (api-contract.md §3.3 Group): lone_ranger_enabled + lone_ranger_points.
+        let json = """
+        {
+          "id": 8, "name": "Lone League",
+          "tournament_id": 1, "tournament_name": "Euro 2026",
+          "tournament_image_url": null, "header_image_url": null,
+          "invite_code": "y", "invite_url": "https://betty.social/dashboard/groups/join/y",
+          "welcome_message": null, "description": null,
+          "correct_team_points": 1, "exact_result_points": 3,
+          "allow_sneak_peek": false,
+          "group_play_deadline": null,
+          "mode": 0,
+          "boost_count": 0, "boost_multiplier": 2,
+          "lone_ranger_enabled": true, "lone_ranger_points": 5,
+          "is_public": false,
+          "public_at": null,
+          "created_at": "2026-05-01T08:00:00Z", "updated_at": "2026-05-01T08:00:00Z",
+          "members": []
+        }
+        """
+        let group = try decoder.decode(Group.self, from: Data(json.utf8))
+        #expect(group.loneRangerEnabled == true)
+        #expect(group.loneRangerPoints == 5)
+    }
+
+    @Test func groupDefaultsLoneRangerFieldsWhenMissing() throws {
+        // Pre-feature backend omits the keys → default false / 0.
+        let json = """
+        {
+          "id": 9, "name": "Old League",
+          "tournament_id": 1, "tournament_name": "Euro 2026",
+          "tournament_image_url": null, "header_image_url": null,
+          "invite_code": "z", "invite_url": "https://betty.social/dashboard/groups/join/z",
+          "welcome_message": null, "description": null,
+          "correct_team_points": 1, "exact_result_points": 3,
+          "allow_sneak_peek": false,
+          "group_play_deadline": null,
+          "mode": 0,
+          "is_public": false,
+          "public_at": null,
+          "created_at": "2026-05-01T08:00:00Z", "updated_at": "2026-05-01T08:00:00Z",
+          "members": []
+        }
+        """
+        let group = try decoder.decode(Group.self, from: Data(json.utf8))
+        #expect(group.loneRangerEnabled == false)
+        #expect(group.loneRangerPoints == 0)
+    }
+
     @Test func messageReactionsNullInPostResponseNormalizesToEmpty() throws {
         // POST /messageboard 201 has "reactions": null; GET has [].
         let postJSON = """
