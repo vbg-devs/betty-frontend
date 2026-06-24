@@ -86,16 +86,6 @@
         </p>
       </div>
 
-      <p class="pred-note">
-        ★ Mock data — endpoint pending merge of
-        <a
-          href="https://github.com/vbg-devs/betty-api/pull/321"
-          target="_blank"
-          rel="noopener"
-          class="pred-note__link"
-          >betty-api#321</a
-        >.
-      </p>
     </section>
 
   </div>
@@ -135,71 +125,18 @@ function teamForRow(row: TeamPrediction) {
   return team ?? { id: row.team_id, name: row.team_name, image_url: row.team_image_url ?? '' };
 }
 
-function mockPredictions(t: Tournament): TeamPrediction[] {
-  const teamIds = new Set<number>();
-  (t.games || []).forEach((g) => {
-    teamIds.add(g.home_team_id);
-    teamIds.add(g.away_team_id);
-  });
-
-  const rows = Array.from(teamIds)
-    .map((id) => {
-      const team = teamStore.byId?.(id);
-      if (!team) return null;
-      const wins = Math.floor(Math.random() * 4);
-      const draws = Math.floor(Math.random() * 3);
-      const losses = Math.floor(Math.random() * 3);
-      const goalsFor = wins * 2 + draws + Math.floor(Math.random() * 3);
-      const goalsAgainst = losses * 2 + draws + Math.floor(Math.random() * 2);
-      return {
-        team_id: team.id,
-        team_name: team.name,
-        team_image_url: team.image_url ?? null,
-        games_predicted: wins + draws + losses,
-        wins,
-        draws,
-        losses,
-        goals_for: goalsFor,
-        goals_against: goalsAgainst,
-        goal_difference: goalsFor - goalsAgainst,
-        points: wins * 3 + draws,
-        position: 0,
-      } satisfies TeamPrediction;
-    })
-    .filter((x): x is TeamPrediction => x !== null);
-
-  rows.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
-    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-    return a.team_name.localeCompare(b.team_name);
-  });
-
-  rows.forEach((row, i) => {
-    if (i === 0) {
-      row.position = 1;
-      return;
-    }
-    const prev = rows[i - 1]!;
-    if (
-      row.points === prev.points &&
-      row.goal_difference === prev.goal_difference &&
-      row.goals_for === prev.goals_for
-    ) {
-      row.position = prev.position;
-    } else {
-      row.position = i + 1;
-    }
-  });
-
-  return rows;
-}
-
 onMounted(async () => {
+  const id = route.params.id;
   try {
-    const data = await authFetch<Tournament>(`/tournament/${route.params.id}`);
-    tournament.value = data;
-    predictions.value = mockPredictions(data);
+    // Tournament must succeed for the page to render. Predictions are a
+    // soft-fail: a tournament with no bets yet returns empty, and a transient
+    // backend hiccup shouldn't take down the whole page.
+    const [tournamentData, predictionsResult] = await Promise.all([
+      authFetch<Tournament>(`/tournament/${id}`),
+      authFetch<TeamPrediction[]>(`/tournament/${id}/predictions`).catch(() => [] as TeamPrediction[]),
+    ]);
+    tournament.value = tournamentData;
+    predictions.value = predictionsResult;
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Unknown error';
   }
