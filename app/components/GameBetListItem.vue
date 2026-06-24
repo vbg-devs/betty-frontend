@@ -31,6 +31,7 @@ const awayTeam = computed(() => {
 });
 
 onMounted(() => {
+  if (!bet.game_id || gameStore.byId(bet.game_id)) return;
   gameStore.load(bet.game_id);
 });
 </script>

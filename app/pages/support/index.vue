@@ -60,6 +60,17 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Support & Contact · Betty',
+  description:
+    'Get in touch with Betty.social — bug reports, feature requests, and support for the free social predictions game.',
+  ogTitle: 'Support & Contact · Betty',
+  ogDescription:
+    'Get in touch with Betty.social — bug reports, feature requests, and support for the free social predictions game.',
+  ogUrl: 'https://betty.social/support',
+});
+useHead({ link: [{ rel: 'canonical', href: 'https://betty.social/support' }] });
+
 const MAX_LEN = 5000;
 
 const description = ref('');
@@ -240,7 +251,7 @@ async function submit() {
 }
 
 .form__textarea::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .form__textarea:focus {

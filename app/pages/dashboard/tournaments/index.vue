@@ -5,7 +5,7 @@
       <section v-for="tournament in tournaments" :key="tournament.id" class="tournament">
         <NuxtLink :to="`/dashboard/tournaments/${tournament.id}`">
           <card class="card--clickable">
-            <img src="~/assets/images/euroflag.webp" class="img img--full" />
+            <img :src="tournament.image_url || euroflag" class="img img--full" />
             {{ tournament.name }}
           </card>
         </NuxtLink>
@@ -15,9 +15,11 @@
 </template>
 
 <script setup lang="ts">
+import euroflag from '~/assets/images/euroflag.webp';
+
 const tournamentStore = useTournamentStore();
 
-const tournaments = computed(() => tournamentStore.all);
+const tournaments = computed(() => tournamentStore.running);
 </script>
 
 <style scoped>

@@ -47,9 +47,7 @@
             <div>
               <h1 class="hero__title">{{ group.name.toUpperCase() }}</h1>
               <div class="hero__meta">
-                <span class="kicker kicker--muted-light"
-                  >{{ group.members.length }} MEMBERS</span
-                >
+                <span class="kicker kicker--muted-light">{{ group.members.length }} MEMBERS</span>
                 <template v-if="allGames.length > 0">
                   <span class="dot">·</span>
                   <span class="kicker kicker--muted-light"
@@ -70,15 +68,10 @@
                 <div class="stat stat--orange stat--champion">
                   <span class="stat__kicker">{{ youWon ? 'YOU WON' : 'CHAMPION' }}</span>
                   <div class="stat__champion">
-                    <UserBadge
-                      v-if="champion"
-                      :user="champion"
-                      medium
-                      :clickable="false"
-                    />
+                    <UserBadge v-if="champion" :user="champion" medium :clickable="false" />
                     <div class="stat__champion-meta">
                       <div class="stat__champion-name">
-                        {{ champion ? (champion.nickname || champion.name) : '–' }}
+                        {{ champion ? champion.nickname || champion.name : '–' }}
                       </div>
                       <div class="stat__sub">{{ champion?.score ?? 0 }} PTS</div>
                     </div>
@@ -87,7 +80,7 @@
                 <div class="stat stat--ghost">
                   <span class="stat__kicker">YOUR FINISH</span>
                   <div class="stat__value">
-                    {{ String(yourPlacement).padStart(2, '0') }}
+                    {{ yourPlacementDisplay }}
                   </div>
                   <div class="stat__sub">
                     OF {{ String(group.members.length).padStart(2, '0') }}
@@ -98,7 +91,7 @@
                 <div class="stat stat--orange">
                   <span class="stat__kicker">YOUR RANK</span>
                   <div class="stat__value">
-                    {{ String(yourPlacement).padStart(2, '0') }}
+                    {{ yourPlacementDisplay }}
                   </div>
                   <div class="stat__sub">
                     OF {{ String(group.members.length).padStart(2, '0') }}
@@ -120,11 +113,7 @@
 
     <!-- ===== Tabs ===== -->
     <nav class="tabs">
-      <button
-        class="tab"
-        :class="{ 'tab--active': currentTab === 1 }"
-        @click="setTab(1)"
-      >
+      <button class="tab" :class="{ 'tab--active': currentTab === 1 }" @click="setTab(1)">
         Group
       </button>
       <button
@@ -135,11 +124,7 @@
       >
         Games
       </button>
-      <button
-        class="tab"
-        :class="{ 'tab--active': currentTab === 3 }"
-        @click="setTab(3)"
-      >
+      <button class="tab" :class="{ 'tab--active': currentTab === 3 }" @click="setTab(3)">
         Leaderboard
       </button>
     </nav>
@@ -193,18 +178,11 @@
                   </div>
                 </div>
               </div>
-              <button class="podium-card__more" @click="setTab(3)">
-                SEE FULL LEADERBOARD →
-              </button>
+              <button class="podium-card__more" @click="setTab(3)">SEE FULL LEADERBOARD →</button>
             </section>
 
             <template v-if="!tournamentEnded && tournamentDetails">
-              <NeedAction
-                :pools="pools"
-                :show-bets="true"
-                :bets="bets"
-                @click-game="clickGame"
-              />
+              <NeedAction :pools="pools" :show-bets="true" :bets="bets" @click-game="clickGame" />
             </template>
             <MemeBoard :members="group.members" />
           </main>
@@ -307,10 +285,7 @@
             >
               <div class="visibility__head">
                 <span class="kicker kicker--accent">★ VISIBILITY</span>
-                <span
-                  class="kicker"
-                  :class="isPublic ? 'kicker--green' : 'kicker--muted-light'"
-                >
+                <span class="kicker" :class="isPublic ? 'kicker--green' : 'kicker--muted-light'">
                   {{ isPublic ? '● PUBLIC' : '○ PRIVATE' }}
                 </span>
               </div>
@@ -327,24 +302,14 @@
                 :disabled="visibilityLoading"
                 @click="toggleVisibility(!isPublic)"
               >
-                {{
-                  visibilityLoading
-                    ? 'SAVING…'
-                    : isPublic
-                      ? 'MAKE PRIVATE'
-                      : 'GO PUBLIC →'
-                }}
+                {{ visibilityLoading ? 'SAVING…' : isPublic ? 'MAKE PRIVATE' : 'GO PUBLIC →' }}
               </button>
             </div>
 
             <div class="side-card" :style="{ order: manyMembers ? 3 : 4 }">
               <div class="rules__head">
                 <span class="kicker kicker--accent">★ HOUSE RULES</span>
-                <button
-                  v-if="isAuthor"
-                  class="rules__edit"
-                  @click="settingsOpen = true"
-                >
+                <button v-if="isAuthor" class="rules__edit" @click="settingsOpen = true">
                   EDIT →
                 </button>
               </div>
@@ -364,6 +329,13 @@
                     :class="group.allow_sneak_peek ? 't-green' : 't-orange'"
                   >
                     {{ group.allow_sneak_peek ? 'Allowed' : 'Closed' }}
+                  </span>
+                </div>
+                <div v-if="group.boost_count > 0" class="rules__row">
+                  <span class="rules__label">Boosters 🚀</span>
+                  <span class="rules__value rules__value--boost">
+                    {{ group.boost_count }}<span class="rules__times">×</span
+                    ><span class="boost-chip">{{ group.boost_multiplier }}×</span>
                   </span>
                 </div>
               </div>
@@ -390,6 +362,7 @@
       :show="gameBet !== null"
       :peek="group.allow_sneak_peek"
       :bets="betsForGame"
+      :group-bets="bets"
       @bet-placed="betPlaced"
       @close="gameBet = null"
     />
@@ -442,18 +415,14 @@ const isAuthor = computed(
   () =>
     !!group.value &&
     !!userId.value &&
-    group.value.members.some(
-      (m) => m.user_id === userId.value && m.access_level === 0,
-    ),
+    group.value.members.some((m) => m.user_id === userId.value && m.access_level === 0),
 );
 const myMember = computed(() => {
   if (!group.value || !userId.value) return null;
   return group.value.members.find((m) => m.user_id === userId.value) ?? null;
 });
 const currentNickname = computed(() => myMember.value?.nickname ?? null);
-const nicknameDirty = computed(
-  () => nicknameInput.value.trim() !== (currentNickname.value ?? ''),
-);
+const nicknameDirty = computed(() => nicknameInput.value.trim() !== (currentNickname.value ?? ''));
 const tournament = computed(() => {
   if (!group.value) return null;
   return tournamentStore.byId(group.value.tournament_id);
@@ -491,8 +460,12 @@ const rankedMembers = computed(() => {
 
 const yourPlacement = computed(() => {
   const me = rankedMembers.value.find((m: any) => m.user_id === userId.value);
-  return me?.place ?? '–';
+  return me?.place ?? null;
 });
+
+const yourPlacementDisplay = computed(() =>
+  yourPlacement.value === null ? '–' : String(yourPlacement.value).padStart(2, '0'),
+);
 
 const podium = computed(() => {
   const slots: { place: number; members: any[] }[] = [];
@@ -504,8 +477,9 @@ const podium = computed(() => {
   });
   return slots;
 });
-const champion = computed(() => rankedMembers.value.find((m: any) => m.place === 1) ?? null);
-const youWon = computed(() => champion.value?.user_id === userId.value);
+const champions = computed(() => rankedMembers.value.filter((m: any) => m.place === 1));
+const champion = computed(() => champions.value[0] ?? null);
+const youWon = computed(() => champions.value.some((m: any) => m.user_id === userId.value));
 
 const currentTab = computed(() => {
   if (selectedTab.value !== null) return selectedTab.value;
@@ -729,7 +703,9 @@ async function saveNickname() {
     await groupStore.setNickname(group.value.id, payload);
     notify({
       title: payload ? 'Nickname saved' : 'Nickname cleared',
-      message: payload ? `You will appear as "${payload}" in this group.` : 'Your real name is back.',
+      message: payload
+        ? `You will appear as "${payload}" in this group.`
+        : 'Your real name is back.',
       state: 'success',
     });
   } catch (err) {
@@ -773,7 +749,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .group-page {
-
   color: var(--cream);
   font-family:
     'Inter',
@@ -1190,7 +1165,9 @@ onBeforeUnmount(() => {
   color: inherit;
   font-family: inherit;
   max-width: 100%;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .podium__person:hover {
@@ -1365,7 +1342,7 @@ onBeforeUnmount(() => {
 }
 
 .nickname__input::placeholder {
-  color: rgba(255, 250, 235, 0.4);
+  color: var(--placeholder);
   font-weight: 500;
 }
 
@@ -1577,6 +1554,27 @@ onBeforeUnmount(() => {
 .rules__value {
   font-weight: 800;
   color: var(--cream);
+}
+
+.rules__value--boost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rules__times {
+  color: var(--muted-strong);
+  font-weight: 400;
+}
+
+.boost-chip {
+  background: rgba(255, 90, 58, 0.15);
+  color: var(--orange);
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
 }
 
 /* ===== Leave button ===== */

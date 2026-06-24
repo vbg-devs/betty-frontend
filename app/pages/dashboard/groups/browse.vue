@@ -48,6 +48,14 @@
               </select>
             </label>
           </div>
+
+          <div class="missing">
+            <span class="kicker kicker--accent">★ MISSING A GROUP?</span>
+            <p class="missing__text">
+              Only public groups show up here. If you've been invited to a private
+              group, ask the group admin for the invite link.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -522,7 +530,7 @@ onMounted(() => {
 }
 
 .field__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .field__input:focus {
@@ -541,6 +549,30 @@ onMounted(() => {
 .field__input--select option {
   background: var(--indigo-dark);
   color: var(--cream);
+}
+
+/* ===== Missing-a-group warning ===== */
+.missing {
+  margin-top: 24px;
+  padding: 18px 22px 20px;
+  background: rgba(255, 90, 58, 0.1);
+  border-left: 4px solid var(--orange);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.missing .kicker {
+  font-size: 12px;
+  letter-spacing: 1.8px;
+}
+
+.missing__text {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--cream);
+  margin: 0;
 }
 
 /* ===== Results ===== */

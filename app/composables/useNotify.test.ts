@@ -22,8 +22,8 @@ describe('useNotify', () => {
       type: 'alert',
       message: 'Hello',
       state: 'info',
-      visible: true,
     });
+    expect(notifications.value[0]).not.toHaveProperty('visible');
   });
 
   it('alert() uses provided state and title', () => {
@@ -54,8 +54,8 @@ describe('useNotify', () => {
       type: 'confirm',
       message: 'Sure?',
       onConfirm,
-      visible: true,
     });
+    expect(notifications.value[0]).not.toHaveProperty('visible');
 
     vi.advanceTimersByTime(10000);
     expect(notifications.value).toHaveLength(1);

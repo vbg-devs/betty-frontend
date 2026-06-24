@@ -85,9 +85,7 @@
           Once members start placing bets, the crowd's projected table will appear here.
         </p>
       </div>
-
     </section>
-
   </div>
 
   <div v-else-if="error" class="state">
@@ -121,7 +119,7 @@ function formatGD(n: number) {
 }
 
 function teamForRow(row: TeamPrediction) {
-  const team = teamStore.byId?.(row.team_id);
+  const team = teamStore.byId(row.team_id);
   return team ?? { id: row.team_id, name: row.team_name, image_url: row.team_image_url ?? '' };
 }
 
@@ -375,24 +373,6 @@ onMounted(async () => {
   color: var(--muted-strong);
 }
 
-.pred-note {
-  margin: 14px 0 0;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--muted-strong);
-}
-
-.pred-note__link {
-  color: var(--orange);
-  text-decoration: none;
-}
-
-.pred-note__link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 .empty {
   background: var(--indigo-dark);
   padding: 36px 32px;
@@ -444,12 +424,13 @@ onMounted(async () => {
 
 @media (max-width: 760px) {
   .pred-row {
-    grid-template-columns: 40px minmax(0, 1fr) 32px 32px 32px 40px 48px;
-    gap: 6px;
+    grid-template-columns: 40px minmax(0, 2fr) repeat(4, minmax(0, 1fr)) minmax(0, 1.2fr);
+    gap: 8px;
     padding: 10px 14px;
   }
-  .pred-row > .pred-cell--num:nth-of-type(5),
-  .pred-row > .pred-cell--num:nth-of-type(6) {
+  .pred-row > .pred-cell:nth-child(7),
+  .pred-row > .pred-cell:nth-child(8),
+  .pred-row > .pred-cell:nth-child(9) {
     display: none;
   }
   .pred-cell__logo {

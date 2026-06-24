@@ -10,6 +10,7 @@
               <img src="~/assets/images/logo.svg" alt="Betty" />
             </a>
             <div class="nav__actions">
+              <a href="/about" class="nav__link">About Betty</a>
               <button class="btn btn--orange btn--small" @click="openAuth(false)">Sign in</button>
             </div>
           </header>
@@ -50,13 +51,13 @@
         </div>
         <div class="what__body">
           <p class="what__copy">
-            Betty is a free game for tournament predictions. Pick a cup, gather your crew, and
-            bet on exact match results. Each group sets its own house rules, and points roll in
-            as games go final.
+            Betty is a free game for tournament predictions. Pick a cup, gather your crew, and bet
+            on exact match results. Each group sets its own house rules, and points roll in as games
+            go final.
           </p>
           <p class="what__copy what__copy--muted">
-            No money. No spreadsheets. Just bragging rights, settled in public — and a
-            permanent record of who actually knew their football.
+            No money. No spreadsheets. Just bragging rights, settled in public — and a permanent
+            record of who actually knew their football.
           </p>
           <ul class="what__points">
             <li><strong>Free forever.</strong> No paywalls, no ads, no nonsense.</li>
@@ -148,7 +149,19 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">BETTY.SOCIAL · EST. 2021 · VARBERG</footer>
+    <footer class="footer">
+      <nav class="footer__links" aria-label="Site">
+        <a href="/about">About Betty</a>
+      </nav>
+      <nav class="footer__links" aria-label="Tournaments">
+        <a href="/world-cup-2026">World Cup 2026</a>
+        <span aria-hidden="true">·</span>
+        <a href="/womens-world-cup-2027">Women's World Cup 2027</a>
+        <span aria-hidden="true">·</span>
+        <a href="/euro-2028">Euro 2028</a>
+      </nav>
+      <div class="footer__brand">BETTY.SOCIAL · EST. 2021 · VARBERG</div>
+    </footer>
 
     <!-- Auth modal -->
     <div class="modal" :class="{ 'modal--show': showModal }">
@@ -323,6 +336,39 @@ useHead({
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
     },
+    { rel: 'canonical', href: 'https://betty.social/' },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            name: 'Betty.social',
+            url: 'https://betty.social',
+            logo: 'https://betty.social/logo.png',
+            email: 'support@betty.social',
+          },
+          {
+            '@type': 'WebSite',
+            name: 'Betty.social',
+            url: 'https://betty.social',
+            description:
+              'Place friendly bets with your friends on any sport, track every score, and crown a champion.',
+          },
+          {
+            '@type': 'WebApplication',
+            name: 'Betty',
+            url: 'https://betty.social',
+            applicationCategory: 'GameApplication',
+            operatingSystem: 'Web, iOS, Android',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          },
+        ],
+      }),
+    },
   ],
   style: [
     {
@@ -359,7 +405,7 @@ onMounted(() => {
   const unsubscribe = onAuthStateChanged(auth, (user) => {
     if (user) {
       const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
-      router.replace(returnUrl || '/dashboard');
+      router.replace(safeReturnUrl(returnUrl, '/dashboard'));
     }
   });
   onUnmounted(unsubscribe);
@@ -377,7 +423,7 @@ function isInAppBrowser() {
 async function handleSignInSuccess() {
   const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
   if (returnUrl) {
-    window.location.href = returnUrl;
+    window.location.href = safeReturnUrl(returnUrl, '/dashboard');
   } else {
     await router.push('/dashboard');
   }
@@ -485,8 +531,23 @@ async function submitEmailAuth() {
 
 .nav__actions {
   display: flex;
-  gap: 12px;
+  gap: 18px;
   align-items: center;
+}
+
+.nav__link {
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 6px 4px;
+  transition: color 0.15s ease;
+}
+
+.nav__link:hover {
+  color: var(--orange);
 }
 
 @media (max-width: 900px) {
@@ -1079,7 +1140,25 @@ async function submitEmailAuth() {
   font-weight: 600;
   color: var(--muted);
   padding: 24px 56px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
+.footer__links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted-strong);
+}
+.footer__links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.footer__links a:hover { color: var(--cream); }
+.footer__links span { color: var(--muted); }
 
 /* ===== Modal (existing auth, restyled to match the design) ===== */
 .modal {
@@ -1293,7 +1372,7 @@ async function submitEmailAuth() {
 }
 
 .email-form__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .email-form__input:focus {

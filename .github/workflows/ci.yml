@@ -1,0 +1,441 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_ios_e2e:
+        description: "Run the full iOS e2e suite"
+        type: boolean
+        default: true
+      run_android_e2e:
+        description: "Run the full Android e2e suite (emulator)"
+        type: boolean
+        default: true
+
+# Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, type-check & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Generates .nuxt/ (incl. the tsconfig vue-tsc and vitest rely on).
+      # There is no postinstall hook, so this must run explicitly.
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
+
+      - name: Lint
+        run: npm run lint
+
+      # Run vue-tsc directly rather than `nuxt typecheck`: it is deterministic
+      # in CI. The "vue-router/volar/sfc-route-blocks" resolve line it prints is
+      # a non-fatal warning and does not affect the exit code.
+      - name: Type-check
+        run: npx vue-tsc --noEmit -p tsconfig.json
+
+      - name: Test
+        run: npx vitest run --coverage --coverage.include='app/**' --coverage.reporter=text --coverage.reporter=html
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  # macOS minutes bill at 10x Linux, so the iOS job only runs when iOS code
+  # actually changed. The TestFlight workflow applies the same path guard.
+  ios-changes:
+    name: Check for iOS changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ios: ${{ steps.diff.outputs.ios }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Diff for ios/ changes
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            # Manual dispatch is an explicit request — always run the iOS job.
+            echo "ios=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$EVENT" = "pull_request" ]; then
+            # API-computed file list: a local origin/main...HEAD diff on the
+            # runner intermittently came back empty and silently skipped the job.
+            FILES=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
+          else
+            # First-parent diff = everything the merge/push brought in.
+            FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
+          if grep -qE '^(ios/|\.github/workflows/(ci|ios-testflight)\.yml)' <<<"$FILES"; then
+            echo "ios=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No iOS changes; skipping iOS job."
+            echo "ios=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Builds the app + test bundles once and runs the fast unit suite. The compiled
+  # products are published so the e2e shards never rebuild (a macOS build is ~6 min
+  # of billed-at-10x time; doing it once instead of per-shard is the whole point).
+  ios-build:
+    name: iOS build & unit tests (simulator)
+    needs: ios-changes
+    if: needs.ios-changes.outputs.ios == 'true'
+    # macos-26 is required: Apple rejects App Store uploads not built with the
+    # iOS 26 SDK since 2026-04-28, and CI stays on the same Xcode as releases.
+    runs-on: macos-26
+    timeout-minutes: 40
+    environment: release
+    env:
+      XCODE_VERSION: "26.5"
+      SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      # Guard against silently-skipped tests: every test-bearing UITest class must be
+      # assigned to exactly one e2e shard. A class added without a shard entry would
+      # never run yet CI would stay green — fail loudly instead. (macOS runs bash, so
+      # process substitution below is available.)
+      - name: Verify e2e shard coverage
+        run: |
+          set -euo pipefail
+          declared=$(for f in BettyUITests/*.swift; do
+            awk '/^[[:space:]]*(final )?class [A-Za-z0-9_]+[[:space:]]*:/{c=$0;sub(/.*class /,"",c);sub(/[[:space:]:].*/,"",c);cls=c;n[cls]=n[cls]+0} /^[[:space:]]*func test/{if(cls)n[cls]++} END{for(k in n)if(n[k]>0)print k}' "$f"
+          done | sort -u)
+          # Only the iOS shards (everything before the android-changes job); the Android
+          # shards below also use `classes:` keys and must not be conflated.
+          assigned=$(awk '/^  android-changes:/{exit} 1' ../.github/workflows/ci.yml | grep -E '^[[:space:]]*classes:' | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
+          unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
+          if [ -n "$missing" ]; then echo "::error::UITest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
+          if [ -n "$unknown" ]; then echo "::error::e2e shard references unknown UITest classes:"; echo "$unknown"; exit 1; fi
+          echo "All $(echo "$declared" | grep -c .) UITest classes are covered by the e2e shards."
+
+      - name: Select Xcode ${{ env.XCODE_VERSION }}
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Decode GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST_BASE64 secret missing"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > Betty/GoogleService-Info.plist
+          test "$(wc -c < Betty/GoogleService-Info.plist)" -gt 200
+          ls -la Betty/GoogleService-Info.plist
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          xcodebuild -project Betty.xcodeproj -scheme Betty \
+            -destination "$SIMULATOR_DESTINATION" \
+            -derivedDataPath .derived \
+            build-for-testing
+
+      - name: Unit tests
+        run: |
+          set -o pipefail
+          xcodebuild -project Betty.xcodeproj -scheme Betty \
+            -destination "$SIMULATOR_DESTINATION" \
+            -derivedDataPath .derived \
+            test-without-building -only-testing:BettyTests
+
+      # The .xctestrun references the .app bundles via __TESTROOT__ (paths relative
+      # to the xctestrun's own dir), so the whole Build/Products tree must travel
+      # together. tar (rather than a raw artifact upload) preserves the app binary's
+      # executable bit and bundle symlinks — upload-artifact strips both, and the
+      # simulator then can't launch the app on the shards.
+      - name: Package compiled test bundle
+        run: tar -czf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C .derived/Build Products
+
+      - name: Upload compiled test bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: betty-test-bundle
+          path: ${{ runner.temp }}/betty-test-bundle.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+
+  # The hermetic e2e suite (in-process mock backend on ephemeral loopback ports, no
+  # network) sharded across parallel runners. Each shard downloads the prebuilt
+  # bundle and runs its subset SERIALLY (-parallel-testing-enabled NO): the matrix
+  # is the parallelism, and a second in-runner simulator clone over-subscribes the
+  # 3-vCPU macos-26 runner — app launches get starved and hit the per-test time
+  # allowance (the hangs that made this necessary). The GitHub Free plan caps macOS
+  # jobs at ~6 concurrent and offers no larger runners, so the suite is split into
+  # 6 shards that run in a single wave; the full suite lands at ~15 min (down from
+  # ~60 serial). Reaching ~10 min would need a paid plan's larger runners / more
+  # concurrency.
+  #
+  # Rebalance the matrix when a class grows materially — serial within a shard, the
+  # wall-clock is the SUM of its classes' durations, so the slowest shard is the
+  # floor. Shards are balanced by measured duration; keep the heavy WebSocket classes
+  # (LiveE2ETests, TournamentsDetailE2ETests) on separate shards. RUN ON DEMAND ONLY:
+  # the e2e suite runs solely via workflow_dispatch (run_ios_e2e), not on push/PR —
+  # macOS runners drain the shards ~serially, so auto-running them stalled every merge.
+  # push/PR still get the build + unit tests + shard-coverage guard; trigger the full
+  # e2e suite manually (Actions > CI > Run workflow) before merging risky iOS changes.
+  ios-e2e:
+    name: iOS e2e ${{ matrix.name }}
+    needs: [ios-changes, ios-build]
+    if: needs.ios-changes.outputs.ios == 'true' && github.event_name == 'workflow_dispatch' && inputs.run_ios_e2e
+    runs-on: macos-26
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        # 6 shards (= the Free-plan macOS concurrency cap, so all run in one wave)
+        # balanced by measured per-class duration; the two heavy WebSocket classes
+        # (LiveE2ETests, TournamentsDetailE2ETests) are isolated on shards 1 and 2.
+        # AppStoreScreenshots is the gated screenshot generator (XCTSkipUnless on
+        # BETTY_SCREENSHOTS) — it skips instantly in CI but must still be assigned to a
+        # shard to satisfy the coverage guard above.
+        include:
+          - name: shard1
+            classes: LiveE2ETests GroupJoinInviteE2ETests CompleteProfileE2ETests GroupDetailMoreE2ETests AuthBootFailureE2ETests
+          - name: shard2
+            classes: TournamentsDetailE2ETests TournamentsAdminE2ETests GroupDetailLeaderboardE2ETests GroupDetailNonAuthorCoverE2ETests ProfileAdminE2ETests
+          - name: shard3
+            classes: ChatMoreE2ETests HomeE2ETests AuthSignInValidationE2ETests AuthSessionE2ETests GroupDetailGamesE2ETests GroupCreateE2ETests
+          - name: shard4
+            classes: GroupSettingsE2ETests HomeNavigationE2ETests ChatE2ETests ProfileLeaderboardE2ETests LiveConnectionE2ETests BoosterE2ETests
+          - name: shard5
+            classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests AppStoreScreenshots
+          - name: shard6
+            classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests
+    env:
+      XCODE_VERSION: "26.5"
+      SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
+    # No working-directory: these shards don't check out the repo (the prebuilt
+    # bundle is self-contained), so `ios/` doesn't exist — steps run from the
+    # workspace root and use $RUNNER_TEMP plus ios/-prefixed paths they create.
+    steps:
+      - name: Select Xcode ${{ env.XCODE_VERSION }}
+        run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+
+      # No checkout/build: `test-without-building -xctestrun` runs purely from the
+      # prebuilt products. Download the tarball, then unpack it (perms/symlinks
+      # intact) — this also recreates the ios/.derived/Build/Products tree the
+      # .xctestrun's __TESTROOT__ resolves against.
+      - name: Download compiled test bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: betty-test-bundle
+          path: ${{ runner.temp }}
+
+      # Time allowances turn a hung test into one failure instead of a wedged shard.
+      - name: UI tests (mock e2e) — ${{ matrix.name }}
+        env:
+          CLASSES: ${{ matrix.classes }}
+        run: |
+          set -o pipefail
+          mkdir -p ios/.derived/Build
+          tar -xzf "$RUNNER_TEMP/betty-test-bundle.tar.gz" -C ios/.derived/Build
+          XCTESTRUN=$(find ios/.derived/Build/Products -name '*.xctestrun' | head -1)
+          ARGS=""
+          for c in $CLASSES; do ARGS="$ARGS -only-testing:BettyUITests/$c"; done
+          # Serial within the shard (parallel clones starve the runner — see above).
+          # Generous allowances: the slower-but-fine WebSocket tests must not trip
+          # the per-test timeout at the single-clone pace.
+          xcodebuild test-without-building \
+            -xctestrun "$XCTESTRUN" \
+            -destination "$SIMULATOR_DESTINATION" \
+            -parallel-testing-enabled NO \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 240 \
+            -maximum-test-execution-time-allowance 420 \
+            $ARGS
+
+  # Android runs entirely on Linux (no 10x macOS billing), so build + lint + unit
+  # tests run on every Android-touching PR. Only the emulator e2e job is gated.
+  android-changes:
+    name: Check for Android changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      android: ${{ steps.diff.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Diff for android/ changes
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "android=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$EVENT" = "pull_request" ]; then
+            FILES=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
+          else
+            FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
+          if grep -qE '^(android/|\.github/workflows/(ci|android-playstore)\.yml)' <<<"$FILES"; then
+            echo "android=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Android changes; skipping Android jobs."
+            echo "android=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  android-build:
+    name: Android build, lint & unit tests
+    needs: android-changes
+    if: needs.android-changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      # Guard against silently-skipped tests: every @Test-bearing androidTest class
+      # must be assigned to exactly one e2e shard (mirrors the iOS shard guard).
+      - name: Verify android e2e shard coverage
+        run: |
+          set -euo pipefail
+          declared=$(for f in $(find app/src/androidTest -name '*.kt' 2>/dev/null); do
+            if grep -q '@Test' "$f"; then
+              grep -oE '(class|object) [A-Za-z0-9_]+' "$f" | head -1 | awk '{print $2}'
+            fi
+          done | sort -u)
+          # Only the android-e2e job's shard `classes:` lines (skip the iOS shards above it).
+          assigned=$(awk '/^  android-e2e:/,0' ../.github/workflows/ci.yml \
+            | grep -E '^[[:space:]]*classes:' \
+            | sed -E 's/^[[:space:]]*classes:[[:space:]]*//' | tr ' ' '\n' | sort -u)
+          missing=$(comm -23 <(echo "$declared") <(echo "$assigned"))
+          unknown=$(comm -13 <(echo "$declared") <(echo "$assigned"))
+          if [ -n "$missing" ]; then echo "::error::androidTest classes not assigned to any e2e shard:"; echo "$missing"; exit 1; fi
+          if [ -n "$unknown" ]; then echo "::error::android e2e shard references unknown classes:"; echo "$unknown"; exit 1; fi
+          echo "All $(echo "$declared" | grep -c .) androidTest classes are covered by the e2e shards."
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint (non-blocking)
+        continue-on-error: true
+        run: ./gradlew :app:lintDebug --no-daemon
+
+      - name: Unit tests (JVM)
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      # Release-only path: runs R8/minify + resource shrinking, which assembleDebug skips.
+      # Catches proguard/keep-rule regressions (e.g. Tink via security-crypto) that would
+      # otherwise only surface in the Play publish build. Falls back to debug signing here
+      # (no release secrets on PRs).
+      - name: Assemble release (R8 / minify smoke check)
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+  # Hermetic Android e2e (in-process mock backend) on an emulator, sharded and
+  # gated on demand (emulator runs are slow). Mirrors the iOS ios-e2e policy.
+  android-e2e:
+    name: Android e2e ${{ matrix.name }}
+    needs: [android-changes, android-build]
+    if: needs.android-changes.outputs.android == 'true' && github.event_name == 'workflow_dispatch' && inputs.run_android_e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: shard1
+            classes: SmokeTest AuthE2ETest
+          - name: shard2
+            classes: HomeE2ETest BrowseJoinE2ETest
+          - name: shard3
+            classes: GroupDetailE2ETest BetSheetE2ETest
+          - name: shard4
+            classes: ChatE2ETest ProfileE2ETest BoosterE2ETest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run e2e shard on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          CLASSES: ${{ matrix.classes }}
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: android
+          script: |
+            ARGS=$(echo "$CLASSES" | tr ' ' '\n' | sed 's/^/social.betty.e2e./' | paste -sd, -)
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon \
+              -Pandroid.testInstrumentationRunnerArguments.class="$ARGS"

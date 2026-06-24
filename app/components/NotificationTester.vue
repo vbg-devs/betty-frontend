@@ -67,8 +67,8 @@ let nextId = 100000;
 let visibilityToggle = true;
 
 function pickGameId(): number | null {
-  const g = (gameStore as any).all?.value ?? (gameStore as any).all;
-  if (Array.isArray(g) && g.length > 0) return g[0].id;
+  const games = gameStore.all;
+  if (games.length > 0) return games[0]!.id;
   return null;
 }
 
@@ -81,7 +81,7 @@ function pickGroupId(): number | null {
 function payloadFor(type: string): any {
   const gameId = pickGameId();
   const groupId = pickGroupId();
-  const userId = (userStore as any).id ?? 1;
+  const userId = (userStore as any).id ?? 'uid-1';
 
   switch (type) {
     case 'bet_placed':
@@ -138,6 +138,8 @@ function fire(type: string) {
 }
 
 function fireAll() {
+  // The message store keeps only the 5 most recent entries, so the feed ends
+  // up showing the last 5 of these types.
   const types = [
     'bet_placed',
     'bet_updated',
@@ -160,7 +162,6 @@ function clear() {
 
 <style scoped>
 .tester {
-
   position: fixed;
   bottom: 20px;
   right: 20px;

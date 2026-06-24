@@ -4,7 +4,10 @@
     <div v-if="gameBet !== null" class="modal__inner">
       <header class="modal__header">
         <span class="kicker kicker--accent">★ PLACE YOUR BET</span>
-        <h2 class="modal__title">{{ homeTeam?.name?.toUpperCase() }} <span class="vs">vs</span> {{ awayTeam?.name?.toUpperCase() }}</h2>
+        <h2 class="modal__title">
+          {{ homeTeam?.name?.toUpperCase() }} <span class="vs">vs</span>
+          {{ awayTeam?.name?.toUpperCase() }}
+        </h2>
         <BetHistory :bets="bets" :game-bet="gameBet" :home-team="homeTeam" :away-team="awayTeam" />
         <button class="modal__close" @click="emit('close')" aria-label="Close">
           <svg
@@ -33,11 +36,7 @@
         >
           Your bet
         </button>
-        <button
-          class="tab"
-          :class="{ 'tab--active': selectedTab === 2 }"
-          @click="selectedTab = 2"
-        >
+        <button class="tab" :class="{ 'tab--active': selectedTab === 2 }" @click="selectedTab = 2">
           Placed bets
         </button>
       </nav>
@@ -54,13 +53,27 @@
               'bet-row--full': bet.user_points === 3,
             }"
           >
-            <span class="bet-row__name">{{ bet.user.nickname || bet.user.name }}</span>
+            <span class="bet-row__name">{{ bet.user?.nickname || bet.user?.name }}</span>
             <span class="bet-row__score">
               <template v-if="showScores">
                 <strong>{{ bet.home_team_score }} – {{ bet.away_team_score }}</strong>
-                <span v-if="bet.processed_at" class="bet-row__points">
-                  {{ bet.user_points > 0 ? `+${bet.user_points}P` : '0P' }}
-                </span>
+                <template v-if="bet.processed_at">
+                  <span class="bet-row__points">
+                    {{ bet.user_points > 0 ? `+${bet.user_points}P` : '0P' }}
+                  </span>
+                  <span
+                    v-if="bet.boosted && bet.user_points > 0"
+                    class="bet-row__rocket"
+                    aria-label="Boosted"
+                    >🚀</span
+                  >
+                </template>
+                <span
+                  v-else-if="bet.boosted"
+                  class="bet-row__rocket"
+                  aria-label="Boosted"
+                  >🚀</span
+                >
               </template>
               <HiddenScore v-else />
             </span>
@@ -97,6 +110,29 @@
               />
             </div>
           </div>
+
+          <div v-if="boostersEnabled" class="booster">
+            <label class="booster__row" :class="{ 'booster__row--disabled': boosterDisabled }">
+              <span class="booster__icon" aria-hidden="true">🚀</span>
+              <span class="booster__label">Apply booster</span>
+              <span class="booster__switch">
+                <input
+                  v-model="boosted"
+                  type="checkbox"
+                  class="booster__input"
+                  :disabled="boosterDisabled"
+                />
+                <span class="booster__track" aria-hidden="true">
+                  <span class="booster__thumb"></span>
+                </span>
+              </span>
+            </label>
+            <p class="booster__help">{{ boosterHelpText }}</p>
+            <p v-if="placeInAllGroups && boosted" class="booster__caveat">
+              Booster applies to this group only — the bet's copies in your other groups aren't
+              boosted.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -128,15 +164,7 @@
           :class="{ 'btn--disabled': !canSave || loading }"
           @click="placeBet"
         >
-          {{
-            loading
-              ? myBet
-                ? 'UPDATING…'
-                : 'PLACING…'
-              : myBet
-                ? 'UPDATE BET'
-                : 'PLACE BET'
-          }}
+          {{ loading ? (myBet ? 'UPDATING…' : 'PLACING…') : myBet ? 'UPDATE BET' : 'PLACE BET' }}
         </button>
       </footer>
     </div>
@@ -149,10 +177,16 @@ import { isAfter } from 'date-fns';
 const {
   gameBet = null,
   bets = [],
+  groupBets = [],
   peek = false,
 } = defineProps<{
   gameBet?: Record<string, any> | null;
+  /** Bets on the current game only — drives the placed-bets list and BetHistory chart. */
   bets?: any[];
+  /** All bets in the current group (every game). Drives the booster cap math so we can
+   * see boosters the user already spent on OTHER games in this group. Defaults to [],
+   * which disables the cap (callers that don't pass it lose the cross-game count). */
+  groupBets?: any[];
   peek?: boolean;
 }>();
 
@@ -163,6 +197,7 @@ const emit = defineEmits<{
 
 const userStore = useUserStore();
 const teamStore = useTeamStore();
+const groupStore = useGroupStore();
 const betStore = useBetStore();
 const { alert } = useNotify();
 
@@ -171,8 +206,66 @@ const awayScore = ref('');
 const selectedTab = ref(1);
 const loading = ref(false);
 const placeInAllGroups = ref(true);
+const boosted = ref(false);
 
 const userId = computed(() => userStore.id);
+
+const group = computed(() => (gameBet ? groupStore.byId(gameBet.groupId) : null));
+
+const boostersEnabled = computed(() => (group.value?.boost_count ?? 0) > 0);
+
+// Count this user's boosted bets in this group, excluding the bet we're editing
+// (so toggling off-then-on the same bet doesn't drain capacity). Reads from
+// `groupBets` (all games in the group), not `bets` (only the current game), so
+// boosters already spent on OTHER games still count against the cap.
+const boostersUsedByMe = computed(() => {
+  const me = userId.value;
+  const gid = gameBet?.groupId;
+  if (!me || gid == null) return 0;
+  return groupBets.filter(
+    (b: any) =>
+      b.user_id === me &&
+      b.group_id === gid &&
+      b.boosted === true &&
+      b.game_id !== gameBet!.id,
+  ).length;
+});
+
+const remainingBoosters = computed(() => {
+  const cap = group.value?.boost_count ?? 0;
+  return Math.max(0, cap - boostersUsedByMe.value);
+});
+
+const myBetIsBoosted = computed(() => {
+  const me = userId.value;
+  const gid = gameBet?.groupId;
+  if (!me || gid == null) return false;
+  return bets.some(
+    (b: any) =>
+      b.user_id === me &&
+      b.group_id === gid &&
+      b.game_id === gameBet!.id &&
+      b.boosted === true,
+  );
+});
+
+const boosterDisabled = computed(() => {
+  if (!boostersEnabled.value) return false;
+  // Always allow un-boosting the current bet.
+  if (myBetIsBoosted.value) return false;
+  return remainingBoosters.value <= 0;
+});
+
+const boosterHelpText = computed(() => {
+  if (!boostersEnabled.value) return '';
+  const cap = group.value?.boost_count ?? 0;
+  const mult = group.value?.boost_multiplier ?? 2;
+  if (boosterDisabled.value) return 'No boosters remaining in this group';
+  if (boosted.value) return `This bet's points will be ×${mult}`;
+  const used = boostersUsedByMe.value + (boosted.value ? 1 : 0);
+  const left = Math.max(0, cap - used);
+  return `${mult}× multiplier — ${left} of ${cap} remaining`;
+});
 
 const showScores = computed(() => {
   if (isAfter(new Date(), new Date(gameBet!.start_date))) return true;
@@ -193,7 +286,7 @@ const canSave = computed(() => {
 });
 
 const orderedBets = computed(() => {
-  const sorted = bets.concat();
+  const sorted = bets.filter((x: any) => x.user);
   sorted.sort((a: any, b: any) => b.user_points - a.user_points);
   return sorted;
 });
@@ -211,6 +304,7 @@ watch(
       awayScore.value = '';
       selectedTab.value = 1;
       placeInAllGroups.value = true;
+      boosted.value = false;
       loading.value = false;
     }
 
@@ -220,14 +314,24 @@ watch(
       document.body.classList.remove('no-scroll');
     }
   },
+  { immediate: true },
 );
 
-watch(myBet, (newVal) => {
-  if (newVal) {
-    homeScore.value = newVal.home_team_score;
-    awayScore.value = newVal.away_team_score;
-  }
-});
+watch(
+  myBet,
+  (newVal, oldVal) => {
+    // Seed only when our bet first becomes available (initial render or async
+    // user-load). Re-seeding on every change would clobber in-progress edits
+    // when the bets list refreshes in the background — e.g. another player's
+    // bet arriving over WebSocket would silently flip the booster toggle back.
+    if (newVal && !oldVal) {
+      homeScore.value = newVal.home_team_score;
+      awayScore.value = newVal.away_team_score;
+      boosted.value = !!newVal.boosted;
+    }
+  },
+  { immediate: true },
+);
 
 watch(
   lockInput,
@@ -240,21 +344,42 @@ watch(
 );
 
 async function placeBet() {
-  const betPayload = {
-    game_id: gameBet!.id,
-    group_id: gameBet!.groupId,
-    home_team_score: parseFloat(homeScore.value),
-    away_team_score: parseFloat(awayScore.value),
-    is_universal: placeInAllGroups.value,
-  };
+  const existing = myBet.value;
   loading.value = true;
   try {
-    await betStore.place(betPayload);
+    // PUT /bet/:id only touches this one bet; a universal edit must re-POST so the
+    // backend upserts the new score across every group in the tournament. Routing
+    // checked edits through update() would silently leave the other groups divergent.
+    // When the booster row is hidden (group disabled it), preserve whatever the bet
+    // already has on it — admins toggling count to 0 don't strip existing boosts per
+    // spec §2.6; the scoring formula just multiplies by 1×.
+    const outgoingBoosted = boostersEnabled.value ? boosted.value : !!existing?.boosted;
+    if (existing && !placeInAllGroups.value) {
+      await betStore.update({
+        id: existing.id,
+        home_team_score: parseFloat(homeScore.value),
+        away_team_score: parseFloat(awayScore.value),
+        boosted: outgoingBoosted,
+      });
+    } else {
+      await betStore.place({
+        game_id: gameBet!.id,
+        group_id: gameBet!.groupId,
+        home_team_score: parseFloat(homeScore.value),
+        away_team_score: parseFloat(awayScore.value),
+        is_universal: placeInAllGroups.value,
+        boosted: outgoingBoosted,
+      });
+    }
     emit('bet-placed');
   } catch (err) {
+    // $fetch throws FetchError with the parsed JSON body on `err.data`; the API uses
+    // `{ "error": "..." }` for human messages (e.g. "no boosters remaining", 423 lock).
+    const apiMessage =
+      (err as any)?.data?.error || (err as any)?.message || String(err);
     alert({
       title: 'Could not place bet',
-      message: `Your bet could not be placed, please try again \n\n ${err}`,
+      message: apiMessage,
       state: 'critical',
     });
     console.error(err);
@@ -266,7 +391,6 @@ async function placeBet() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 997;
   top: 0;
@@ -433,6 +557,7 @@ async function placeBet() {
 .modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 0;
 }
 
@@ -491,7 +616,7 @@ async function placeBet() {
 }
 
 .score-input__field::placeholder {
-  color: var(--muted-strong);
+  color: var(--placeholder);
 }
 
 .score-input__field::-webkit-outer-spin-button,
@@ -515,6 +640,101 @@ async function placeBet() {
   color: var(--muted);
   font-weight: 400;
   padding-bottom: 18px;
+}
+
+/* ===== Booster row ===== */
+.booster {
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: var(--surface-overlay-06);
+  border: 1px solid var(--surface-overlay-10);
+  border-radius: 2px;
+}
+
+.booster__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.booster__row--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.booster__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.booster__label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--cream);
+}
+
+.booster__switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.booster__input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.booster__input:disabled {
+  cursor: not-allowed;
+}
+
+.booster__track {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  transition: background 0.18s ease;
+}
+
+.booster__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--cream);
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+}
+
+.booster__input:checked + .booster__track {
+  background: var(--orange);
+}
+
+.booster__input:checked + .booster__track .booster__thumb {
+  transform: translateX(16px);
+}
+
+.booster__help {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+.booster__caveat {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--orange);
+  line-height: 1.4;
 }
 
 /* ===== Placed bets list ===== */
@@ -562,6 +782,11 @@ async function placeBet() {
   font-weight: 800;
   letter-spacing: 0.8px;
   color: var(--muted-strong);
+}
+
+.bet-row__rocket {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .bet-row--you {

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "sheffield-united.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

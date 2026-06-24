@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Activity-level theme. The real visual identity lives in the Compose BettyTheme;
+         this only sets the window background (Betty indigo) and an edge-to-edge,
+         action-bar-free shell so there is no system-chrome flash before Compose draws. -->
+    <style name="Theme.Betty" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/betty_indigo</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

@@ -29,9 +29,7 @@
         <span v-if="user.user_id === userId" class="lb-row__you">YOU</span>
       </div>
       <div class="lb-row__score">
-        <span class="lb-row__score-value">{{
-          global ? user.normalized_score : user.score
-        }}</span>
+        <span class="lb-row__score-value">{{ global ? user.normalized_score : user.score }}</span>
         <span class="lb-row__score-unit">P</span>
       </div>
     </div>
@@ -39,13 +37,17 @@
 </template>
 
 <script setup lang="ts">
+import type { GroupMember } from '~/types';
+
+type RankedMember = GroupMember & { place: number };
+
 const { users = [], global = false } = defineProps<{
-  users?: any[];
+  users?: GroupMember[];
   global?: boolean;
 }>();
 
 const emit = defineEmits<{
-  'user-selected': [user: any];
+  'user-selected': [user: GroupMember];
 }>();
 
 const userStore = useUserStore();
@@ -55,25 +57,23 @@ const userId = computed(() => userStore.id);
 const orderedList = computed(() => {
   const list = users.concat();
   if (global) {
-    list.sort((a: any, b: any) => b.normalized_score - a.normalized_score);
+    list.sort((a, b) => (b.normalized_score ?? 0) - (a.normalized_score ?? 0));
   } else {
-    list.sort((a: any, b: any) => b.score - a.score);
+    list.sort((a, b) => b.score - a.score);
   }
   return list;
 });
 
 const listWithPlacement = computed(() => {
   let currentPlace = 0;
-  const result: any[] = [];
+  const result: RankedMember[] = [];
+
+  const scoreOf = (m: GroupMember) => (global ? (m.normalized_score ?? 0) : m.score);
 
   for (let i = 0; i < orderedList.value.length; i += 1) {
-    const currentUser = orderedList.value[i];
+    const currentUser = orderedList.value[i]!;
     const lastUser = orderedList.value[i - 1];
-    if (
-      !lastUser ||
-      (global ? currentUser.normalized_score : currentUser.score) <
-        (global ? lastUser.normalized_score : lastUser.score)
-    ) {
+    if (!lastUser || scoreOf(currentUser) < scoreOf(lastUser)) {
       currentPlace += 1;
     }
     result.push({ ...currentUser, place: currentPlace });
@@ -84,7 +84,6 @@ const listWithPlacement = computed(() => {
 
 <style scoped>
 .leaderboard {
-
   display: flex;
   flex-direction: column;
   gap: 2px;

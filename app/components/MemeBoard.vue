@@ -44,7 +44,9 @@
           </div>
           <div class="column">
             <div class="meme-board__username">
-              <strong>{{ getUser(msg.user_id).nickname || getUser(msg.user_id).name }}</strong>
+              <strong>{{
+                getUser(msg.user_id)?.nickname || getUser(msg.user_id)?.name || 'Unknown'
+              }}</strong>
               - {{ formatDate(msg.created_at) }}
             </div>
             <button
@@ -368,6 +370,7 @@ const loading = ref(false);
 const images = ref<any[]>([]);
 const selectedImageIndex = ref(0);
 const deletingId = ref<number | null>(null);
+const posting = ref(false);
 const pickerOpenFor = ref<number | null>(null);
 let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -488,7 +491,7 @@ function formatDate(date: string) {
   return formatDistance(new Date(date), new Date(), { addSuffix: true });
 }
 
-function getUser(userId: number) {
+function getUser(userId: string) {
   return members.find((member) => member.user_id === userId);
 }
 
@@ -497,7 +500,7 @@ function handleKeyup(ev: KeyboardEvent) {
   sendMessage();
 }
 
-async function postMessage(msg: { message?: string; image?: string }) {
+async function postMessage(msg: { message?: string; image?: string }): Promise<boolean> {
   try {
     const data = await authFetch<any>('/messageboard', {
       method: 'POST',
@@ -507,11 +510,13 @@ async function postMessage(msg: { message?: string; image?: string }) {
         image_url: msg.image,
       },
     });
-    messages.value.unshift(data);
+    messages.value.unshift({ ...data, reactions: data.reactions ?? [] });
     images.value = [];
     selectedImageIndex.value = 0;
+    return true;
   } catch (err) {
     console.error(err);
+    return false;
   }
 }
 
@@ -522,7 +527,7 @@ function selectImage() {
   postMessage(newMessage);
 }
 
-function confirmDeleteMessage(msg: { id: number; user_id: number }) {
+function confirmDeleteMessage(msg: { id: number; user_id: string }) {
   if (msg.user_id !== userId.value) return;
   confirmDialog({
     title: 'Delete message',
@@ -557,22 +562,33 @@ async function deleteMessage(id: number) {
 async function sendMessage() {
   if (!q.value) return;
   if (!useGiphy.value) {
+    if (posting.value) return;
+    posting.value = true;
     const newMessage = {
       image: undefined,
       message: q.value,
     };
-    postMessage(newMessage);
-    q.value = '';
+    try {
+      const posted = await postMessage(newMessage);
+      if (posted) q.value = '';
+    } finally {
+      posting.value = false;
+    }
     return;
   }
   if (loading.value) return;
   loading.value = true;
-  const res = await gf.search(q.value, { limit: 10 });
-  if (res.data.length) {
-    images.value = res.data;
+  try {
+    const res = await gf.search(q.value, { limit: 10 });
+    if (res.data.length) {
+      images.value = res.data;
+    }
+    q.value = '';
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
-  q.value = '';
-  loading.value = false;
 }
 </script>
 
@@ -672,7 +688,7 @@ async function sendMessage() {
 }
 
 .meme-board__input::placeholder {
-  color: var(--muted);
+  color: var(--placeholder);
 }
 
 .meme-board__input:focus {

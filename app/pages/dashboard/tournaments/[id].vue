@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="pools">
-        <pools :pools="pools" :clickable="false"></pools>
+        <pools :pools="poolsWithGames" :clickable="false"></pools>
       </div>
     </card>
   </div>
@@ -27,16 +27,13 @@ const { authFetch } = useApi();
 
 const tournament = ref<any>(null);
 
-const pools = computed(() => {
+const poolsWithGames = computed(() => {
   if (!tournament.value) return [];
-  const result: any[] = [];
-  tournament.value.pools.forEach((pool: any) => {
-    result.push({
-      ...pool,
-      games: tournament.value.games.filter((x: any) => x.pool_id === pool.id),
-    });
-  });
-  return result;
+  const games = tournament.value.games ?? [];
+  return (tournament.value.pools ?? []).map((pool: any) => ({
+    ...pool,
+    games: games.filter((x: any) => x.pool_id === pool.id),
+  }));
 });
 
 function formatDate(input: string) {

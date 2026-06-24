@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <HeaderBar :user="user" @toggle-notifications="showNotifications = !showNotifications" />
+    <HeaderBar :user="user" />
     <template v-if="!loading">
       <CompleteProfileModal @set-user="setUser" />
       <SideBar v-if="user" :show="showNotifications" />
@@ -28,6 +28,7 @@
     </Transition>
     <NotificationProvider />
     <NotificationTester v-if="user && isDev" />
+    <IosAppBanner />
   </div>
 </template>
 
@@ -98,16 +99,19 @@ const userStore = useUserStore();
 const teamStore = useTeamStore();
 const tournamentStore = useTournamentStore();
 const groupStore = useGroupStore();
+const { alert } = useNotify();
 
 const user = ref<UserProfile | null>(null);
-const showNotifications = ref(false);
-const loading = ref(true);
+const showNotifications = useNotificationsPref();
 const isDev = import.meta.dev;
 
 const isOpenPage = computed(() => {
   const name = route.name as string;
-  return ['privacy', 'support', 'about'].includes(name);
+  return ['privacy', 'support'].includes(name);
 });
+
+// Open pages skip the auth loader so they render real content when prerendered.
+const loading = ref(!isOpenPage.value);
 
 function setUser(u: UserProfile | null) {
   user.value = u;
@@ -124,11 +128,21 @@ onMounted(() => {
   const auth = useFirebaseAuth();
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      await Promise.all([teamStore.load(), tournamentStore.load(), groupStore.load()]);
-      if (route.path === '/') {
-        router.replace('/dashboard');
+      try {
+        await Promise.all([teamStore.load(), tournamentStore.load(), groupStore.load()]);
+        if (route.path === '/') {
+          router.replace('/dashboard');
+        }
+      } catch (err) {
+        alert({
+          title: 'Could not load your data',
+          message: 'Something went wrong while loading. Please refresh to try again.',
+          state: 'critical',
+        });
+        console.error(err);
+      } finally {
+        loading.value = false;
       }
-      loading.value = false;
     } else {
       userStore.set(null);
       setUser(null);

@@ -50,7 +50,7 @@ const route = useRoute();
 const router = useRouter();
 const tournamentStore = useTournamentStore();
 const groupStore = useGroupStore();
-const { confirm } = useNotify();
+const { confirm, alert } = useNotify();
 
 const loading = ref(false);
 
@@ -84,6 +84,12 @@ async function join() {
           router.push(`/dashboard/groups/${group.id}`);
         },
       });
+    } else {
+      alert({
+        title: 'Could not join group',
+        message: 'Something went wrong while joining the group. Please try again.',
+        state: 'critical',
+      });
     }
     console.error(err);
   } finally {
@@ -94,7 +100,6 @@ async function join() {
 
 <style scoped>
 .modal {
-
   position: fixed;
   z-index: 997;
   top: 0;

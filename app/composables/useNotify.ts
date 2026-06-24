@@ -1,12 +1,14 @@
 interface AlertOptions {
   title?: string;
   message: string;
-  state?: 'success' | 'error' | 'warning' | 'info';
+  state?: 'success' | 'error' | 'warning' | 'info' | 'critical';
 }
 
 interface ConfirmOptions {
   title?: string;
   question: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -16,8 +18,9 @@ interface Notification {
   title?: string;
   message: string;
   state?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm?: () => void | Promise<void>;
-  visible: boolean;
 }
 
 const notifications = ref<Notification[]>([]);
@@ -32,7 +35,6 @@ export function useNotify() {
       title: options.title,
       message: options.message,
       state: options.state ?? 'info',
-      visible: true,
     });
     setTimeout(() => dismiss(id), 4000);
   }
@@ -44,8 +46,9 @@ export function useNotify() {
       type: 'confirm',
       title: options.title,
       message: options.question,
+      confirmLabel: options.confirmLabel,
+      cancelLabel: options.cancelLabel,
       onConfirm: options.onConfirm,
-      visible: true,
     });
   }
 

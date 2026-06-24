@@ -1,81 +1,12 @@
 <template>
   <div class="dashboard">
-    <section class="hero">
-      <NuxtLink to="/support" class="feedback-banner">
-        <span class="feedback-banner__kicker">● FEEDBACK</span>
-        <span class="feedback-banner__text">
-          Got feedback or a feature request? Betty's listening.
-        </span>
-        <span class="feedback-banner__arrow">→</span>
+    <div class="feedback-row">
+      <NuxtLink to="/support" class="feedback-pill">
+        <span class="feedback-pill__dot" aria-hidden="true"></span>
+        <span class="feedback-pill__text">Feedback? Betty's listening</span>
+        <span class="feedback-pill__arrow" aria-hidden="true">→</span>
       </NuxtLink>
-
-      <div class="hero__card">
-        <div class="hero__card-inner">
-          <div class="hero__grid">
-            <div class="hero__main">
-              <span class="kicker kicker--accent">★ YOUR GROUPS</span>
-              <h1 class="hero__title">
-                <template v-if="visibleGroups.length > 0">
-                  {{ visibleGroups.length }}
-                  <span class="hero__title--green">{{
-                    visibleGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
-                  }}</span
-                  ><br />
-                  <span class="hero__title--outline">ONE CHAMPION.</span>
-                </template>
-                <template v-else-if="allGroups.length > 0">
-                  NO {{ selectedTab === 'running' ? 'RUNNING' : 'ENDED' }}<br />
-                  <span class="hero__title--green">GROUPS.</span>
-                </template>
-                <template v-else>
-                  NO GROUPS<br />
-                  <span class="hero__title--green">YET.</span>
-                </template>
-              </h1>
-            </div>
-            <div class="hero__side">
-              <div v-if="nextKickoff" class="hero__countdown">
-                <span class="kicker kicker--green hero__countdown-kicker">● FIRST KICKOFF IN</span>
-                <div class="hero__countdown-time">
-                  <div class="hero__countdown-cell">
-                    <span class="hero__countdown-num">{{ pad(countdown.days) }}</span>
-                    <span class="hero__countdown-unit">DAYS</span>
-                  </div>
-                  <div class="hero__countdown-cell">
-                    <span class="hero__countdown-num">{{ pad(countdown.hours) }}</span>
-                    <span class="hero__countdown-unit">HRS</span>
-                  </div>
-                  <div class="hero__countdown-cell">
-                    <span class="hero__countdown-num">{{ pad(countdown.minutes) }}</span>
-                    <span class="hero__countdown-unit">MIN</span>
-                  </div>
-                  <div class="hero__countdown-cell">
-                    <span class="hero__countdown-num hero__countdown-num--pulse">{{
-                      pad(countdown.seconds)
-                    }}</span>
-                    <span class="hero__countdown-unit">SEC</span>
-                  </div>
-                </div>
-                <span class="kicker kicker--accent hero__countdown-name"
-                  >★ {{ nextKickoff.tournament.name.toUpperCase() }}</span
-                >
-              </div>
-              <!-- <div class="kicker kicker--muted-light">★ READY?</div>
-              <p class="hero__lede">
-                Pick a tournament, set the points, share one link.<br />Betty handles the math, you
-                handle the banter.
-              </p> -->
-              <button class="btn btn--orange btn--block" @click="showModal = true">
-                + NEW GROUP
-              </button>
-              <NuxtLink to="/dashboard/groups/browse" class="hero__browse">
-                OR BROWSE PUBLIC GROUPS →
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
 
     <section v-if="allGroups.length > 0" class="groups-section">
       <div class="tabs-row">
@@ -264,6 +195,66 @@
       </div>
     </section>
 
+    <section v-if="allGroups.length > 0" class="hero hero--below">
+      <div class="hero__card">
+        <div class="hero__card-inner">
+          <div class="hero__grid">
+            <div class="hero__main">
+              <span class="kicker kicker--accent">★ YOUR GROUPS</span>
+              <h1 class="hero__title">
+                <template v-if="visibleGroups.length > 0">
+                  {{ visibleGroups.length }}
+                  <span class="hero__title--green">{{
+                    visibleGroups.length === 1 ? 'GROUP.' : 'GROUPS.'
+                  }}</span
+                  ><br />
+                  <span class="hero__title--outline">ONE CHAMPION.</span>
+                </template>
+                <template v-else>
+                  NO {{ selectedTab === 'running' ? 'RUNNING' : 'ENDED' }}<br />
+                  <span class="hero__title--green">GROUPS.</span>
+                </template>
+              </h1>
+            </div>
+            <div class="hero__side">
+              <div v-if="nextKickoff" class="hero__countdown">
+                <span class="kicker kicker--green hero__countdown-kicker">● FIRST KICKOFF IN</span>
+                <div class="hero__countdown-time">
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.days) }}</span>
+                    <span class="hero__countdown-unit">DAYS</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.hours) }}</span>
+                    <span class="hero__countdown-unit">HRS</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num">{{ pad(countdown.minutes) }}</span>
+                    <span class="hero__countdown-unit">MIN</span>
+                  </div>
+                  <div class="hero__countdown-cell">
+                    <span class="hero__countdown-num hero__countdown-num--pulse">{{
+                      pad(countdown.seconds)
+                    }}</span>
+                    <span class="hero__countdown-unit">SEC</span>
+                  </div>
+                </div>
+                <span class="kicker kicker--accent hero__countdown-name"
+                  >★ {{ nextKickoff.tournament.name.toUpperCase() }}</span
+                >
+              </div>
+              <button class="btn btn--orange btn--block" @click="showModal = true">
+                + NEW GROUP
+              </button>
+              <NuxtLink to="/dashboard/groups/browse" class="hero__browse">
+                OR BROWSE PUBLIC GROUPS →
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <transition name="page">
       <create-group-modal
         v-if="showModal"
@@ -422,6 +413,11 @@ function handleCloseCreateGroupModal() {
   padding: 0 0 40px;
 }
 
+.hero--below {
+  padding: 40px 0 0;
+  margin-top: 40px;
+}
+
 .hero__card {
   max-width: 1180px;
   margin: 0 auto;
@@ -560,52 +556,48 @@ function handleCloseCreateGroupModal() {
   }
 }
 
-/* ===== Feedback banner ===== */
-.feedback-banner {
+/* ===== Feedback pill ===== */
+.feedback-row {
   max-width: 1180px;
-  margin: 0 auto 16px;
-  background: var(--indigo-deep);
-  border-left: 3px solid var(--green);
-  border-radius: 2px;
-  padding: 10px 18px;
+  margin: 0 auto 12px;
   display: flex;
+  justify-content: flex-end;
+}
+
+.feedback-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--surface-overlay-08);
+  border: 1px solid var(--surface-overlay-08);
   text-decoration: none;
-  color: var(--cream);
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
-}
-
-.feedback-banner:hover {
-  background: color-mix(in srgb, var(--indigo-deep) 88%, var(--ink));
-}
-
-.feedback-banner:hover .feedback-banner__arrow {
-  transform: translateX(3px);
-  color: var(--orange);
-}
-
-.feedback-banner__kicker {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: var(--green);
-  white-space: nowrap;
-}
-
-.feedback-banner__text {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 600;
   color: var(--muted-strong);
-  line-height: 1.4;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.feedback-banner__arrow {
-  font-size: 16px;
+.feedback-pill:hover {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  border-color: color-mix(in srgb, var(--green) 40%, transparent);
+  color: var(--cream);
+}
+
+.feedback-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: 0 0 auto;
+}
+
+.feedback-pill__arrow {
   font-weight: 800;
   color: var(--muted-strong);
   transition:
@@ -613,13 +605,18 @@ function handleCloseCreateGroupModal() {
     color 0.15s ease;
 }
 
+.feedback-pill:hover .feedback-pill__arrow {
+  transform: translateX(2px);
+  color: var(--orange);
+}
+
 @media (max-width: 600px) {
-  .feedback-banner {
-    padding: 10px 14px;
-    gap: 10px;
+  .feedback-row {
+    justify-content: stretch;
   }
-  .feedback-banner__text {
-    font-size: 12px;
+  .feedback-pill {
+    width: 100%;
+    justify-content: center;
   }
 }
 

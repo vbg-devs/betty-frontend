@@ -157,6 +157,8 @@
               points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
             />
           </svg>
+          <!-- booster_applied -->
+          <span v-else-if="message.type === 'booster_applied'" class="feed-item__emoji">🚀</span>
         </div>
 
         <div class="feed-item__body">
@@ -177,9 +179,7 @@
             <template v-else-if="message.type === 'group_left'">
               Someone just left a group
             </template>
-            <template v-else-if="message.type === 'group_created'">
-              New group on Betty
-            </template>
+            <template v-else-if="message.type === 'group_created'"> New group on Betty </template>
             <template v-else-if="message.type === 'group_visibility_changed'">
               <GroupVisibilityChangedListItem :data="message.message" />
             </template>
@@ -188,6 +188,9 @@
             </template>
             <template v-else-if="message.type === 'evaluate_game'">
               <GameMessageListItem :message="message.message" />
+            </template>
+            <template v-else-if="message.type === 'booster_applied'">
+              <GameMessageListItem :message="message.message" kind="booster_applied" />
             </template>
             <template v-else-if="message.type === 'user_exact_score'">
               <ExactScoreListItem :message="message.message" />
@@ -203,11 +206,18 @@
 </template>
 
 <script setup lang="ts">
+import type { ActivityMessage } from '~/types';
+
+type FeedMessage = ActivityMessage & { message: Record<string, any> };
+
 const messageStore = useMessageStore();
 
-const list = computed(() => messageStore.all);
+const list = computed(() => messageStore.all as FeedMessage[]);
 
-const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }> = {
+const TYPE_META: Record<
+  string,
+  { label: string; accent: 'orange' | 'green' | 'yellow' | 'cream' }
+> = {
   bet_placed: { label: '● NEW BET', accent: 'orange' },
   bet_updated: { label: '● BET UPDATED', accent: 'orange' },
   game_starting_soon: { label: '● KICKING OFF', accent: 'yellow' },
@@ -218,6 +228,7 @@ const TYPE_META: Record<string, { label: string; accent: 'orange' | 'green' | 'y
   group_created: { label: '★ NEW GROUP', accent: 'orange' },
   group_visibility_changed: { label: '● VISIBILITY', accent: 'yellow' },
   user_register: { label: '★ WELCOME', accent: 'green' },
+  booster_applied: { label: '🚀 BOOSTED', accent: 'orange' },
 };
 
 function meta(type: string) {
@@ -225,8 +236,9 @@ function meta(type: string) {
 }
 
 let msgIndex = 0;
+let connection: WebSocket | null = null;
 onMounted(() => {
-  const connection = new WebSocket('wss://api.betty.social/ws');
+  connection = new WebSocket('wss://api.betty.social/ws');
   connection.onmessage = (event) => {
     const evt = JSON.parse(event.data);
     if (evt.type === 'ping') return;
@@ -239,6 +251,14 @@ onMounted(() => {
   };
 });
 
+onUnmounted(() => {
+  if (connection) {
+    connection.onmessage = null;
+    connection.close();
+    connection = null;
+  }
+});
+
 function clearAll() {
   messageStore.clearAll();
 }
@@ -246,7 +266,6 @@ function clearAll() {
 
 <style scoped>
 .feed {
-
   font-family:
     'Inter',
     system-ui,
@@ -346,6 +365,11 @@ function clearAll() {
 
 .feed-item--cream .feed-item__icon {
   color: var(--muted-strong);
+}
+
+.feed-item__emoji {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .feed-item__body {

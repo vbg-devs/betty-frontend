@@ -1,10 +1,11 @@
 export interface UserProfile {
-  id: number;
+  id: string;
   email: string;
   name: string;
   image_url: string | null;
   firebase_image_url: string | null;
   country: string | null;
+  allow_marketing: boolean;
   is_admin: boolean;
   created_at: string;
   updated_at: string;
@@ -43,6 +44,8 @@ export interface Group {
   allow_sneak_peek: boolean;
   correct_team_points: number;
   exact_result_points: number;
+  boost_count: number;
+  boost_multiplier: number;
   public_at: string | null;
   members: GroupMember[];
 }
@@ -60,6 +63,8 @@ export interface PublicGroupItem {
   allow_sneak_peek: boolean;
   bet_mode: number;
   group_play_deadline: string | null;
+  boost_count: number;
+  boost_multiplier: number;
   public_at: string;
   created_at: string;
   member_count: number;
@@ -72,7 +77,7 @@ export interface PublicGroupListResponse {
 }
 
 export interface GroupMember {
-  user_id: number;
+  user_id: string;
   name: string;
   nickname: string | null;
   image_url: string | null;
@@ -95,14 +100,30 @@ export interface Game {
 
 export interface Bet {
   id: number;
-  user_id: number;
+  user_id: string;
   game_id: number;
   group_id: number;
   home_team_score: number;
   away_team_score: number;
   user_points: number;
+  boosted: boolean;
   processed_at: string | null;
   user?: GroupMember;
+}
+
+export interface TeamPrediction {
+  team_id: number;
+  team_name: string;
+  team_image_url: string | null;
+  games_predicted: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  points: number;
+  position: number;
 }
 
 export interface Pool {
@@ -134,17 +155,86 @@ export interface ActivityMessage {
 }
 
 export interface MessageReaction {
-  user_id: number;
+  user_id: string;
   emoji_id: string;
   created_at: string;
 }
 
 export interface GroupMessage {
   id: number;
-  user_id: number;
+  user_id: string;
   group_id: number;
   body: string | null;
   image_url: string | null;
   created_at: string;
   reactions: MessageReaction[];
+}
+
+// ===== FIFA result polling (admin) =====
+// Wire shapes from betty-api internal/fifa (admin /fifa endpoints). Admin-only
+// operator tooling; not part of the player wire contract or the native clients.
+
+export interface FifaSeason {
+  label: string;
+  season_id: string;
+}
+
+export interface FifaLinkResult {
+  competition_id: string;
+  match_count: number;
+}
+
+export interface FifaMappingSuggestion {
+  game_id: number;
+  match_id: string;
+  orientation_flipped: boolean;
+  ambiguous: boolean;
+  // True when this game already has a confirmed mapping (hidden from the to-do list).
+  confirmed: boolean;
+  // Display enrichment from the backend. game_* are always set; fifa_* are empty
+  // for an ambiguous (unmatched) game.
+  game_home_team: string;
+  game_away_team: string;
+  game_start_date: string;
+  fifa_home_team: string;
+  fifa_away_team: string;
+  fifa_start_time: string;
+}
+
+export interface FifaMappings {
+  competition_id: string;
+  suggestions: FifaMappingSuggestion[];
+}
+
+export type FifaProposalKind = 'initial' | 'correction' | 'rollback';
+export type FifaProposalStatus = 'pending' | 'applied' | 'dismissed' | 'superseded';
+export type FifaProposalSource = 'proposal' | 'auto';
+
+export interface FifaResultProposal {
+  id: number;
+  game_id: number;
+  match_id: string;
+  home_team_score: number;
+  away_team_score: number;
+  kind: FifaProposalKind;
+  status: FifaProposalStatus;
+  source: FifaProposalSource;
+  prev_home_score: number | null;
+  prev_away_score: number | null;
+  feed_hash: number;
+  // Display enrichment from the backend: the betty game's teams + kickoff. The
+  // score above is already oriented to betty's home/away.
+  game_home_team: string;
+  game_away_team: string;
+  game_start_date: string;
+}
+
+export interface FifaUnmappedResult {
+  competition_id: string;
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  start_time: string;
 }

@@ -17,9 +17,9 @@
             </video>
           </div>
           <div class="column">
-            <h1>Betty is your your personal friendly bets assistant.</h1>
+            <h1>Betty is your personal friendly bets assistant.</h1>
             <p class="tagline">
-              Keeps track of everyone's bets and scores and let's you relax, sit back and enjoy the
+              Keeps track of everyone's bets and scores and lets you relax, sit back and enjoy the
               cup.
             </p>
           </div>
@@ -32,8 +32,8 @@
           <div class="column">
             <h1>Create a group and invite friends and family.</h1>
             <p class="tagline">
-              Decide how many points to reward for each correct bet, and exact score. Select wether
-              to allow sneek peaking on the others score or not
+              Decide how many points to reward for each correct bet, and exact score. Select whether
+              to allow sneak peeking on the others' score or not
             </p>
           </div>
           <div class="column column--wrap">
@@ -184,15 +184,17 @@ const auth = useFirebaseAuth();
 
 function isInAppBrowser() {
   const ua = navigator.userAgent;
-  return /FBAN|FBAV|Instagram|Line|MicroMessenger|TikTok|Twitter/i.test(ua)
-    || /; wv\)/i.test(ua)
-    || (/iPhone|iPad/.test(ua) && !/Safari/.test(ua));
+  return (
+    /FBAN|FBAV|Instagram|Line|MicroMessenger|TikTok|Twitter/i.test(ua) ||
+    /; wv\)/i.test(ua) ||
+    (/iPhone|iPad/.test(ua) && !/Safari/.test(ua))
+  );
 }
 
 async function handleSignInSuccess() {
   const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
   if (returnUrl) {
-    window.location.href = returnUrl;
+    window.location.href = safeReturnUrl(returnUrl, '/dashboard');
   } else {
     await router.push('/dashboard');
   }
@@ -231,6 +233,7 @@ onMounted(async () => {
     if (result) await handleSignInSuccess();
   } catch (e: any) {
     authError.value = e.message;
+    showModal.value = true;
   }
 });
 
@@ -485,6 +488,7 @@ async function submitEmailAuth() {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .auth-buttons {
