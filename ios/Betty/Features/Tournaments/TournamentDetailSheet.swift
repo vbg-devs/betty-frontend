@@ -66,8 +66,14 @@ struct TournamentDetailSheet: View {
             .refreshable { await load(force: true) }
             .onAppear {
                 let days = TournamentSchedule.days(pools: tournament.poolsWithGames)
-                if let anchor = days.first(where: \.isNextUpcoming)?.id {
-                    proxy.scrollTo(anchor, anchor: .top)
+                guard let anchor = days.first(where: \.isNextUpcoming)?.id else { return }
+                // LazyVStack hasn't laid out off-screen days yet on a real device;
+                // wait one layout pass before asking the proxy to scroll.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    withAnimation {
+                        proxy.scrollTo(anchor, anchor: .top)
+                    }
                 }
             }
         }
