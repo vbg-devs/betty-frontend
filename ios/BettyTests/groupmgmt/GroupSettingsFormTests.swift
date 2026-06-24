@@ -80,4 +80,64 @@ import Testing
         let update = try #require(form.update)
         #expect(update.description == "Fresh pitch")
     }
+
+    // MARK: - Boosters (spec §3.1 / §1.1)
+
+    @Test func prefillsBoosterFieldsFromGroup() throws {
+        let group = try GroupMgmtFixtures.group(boostCount: 2, boostMultiplier: 3)
+        let form = GroupSettingsForm(group: group)
+        #expect(form.boostCount == "2")
+        #expect(form.boostMultiplier == "3")
+        #expect(!form.isMultiplierDisabled)
+        #expect(!form.isDirty)
+    }
+
+    @Test func multiplierIsDisabledWhenCountIsZero() throws {
+        let group = try GroupMgmtFixtures.group(boostCount: 0, boostMultiplier: 2)
+        let form = GroupSettingsForm(group: group)
+        #expect(form.isMultiplierDisabled)
+    }
+
+    @Test func boosterFieldsContributeToIsDirty() throws {
+        let group = try GroupMgmtFixtures.group(boostCount: 0, boostMultiplier: 2)
+        var form = GroupSettingsForm(group: group)
+
+        form.boostCount = "3"
+        #expect(form.isDirty)
+        form.boostCount = "0"
+        #expect(!form.isDirty)
+
+        form.boostMultiplier = "5"
+        #expect(form.isDirty)
+        form.boostMultiplier = "2"
+        #expect(!form.isDirty)
+    }
+
+    @Test func boosterValidationRejectsNegativeCountAndSubOneMultiplier() throws {
+        let group = try GroupMgmtFixtures.group(boostCount: 2, boostMultiplier: 2)
+        var form = GroupSettingsForm(group: group)
+
+        form.boostCount = "-1"
+        #expect(!form.canSave)
+        #expect(form.update == nil)
+
+        form.boostCount = "0"
+        #expect(form.canSave)
+
+        form.boostMultiplier = "0"
+        #expect(!form.canSave)
+        form.boostMultiplier = "1"
+        #expect(form.canSave)
+    }
+
+    @Test func updateSendsBoosterFields() throws {
+        let group = try GroupMgmtFixtures.group(boostCount: 0, boostMultiplier: 2)
+        var form = GroupSettingsForm(group: group)
+        form.boostCount = "2"
+        form.boostMultiplier = "3"
+
+        let update = try #require(form.update)
+        #expect(update.boostCount == 2)
+        #expect(update.boostMultiplier == 3)
+    }
 }

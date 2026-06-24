@@ -41,7 +41,10 @@ const GroupVisibilityChangedListItemStub = defineComponent({
   template: '<div class="stub-visibility" />',
 });
 const GameMessageListItemStub = defineComponent({
-  props: { message: { type: Object, default: () => ({}) } },
+  props: {
+    message: { type: Object, default: () => ({}) },
+    kind: { type: String, default: 'evaluate_game' },
+  },
   template: '<div class="stub-game-message" />',
 });
 const ExactScoreListItemStub = defineComponent({
@@ -146,6 +149,15 @@ describe('ActivityFeed', () => {
       expect(item.find('.feed-item__kicker').text()).toBe(label);
       expect(item.find('.feed-item__icon svg').exists()).toBe(hasIcon);
     });
+
+    it('booster_applied renders the rocket kicker with the orange accent', async () => {
+      store.add(makeMsg('booster_applied', { game_id: 1, user_id: 'uid-1', group_id: 3 }));
+      const wrapper = await mountFeed();
+      const item = wrapper.find('.feed-item');
+      expect(item.classes()).toContain('feed-item--orange');
+      expect(item.find('.feed-item__kicker').text()).toBe('🚀 BOOSTED');
+      expect(item.find('.feed-item__emoji').text()).toBe('🚀');
+    });
   });
 
   describe('type to child component mapping', () => {
@@ -195,7 +207,19 @@ describe('ActivityFeed', () => {
       const payload = { game_id: 6 };
       store.add(makeMsg('evaluate_game', payload));
       const wrapper = await mountFeed();
-      expect(wrapper.findComponent(GameMessageListItemStub).props('message')).toEqual(payload);
+      const stub = wrapper.findComponent(GameMessageListItemStub);
+      expect(stub.props('message')).toEqual(payload);
+      // Default kind: no explicit prop binding when type=evaluate_game.
+      expect(stub.props('kind')).toBe('evaluate_game');
+    });
+
+    it('booster_applied renders GameMessageListItem with kind="booster_applied"', async () => {
+      const payload = { game_id: 7, user_id: 'uid-1', group_id: 3, boosted: true };
+      store.add(makeMsg('booster_applied', payload));
+      const wrapper = await mountFeed();
+      const stub = wrapper.findComponent(GameMessageListItemStub);
+      expect(stub.props('message')).toEqual(payload);
+      expect(stub.props('kind')).toBe('booster_applied');
     });
 
     it('user_exact_score renders ExactScoreListItem with the payload as message', async () => {

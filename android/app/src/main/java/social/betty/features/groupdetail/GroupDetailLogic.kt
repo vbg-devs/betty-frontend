@@ -33,6 +33,16 @@ object GroupGameCardLogic {
         if (!game.isFinished) return null
         return firstOwnBet(bets, game.id, userId)?.userPoints
     }
+
+    /**
+     * Whether the awarded-points cell should render a rocket: own bet on a finished game,
+     * it's `boosted`, AND it scored > 0 points (spec §2.5 suppression rule).
+     */
+    fun awardedBoosted(game: Game, bets: List<Bet>, userId: String?): Boolean {
+        if (!game.isFinished) return false
+        val bet = firstOwnBet(bets, game.id, userId) ?: return false
+        return bet.boosted && (bet.userPoints ?: 0) > 0
+    }
 }
 
 /** NeedAction strip selection (web `NeedAction.vue`), scoped to a single group source. */

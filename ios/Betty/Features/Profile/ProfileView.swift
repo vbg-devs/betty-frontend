@@ -21,6 +21,8 @@ struct ProfileView: View {
 
     @State private var showsPrivacy = false
 
+    @State private var debugTapCount = 0
+
     var body: some View {
         ZStack {
             theme.colors.background.ignoresSafeArea()
@@ -28,10 +30,7 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: Space.m) {
                     Text("★ ACCOUNT")
                         .kicker(Palette.orange)
-                    Text("EDIT PROFILE")
-                        .font(.bettyDisplayL)
-                        .displayKerning(40)
-                        .foregroundStyle(theme.colors.textPrimary)
+                    editProfileHeader
 
                     avatarSection
 
@@ -52,6 +51,7 @@ struct ProfileView: View {
             }
         }
         .navigationTitle("Profile")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsPrivacy) {
             NavigationStack {
                 PrivacyView()
@@ -63,6 +63,49 @@ struct ProfileView: View {
             photoItem = nil
             Task { await handlePickedPhoto(newValue) }
         }
+    }
+
+    // MARK: - Header
+
+    private var editProfileHeader: some View {
+        Text("EDIT PROFILE")
+            .font(.bettyDisplayL)
+            .displayKerning(40)
+            .foregroundStyle(theme.colors.textPrimary)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                debugTapCount += 1
+                guard debugTapCount >= 5 else { return }
+                debugTapCount = 0
+                Task { await revealPushTokenForDebug() }
+            }
+    }
+
+    /// 5-tap on the EDIT PROFILE header → copy live FCM token to clipboard +
+    /// surface a toast. Flags drift between the SDK's current token and the
+    /// last value POSTed to `/user/me/add_push_token`. Hidden easter egg; ships
+    /// in TestFlight/Release so the token is reachable on physical devices.
+    private func revealPushTokenForDebug() async {
+        let live = await PushRegistrationService.debugCurrentFCMToken()
+        let sent = UserDefaults.standard.string(forKey: PushRegistrationService.sentTokenDefaultsKey)
+        guard let token = live ?? sent else {
+            env.toasts.alert(
+                title: "No FCM token",
+                message: "Firebase Messaging has no token on this device yet.",
+                state: .warning
+            )
+            return
+        }
+        UIPasteboard.general.string = token
+        let snippet = "\(token.prefix(8))…\(token.suffix(8))"
+        let drift = (live != nil && sent != nil && live != sent)
+            ? " — differs from last sent!"
+            : ""
+        env.toasts.alert(
+            title: "FCM token copied",
+            message: "\(snippet)\(drift)",
+            state: .info
+        )
     }
 
     // MARK: - Avatar + photo upload

@@ -20,6 +20,10 @@ nonisolated struct ActivityEventMeta: Equatable, Sendable {
             ActivityEventMeta(label: "● NEW BET", accent: .orange, symbol: "person.crop.circle.badge.checkmark")
         case .betUpdated:
             ActivityEventMeta(label: "● BET UPDATED", accent: .orange, symbol: "person.crop.circle.badge.checkmark")
+        case .boosterApplied:
+            // No SF Symbol for a rocket on every iOS version we support — the row
+            // body already starts with the 🚀 glyph, so leave the symbol nil.
+            ActivityEventMeta(label: "🚀 BOOSTER", accent: .orange, symbol: nil)
         case .gameStartingSoon:
             ActivityEventMeta(label: "● KICKING OFF", accent: .yellow, symbol: "clock")
         case .evaluateGame:
@@ -122,6 +126,8 @@ struct ActivityEventRow: View {
             FeedBetItem(gameID: bet.gameID, update: false)
         case .betUpdated(let bet):
             FeedBetItem(gameID: bet.gameID, update: true)
+        case .boosterApplied(let bet):
+            FeedBoosterItem(bet: bet)
         case .gameStartingSoon(let payload):
             FeedKickoffItem(games: payload.games)
         case .evaluateGame(let payload):
@@ -188,6 +194,48 @@ struct FeedBetItem: View {
         .task(id: gameID) {
             guard gameID != 0, env.gameStore.byID(gameID) == nil else { return }
             _ = try? await env.gameStore.load(id: gameID)
+        }
+    }
+}
+
+/// `booster_applied` — "🚀 **{user_name}** boosted **{home_team}** vs **{away_team}**".
+/// The actor name resolves from `groupStore.byId(bet.groupId).members` (mirroring
+/// web `GameMessageListItem.vue:59-64`). Falls back to "Someone" when unresolvable.
+/// Lazily loads the game so team names exist; renders nothing while pending.
+struct FeedBoosterItem: View {
+    let bet: Bet
+
+    @Environment(AppEnvironment.self) private var env
+    @Environment(ThemeStore.self) private var theme
+
+    private var actorName: String {
+        let group = env.groupStore.byID(bet.groupID)
+        let member = group?.members.first { $0.userID == bet.userID }
+        let display = member?.displayName
+        if let display, !display.isEmpty { return display }
+        return "Someone"
+    }
+
+    var body: some View {
+        // See FeedBetItem: the empty branch must render a node or `.task` never fires.
+        SwiftUI.Group {
+            if let game = env.gameStore.byID(bet.gameID) {
+                let homeTeam = env.teamStore.byID(game.homeTeamID)
+                let awayTeam = env.teamStore.byID(game.awayTeamID)
+                (Text("🚀 ").font(.betty(13, .medium))
+                    + Text(actorName).font(.betty(13, .heavy))
+                    + Text(" boosted ").font(.betty(13, .medium))
+                    + Text(homeTeam?.name ?? "").font(.betty(13, .heavy))
+                    + Text(" vs ").font(.betty(13, .medium))
+                    + Text(awayTeam?.name ?? "").font(.betty(13, .heavy)))
+                    .foregroundStyle(theme.colors.textPrimary)
+            } else {
+                Color.clear.frame(width: 0, height: 0)
+            }
+        }
+        .task(id: bet.gameID) {
+            guard bet.gameID != 0, env.gameStore.byID(bet.gameID) == nil else { return }
+            _ = try? await env.gameStore.load(id: bet.gameID)
         }
     }
 }

@@ -9,6 +9,13 @@ struct GroupGameCard: View {
     let placedHome: Int
     let placedAway: Int
     let awardedPoints: Int?
+    /// True iff the user's own bet on this game is `boosted` AND scored > 0 (spec §2.5
+    /// suppression). Set by the caller from `GroupGameCardLogic.awardedBoosted(...)`.
+    var awardedBoosted: Bool = false
+    /// True iff the user's own bet on this game is `boosted`. Drives the pre-evaluation
+    /// rocket next to the placed-bet chip; no points-suppression check (the spec §2.5 rule
+    /// only applies to the awarded-points rocket).
+    var placedBoosted: Bool = false
     /// nil hides the chip (web `showBets == false`).
     let betCount: Int?
     var onTap: () -> Void
@@ -73,23 +80,38 @@ struct GroupGameCard: View {
                     scoreLabel(game.awayTeamScore)
                 }
                 if betted {
-                    HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text("\(placedHome)")
-                        Text("-")
-                        Text("\(placedAway)")
+                    HStack(alignment: .center, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text("\(placedHome)")
+                            Text("-")
+                            Text("\(placedAway)")
+                        }
+                        .font(.bettyKicker)
+                        .kerning(0.4)
+                        .monospacedDigit()
+                        .foregroundStyle(Palette.orange)
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 8)
+                        .background(Palette.orangeTint15, in: RoundedRectangle(cornerRadius: Radius.sharp))
+                        .accessibilityLabel("Your bet \(placedHome) to \(placedAway)")
+                        if placedBoosted {
+                            Text("🚀")
+                                .font(.betty(12, .regular))
+                                .accessibilityLabel("Boosted")
+                        }
                     }
-                    .font(.bettyKicker)
-                    .kerning(0.4)
-                    .monospacedDigit()
-                    .foregroundStyle(Palette.orange)
-                    .padding(.vertical, 3)
-                    .padding(.horizontal, 8)
-                    .background(Palette.orangeTint15, in: RoundedRectangle(cornerRadius: Radius.sharp))
-                    .accessibilityLabel("Your bet \(placedHome) to \(placedAway)")
                 }
                 if let awardedPoints {
-                    Text("\(awardedPoints)P")
-                        .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                    HStack(spacing: 4) {
+                        Text("\(awardedPoints)P")
+                            .kicker(awardedPoints > 0 ? theme.colors.accentPositive : theme.colors.textSecondary)
+                        if awardedBoosted && awardedPoints > 0 {
+                            // Post-eval rocket (spec §3.4, §2.5 — suppress on 0-point bets).
+                            Text("🚀")
+                                .font(.betty(12, .regular))
+                                .accessibilityLabel("Boosted")
+                        }
+                    }
                 }
             }
             .padding(.top, Space.m)

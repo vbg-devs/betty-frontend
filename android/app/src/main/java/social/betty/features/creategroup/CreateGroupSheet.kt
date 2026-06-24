@@ -23,8 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -198,6 +198,36 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                 }
             }
 
+            // Booster fields (Boosters spec §3.2). Defaults 0 / 2 — boosters OFF on new groups.
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                FormField(label = "Boosters per user", modifier = Modifier.weight(1f)) {
+                    BettyTextField(
+                        value = form.boostCount,
+                        onValueChange = { form.boostCount = it.filter { c -> c.isDigit() } },
+                        placeholder = "0",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.testTag("create-group-boost-count"),
+                    )
+                }
+                FormField(label = "Booster multiplier", modifier = Modifier.weight(1f)) {
+                    val multiplierEnabled = (form.boostCount.toIntOrNull() ?: 0) > 0
+                    BettyTextField(
+                        value = form.boostMultiplier,
+                        onValueChange = { form.boostMultiplier = it.filter { c -> c.isDigit() } },
+                        placeholder = "2",
+                        keyboardType = KeyboardType.Number,
+                        enabled = multiplierEnabled,
+                        modifier = Modifier.testTag("create-group-boost-multiplier"),
+                    )
+                }
+            }
+            Text(
+                text = "Members can apply a booster to multiply a single bet's points. Set count to 0 to disable.",
+                style = BettyTheme.type.bodyRegular.copy(fontSize = BettyTheme.type.caption.fontSize),
+                color = BettyTheme.colors.textSecondary,
+                modifier = Modifier.testTag("create-group-boost-help"),
+            )
+
             // Sneak-peek toggle (default ON)
             CheckRow(
                 title = "Allow sneak peek",
@@ -225,6 +255,8 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                     val trimmedDescription =
                         form.description.trim().takeIf { it.isNotEmpty() }
 
+                    val boostCount = form.boostCount.toIntOrNull() ?: 0
+                    val boostMultiplier = form.boostMultiplier.toIntOrNull() ?: 2
                     isCreating = true
                     scope.launch {
                         try {
@@ -238,6 +270,8 @@ fun CreateGroupSheet(onDismiss: () -> Unit) {
                                 welcomeMessage = form.welcomeMessage.takeIf { it.isNotEmpty() },
                                 description = trimmedDescription,
                                 isPublic = form.isPublic,
+                                boostCount = boostCount,
+                                boostMultiplier = boostMultiplier,
                             )
                             // Reload so byId() can find the new group.
                             container.groupStore.load()
@@ -342,11 +376,13 @@ private fun BettyTextField(
     minLines: Int = 1,
     maxLines: Int = 1,
     keyboardType: KeyboardType = KeyboardType.Text,
+    enabled: Boolean = true,
 ) {
     val colors = BettyTheme.colors
-    TextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         placeholder = {
             Text(
                 placeholder,
@@ -361,20 +397,19 @@ private fun BettyTextField(
         maxLines = if (singleLine) 1 else maxLines,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         textStyle = BettyTheme.type.body.copy(color = colors.textPrimary),
-        colors = TextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = colors.overlay06,
             unfocusedContainerColor = colors.overlay06,
             disabledContainerColor = colors.overlay04,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
+            focusedBorderColor = Palette.orange,
+            unfocusedBorderColor = colors.overlay10,
+            disabledBorderColor = colors.overlay10,
             focusedTextColor = colors.textPrimary,
             unfocusedTextColor = colors.textPrimary,
+            disabledTextColor = colors.textMuted,
         ),
         shape = Radius.sharp,
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.overlay10, Radius.sharp),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 

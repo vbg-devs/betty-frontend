@@ -48,6 +48,10 @@ struct MockGroup {
     var allowSneakPeek = true
     var groupPlayDeadline: Date?
     var mode = 0
+    /// 0 = boosters disabled in this group (default — spec decision log #6).
+    var boostCount = 0
+    /// Multiplier applied when a bet has `boosted == true`. Default 2.
+    var boostMultiplier = 2
     var publicAt: Date?
     var createdAt = Date()
     var updatedAt = Date()
@@ -115,6 +119,8 @@ struct MockBet {
     var userPoints: Int?
     var homeTeamScore: Int
     var awayTeamScore: Int
+    /// True iff the user has applied their booster to this row (spec §1.2).
+    var boosted = false
     var processedAt: Date?
     var createdAt = Date()
     var updatedAt = Date()
@@ -263,19 +269,32 @@ struct MockScenario {
     }
 
     /// Upserts a bet (the DB unique key is user+game+group). Returns the stored bet.
+    /// `boosted` is written verbatim; the route layer is responsible for spec §1.2
+    /// validation (boosters off / capacity) before calling here.
     @discardableResult
-    mutating func upsertBet(userID: String, gameID: Int, groupID: Int, home: Int, away: Int) -> MockBet {
+    mutating func upsertBet(userID: String, gameID: Int, groupID: Int, home: Int, away: Int,
+                            boosted: Bool = false) -> MockBet {
         if let index = bets.firstIndex(where: { $0.userID == userID && $0.gameID == gameID && $0.groupID == groupID }) {
             bets[index].homeTeamScore = home
             bets[index].awayTeamScore = away
+            bets[index].boosted = boosted
             bets[index].updatedAt = Date()
             return bets[index]
         }
         let bet = MockBet(id: nextBetID, userID: userID, gameID: gameID, groupID: groupID,
-                          userPoints: nil, homeTeamScore: home, awayTeamScore: away)
+                          userPoints: nil, homeTeamScore: home, awayTeamScore: away, boosted: boosted)
         nextBetID += 1
         bets.append(bet)
         return bet
+    }
+
+    /// Spec §1.6 helper — count the user's already-boosted bets in `groupID` *excluding*
+    /// `excludingBetID` (so a no-op true→true write never trips the cap).
+    func boostersUsed(userID: String, groupID: Int, excludingBetID: Int? = nil) -> Int {
+        bets.count { bet in
+            bet.userID == userID && bet.groupID == groupID && bet.boosted
+                && (excludingBetID == nil || bet.id != excludingBetID!)
+        }
     }
 }
 
@@ -431,6 +450,8 @@ enum DefaultScenario {
             id: groupSundayLegendsID, name: "Sunday Legends",
             tournamentID: runningTournamentID, inviteCode: "SUNLEG",
             welcomeMessage: "Bring your A-game.", description: "The original crew.",
+            // Boosters ON in this group (spec §4.1 default fixture: count=2, multiplier=2).
+            boostCount: 2, boostMultiplier: 2,
             createdAt: now.addingTimeInterval(-6 * 86_400),
             members: [
                 MockMember(userID: currentUserID, score: 5, normalizedScore: 5, accessLevel: 0),
@@ -442,6 +463,8 @@ enum DefaultScenario {
             id: groupOfficeRoyaleID, name: "Office Royale",
             tournamentID: runningTournamentID, inviteCode: "OFFICE",
             correctTeamPoints: 2, exactResultPoints: 5,
+            // Boosters OFF in this group (spec §4.1 — exercise the disabled-state UI).
+            boostCount: 0, boostMultiplier: 2,
             createdAt: now.addingTimeInterval(-5 * 86_400),
             members: [
                 MockMember(userID: friendUserID, score: 4, normalizedScore: 4, accessLevel: 0),

@@ -115,6 +115,27 @@ import Testing
         #expect(bet.userPoints == nil)
         #expect(!bet.isProcessed)
         #expect(!bet.isUniversal)
+        // Missing `boosted` on a pre-feature response defaults to false.
+        #expect(!bet.boosted)
+    }
+
+    @Test func betDecodesBoostedFlagWhenPresent() throws {
+        // Booster fields land on the existing Bet model (api-contract.md §2, §3.4).
+        let json = """
+        {
+          "id": 2, "user_id": "uid-1", "game_id": 9, "group_id": 7,
+          "user_points": 6,
+          "home_team_score": 2, "away_team_score": 1,
+          "is_universal": false,
+          "boosted": true,
+          "processed_at": "2026-06-08T12:00:00Z",
+          "created_at": "2026-06-07T12:00:00Z", "updated_at": "2026-06-08T12:00:00Z"
+        }
+        """
+        let bet = try decoder.decode(Bet.self, from: Data(json.utf8))
+        #expect(bet.boosted)
+        #expect(bet.userPoints == 6)
+        #expect(bet.isProcessed)
     }
 
     @Test func postBetEchoDecodesZeroIDAndZeroTimes() throws {
@@ -171,6 +192,34 @@ import Testing
         #expect(group.members[1].displayName == "Lovelace")
         #expect(group.member(withUserID: "uid-2")?.nickname == "Lovelace")
         #expect(group.member(withUserID: nil) == nil)
+        // Missing booster fields default to 0/2 per spec §1.1 (pre-feature backend).
+        #expect(group.boostCount == 0)
+        #expect(group.boostMultiplier == 2)
+    }
+
+    @Test func groupDecodesBoosterFieldsWhenPresent() throws {
+        // New wire fields (api-contract.md §2 Group): boost_count + boost_multiplier.
+        let json = """
+        {
+          "id": 7, "name": "Boosted League",
+          "tournament_id": 1, "tournament_name": "Euro 2026",
+          "tournament_image_url": null, "header_image_url": null,
+          "invite_code": "x", "invite_url": "https://betty.social/dashboard/groups/join/x",
+          "welcome_message": null, "description": null,
+          "correct_team_points": 1, "exact_result_points": 3,
+          "allow_sneak_peek": false,
+          "group_play_deadline": null,
+          "mode": 0,
+          "boost_count": 3, "boost_multiplier": 5,
+          "is_public": false,
+          "public_at": null,
+          "created_at": "2026-05-01T08:00:00Z", "updated_at": "2026-05-01T08:00:00Z",
+          "members": []
+        }
+        """
+        let group = try decoder.decode(Group.self, from: Data(json.utf8))
+        #expect(group.boostCount == 3)
+        #expect(group.boostMultiplier == 5)
     }
 
     @Test func messageReactionsNullInPostResponseNormalizesToEmpty() throws {
@@ -228,6 +277,7 @@ import Testing
             "tournament_image_url": null, "header_image_url": null,
             "correct_team_points": 1, "exact_result_points": 3, "allow_sneak_peek": true,
             "bet_mode": 0, "group_play_deadline": null,
+            "boost_count": 2, "boost_multiplier": 3,
             "public_at": "2026-06-01T08:00:00Z", "created_at": "2026-05-01T08:00:00Z",
             "member_count": 12, "is_member": false
           }],
@@ -237,11 +287,31 @@ import Testing
         let list = try decoder.decode(PublicGroupList.self, from: Data(json.utf8))
         #expect(list.items.count == 1)
         #expect(list.items[0].betMode == 0) // key is bet_mode here, mode on Group
+        #expect(list.items[0].boostCount == 2)
+        #expect(list.items[0].boostMultiplier == 3)
         #expect(list.nextCursor == "eyJpZCI6N30")
 
         let emptyPage = try decoder.decode(PublicGroupList.self, from: Data(#"{"items": null, "next_cursor": ""}"#.utf8))
         #expect(emptyPage.items.isEmpty)
         #expect(emptyPage.nextCursor.isEmpty)
+    }
+
+    @Test func publicGroupItemDefaultsBoosterFieldsWhenMissing() throws {
+        // Pre-feature backend response: boost_count / boost_multiplier absent → 0 / 2.
+        let json = """
+        {
+          "id": 7, "name": "Pre-Feature League", "description": null,
+          "tournament_id": 1, "tournament_name": "Euro 2026",
+          "tournament_image_url": null, "header_image_url": null,
+          "correct_team_points": 1, "exact_result_points": 3, "allow_sneak_peek": true,
+          "bet_mode": 0, "group_play_deadline": null,
+          "public_at": "2026-06-01T08:00:00Z", "created_at": "2026-05-01T08:00:00Z",
+          "member_count": 1, "is_member": false
+        }
+        """
+        let item = try decoder.decode(PublicGroupItem.self, from: Data(json.utf8))
+        #expect(item.boostCount == 0)
+        #expect(item.boostMultiplier == 2)
     }
 
     @Test func userGroupsResponseDecodesPlacements() throws {
@@ -294,6 +364,80 @@ import Testing
         let decoded = try decoder.decode(Game.self, from: Data(game.utf8))
         #expect(decoded.status == 0)
         #expect(!decoded.isFinished) // 0 is NOT finished — only 1 is
+    }
+}
+
+/// Encoding tests for request bodies that ship to the backend. Pins the booster fields
+/// land on the wire in their documented shape (`api-contract.md` §3.3, §3.4).
+@Suite struct RequestEncodingTests {
+    private let encoder = JSONCoding.makeEncoder()
+
+    @Test func createGroupRequestEncodesBoostFieldsWithDefaults() throws {
+        let payload = CreateGroupRequest(
+            name: "G", tournamentID: 1,
+            correctTeamPoints: 1, exactResultPoints: 3
+        )
+        let data = try encoder.encode(payload)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["boost_count"] as? Int == 0)
+        #expect(json?["boost_multiplier"] as? Int == 2)
+    }
+
+    @Test func createGroupRequestEncodesExplicitBoostValues() throws {
+        let payload = CreateGroupRequest(
+            name: "G", tournamentID: 1,
+            correctTeamPoints: 1, exactResultPoints: 3,
+            boostCount: 3, boostMultiplier: 5
+        )
+        let data = try encoder.encode(payload)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["boost_count"] as? Int == 3)
+        #expect(json?["boost_multiplier"] as? Int == 5)
+    }
+
+    @Test func groupSettingsUpdateOmitsBoostFieldsWhenNil() throws {
+        let update = GroupSettingsUpdate(
+            welcomeMessage: nil, description: nil,
+            correctTeamPoints: 1, exactResultPoints: 3,
+            allowSneakPeek: true
+        )
+        let data = try encoder.encode(update)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        // Partial update: nil-keyed booster fields must not appear on the wire.
+        #expect(!(json?.keys.contains("boost_count") ?? false))
+        #expect(!(json?.keys.contains("boost_multiplier") ?? false))
+    }
+
+    @Test func groupSettingsUpdateEmitsBoostFieldsWhenSet() throws {
+        let update = GroupSettingsUpdate(
+            welcomeMessage: nil, description: nil,
+            correctTeamPoints: 1, exactResultPoints: 3,
+            allowSneakPeek: true,
+            boostCount: 2, boostMultiplier: 4
+        )
+        let data = try encoder.encode(update)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["boost_count"] as? Int == 2)
+        #expect(json?["boost_multiplier"] as? Int == 4)
+    }
+
+    @Test func placeBetRequestEncodesBoostedFlag() throws {
+        let payload = PlaceBetRequest(
+            gameID: 9, groupID: 7,
+            homeTeamScore: 2, awayTeamScore: 1,
+            isUniversal: false, boosted: true
+        )
+        let data = try encoder.encode(payload)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["boosted"] as? Bool == true)
+        #expect(json?["is_universal"] as? Bool == false)
+    }
+
+    @Test func updateBetRequestDefaultsBoostedFalse() throws {
+        let payload = UpdateBetRequest(id: 42, homeTeamScore: 1, awayTeamScore: 0)
+        let data = try encoder.encode(payload)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["boosted"] as? Bool == false)
     }
 }
 

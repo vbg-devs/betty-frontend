@@ -99,7 +99,9 @@ enum GroupMgmtFixtures {
         description: String? = nil,
         correctTeamPoints: Int = 2,
         exactResultPoints: Int = 4,
-        allowSneakPeek: Bool = true
+        allowSneakPeek: Bool = true,
+        boostCount: Int = 0,
+        boostMultiplier: Int = 2
     ) throws -> Group {
         try decode(Group.self, from: """
         {
@@ -115,6 +117,8 @@ enum GroupMgmtFixtures {
           "exact_result_points": \(exactResultPoints),
           "allow_sneak_peek": \(allowSneakPeek),
           "mode": 0,
+          "boost_count": \(boostCount),
+          "boost_multiplier": \(boostMultiplier),
           "public_at": null,
           "created_at": "2026-01-01T00:00:00Z",
           "updated_at": "2026-01-01T00:00:00Z",

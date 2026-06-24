@@ -17,14 +17,21 @@ class BetStore(private val api: BettyApi) {
     val bets: StateFlow<List<Bet>> = _bets.asStateFlow()
 
     /** POST /bet — 200 on success, 423 if the game already started. */
-    suspend fun place(gameId: Int, groupId: Int, home: Int, away: Int, isUniversal: Boolean): Bet =
-        api.placeBet(gameId, groupId, home, away, isUniversal).also { bet ->
+    suspend fun place(
+        gameId: Int,
+        groupId: Int,
+        home: Int,
+        away: Int,
+        isUniversal: Boolean,
+        boosted: Boolean = false,
+    ): Bet =
+        api.placeBet(gameId, groupId, home, away, isUniversal, boosted).also { bet ->
             _bets.value = _bets.value + bet
         }
 
     /** PUT /bet/:id — single-group score edit only. Unknown id leaves state untouched. */
-    suspend fun update(id: Int, home: Int, away: Int): Bet =
-        api.updateBet(id, home, away).also { updated ->
+    suspend fun update(id: Int, home: Int, away: Int, boosted: Boolean = false): Bet =
+        api.updateBet(id, home, away, boosted).also { updated ->
             _bets.value = _bets.value.map { if (it.id == id) updated else it }
         }
 }

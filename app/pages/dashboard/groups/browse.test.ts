@@ -36,6 +36,8 @@ function makeItem(id: number, overrides: Partial<PublicGroupItem> = {}): PublicG
     allow_sneak_peek: false,
     bet_mode: 0,
     group_play_deadline: null,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: '2026-01-01T00:00:00Z',
     created_at: '2026-01-01T00:00:00Z',
     member_count: 1,

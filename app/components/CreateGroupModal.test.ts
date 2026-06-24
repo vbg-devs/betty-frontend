@@ -34,6 +34,8 @@ function makeGroup(id: number, overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: true,
     correct_team_points: 2,
     exact_result_points: 4,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [],
     ...overrides,
@@ -156,7 +158,7 @@ describe('CreateGroupModal', () => {
     expect(wrapper.find('.modal__footer-btn-wrap').attributes('aria-label')).toBeUndefined();
   });
 
-  it('posts the payload with defaults: sneak peek off, private, null description', async () => {
+  it('posts the payload with defaults: sneak peek off, private, null description, boosters off', async () => {
     authFetch.mockImplementation((url: string) =>
       url === '/group' ? Promise.resolve({ group_id: 5 }) : Promise.resolve([makeGroup(5)]),
     );
@@ -173,6 +175,8 @@ describe('CreateGroupModal', () => {
         correct_team_points: 2,
         exact_result_points: 4,
         allow_sneak_peek: false,
+        boost_count: 0,
+        boost_multiplier: 2,
         group_play_deadline: '2026-06-11T00:00:00Z',
         welcome_message: '',
         description: null,
@@ -180,6 +184,54 @@ describe('CreateGroupModal', () => {
         mode: 0,
       },
     });
+  });
+
+  it('renders the booster fields with defaults and disables the multiplier when count is 0', async () => {
+    const wrapper = await mountModal();
+    const numbers = wrapper.findAll('input[type="number"]');
+    expect(numbers).toHaveLength(4);
+    expect((numbers[2]!.element as HTMLInputElement).value).toBe('0');
+    expect((numbers[3]!.element as HTMLInputElement).value).toBe('2');
+    expect(numbers[3]!.attributes('disabled')).toBeDefined();
+    await numbers[2]!.setValue('3');
+    expect(numbers[3]!.attributes('disabled')).toBeUndefined();
+  });
+
+  it('posts overridden booster values in the payload', async () => {
+    authFetch.mockImplementation((url: string) =>
+      url === '/group' ? Promise.resolve({ group_id: 5 }) : Promise.resolve([makeGroup(5)]),
+    );
+    const wrapper = await mountModal();
+    await fillForm(wrapper);
+    const numbers = wrapper.findAll('input[type="number"]');
+    await numbers[2]!.setValue('3');
+    await numbers[3]!.setValue('5');
+    await createBtn(wrapper).trigger('click');
+    await flushPromises();
+
+    expect(authFetch).toHaveBeenCalledWith(
+      '/group',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          boost_count: 3,
+          boost_multiplier: 5,
+        }),
+      }),
+    );
+  });
+
+  it('disables create when booster count is negative or multiplier is below 1', async () => {
+    const wrapper = await mountModal();
+    await fillForm(wrapper);
+    expect(createBtn(wrapper).attributes('disabled')).toBeUndefined();
+
+    const numbers = wrapper.findAll('input[type="number"]');
+    await numbers[2]!.setValue('-1');
+    expect(createBtn(wrapper).attributes('disabled')).toBeDefined();
+
+    await numbers[2]!.setValue('2');
+    await numbers[3]!.setValue('0');
+    expect(createBtn(wrapper).attributes('disabled')).toBeDefined();
   });
 
   it('posts toggled checkboxes, message, and trimmed description', async () => {

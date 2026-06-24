@@ -19,6 +19,8 @@ function makeGroup(id: number, overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: false,
     correct_team_points: 1,
     exact_result_points: 3,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [],
     ...overrides,
@@ -102,6 +104,23 @@ describe('useGroupStore', () => {
       expect(authFetch).toHaveBeenCalledWith('/group', {
         method: 'POST',
         body: { name: 'New group', tournament_id: 3 },
+      });
+    });
+
+    it('forwards boost_count and boost_multiplier when included in the payload', async () => {
+      authFetch.mockResolvedValue({ group_id: 88 });
+      const store = useGroupStore();
+
+      await store.create({
+        name: 'Boosted group',
+        tournament_id: 3,
+        boost_count: 2,
+        boost_multiplier: 5,
+      });
+
+      expect(authFetch).toHaveBeenCalledWith('/group', {
+        method: 'POST',
+        body: { name: 'Boosted group', tournament_id: 3, boost_count: 2, boost_multiplier: 5 },
       });
     });
   });
@@ -216,6 +235,29 @@ describe('useGroupStore', () => {
       });
       expect(authFetch).toHaveBeenNthCalledWith(2, '/groups');
       expect(store.byId(3)!.welcome_message).toBe('Hi');
+    });
+
+    it('forwards boost_count and boost_multiplier when given', async () => {
+      authFetch.mockImplementation(async (path: string) =>
+        path === '/groups' ? [makeGroup(3, { boost_count: 2, boost_multiplier: 4 })] : {},
+      );
+      const store = useGroupStore();
+      const payload = {
+        welcome_message: 'Hi',
+        description: null,
+        correct_team_points: 2,
+        exact_result_points: 5,
+        allow_sneak_peek: false,
+        boost_count: 2,
+        boost_multiplier: 4,
+      };
+
+      await store.updateSettings(3, payload);
+
+      expect(authFetch).toHaveBeenNthCalledWith(1, '/group/3/settings', {
+        method: 'PUT',
+        body: payload,
+      });
     });
   });
 

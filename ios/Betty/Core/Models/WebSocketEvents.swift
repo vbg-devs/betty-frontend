@@ -89,6 +89,9 @@ nonisolated enum BettyEvent: Hashable, Sendable {
     case userRegister(UserProfile)
     case betPlaced(Bet)
     case betUpdated(Bet)
+    /// `booster_applied` — payload is the updated `Bet` (same echo shape as
+    /// `bet_placed` / `bet_updated`). Emitted on false→true transitions only.
+    case boosterApplied(Bet)
     case groupJoined(WSGroupJoined)
     case groupLeft
     case groupCreated
@@ -105,6 +108,7 @@ nonisolated enum BettyEvent: Hashable, Sendable {
         case .userRegister: "user_register"
         case .betPlaced: "bet_placed"
         case .betUpdated: "bet_updated"
+        case .boosterApplied: "booster_applied"
         case .groupJoined: "group_joined"
         case .groupLeft: "group_left"
         case .groupCreated: "group_created"
@@ -145,6 +149,8 @@ nonisolated enum BettyEvent: Hashable, Sendable {
             return payload(Bet.self).map { .betPlaced($0) } ?? fallback()
         case "bet_updated":
             return payload(Bet.self).map { .betUpdated($0) } ?? fallback()
+        case "booster_applied":
+            return payload(Bet.self).map { .boosterApplied($0) } ?? fallback()
         case "group_joined":
             return payload(WSGroupJoined.self).map { .groupJoined($0) } ?? fallback()
         case "group_left":

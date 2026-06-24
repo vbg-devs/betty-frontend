@@ -27,8 +27,9 @@ import social.betty.designsystem.BettyTheme
  * - `pl:arsenal` → remote `https://betty.social/pl/arsenal.png`
  * - anything else / null → fallback initials from `name`
  *
- * NOTE: The Android build does not yet bundle flag/club art. All images fall back to a
- * remote Coil fetch or initials until assets are added to the drawable resource catalog.
+ * NOTE: The Android build does not bundle flag/club art (iOS ships it in an asset
+ * catalog). All images are fetched remotely by Coil — flags as SVG (decoded via the
+ * `SvgDecoder` registered on `BettyApplication`'s `ImageLoader`) — or fall back to initials.
  *
  * @param url   `imageUrl` string from the Team model (scheme-prefixed or null).
  * @param name  Team name used to derive the single-initial fallback.
@@ -80,9 +81,9 @@ fun TeamLogo(
  * type is unsupported / the input is null.
  *
  * - `pl:<key>` → `https://betty.social/pl/<key>.png`
- * - `flag:<key>` → `https://betty.social/flags/<key>.svg` (SVG; Coil handles it on Android
- *   via its SVG decoder if present; the asset bundle is preferred on iOS but not yet
- *   available here — this remote fallback ensures logos render)
+ * - `flag:<key>` → `https://betty.social/flags/<key>.svg` (SVG, decoded by the `SvgDecoder`
+ *   registered on `BettyApplication`'s Coil `ImageLoader`; iOS bundles the same art as a
+ *   PNG asset catalog instead, but this remote fetch keeps Android at visual parity)
  * - all other types / null → null (show initials)
  */
 private fun resolveTeamLogoUrl(raw: String?): String? {

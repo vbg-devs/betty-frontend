@@ -3,7 +3,7 @@
 Betty.social — social betting with friends. One repo, every client:
 
 - `app/` — Nuxt 4 / Vue web app (SPA, `ssr: false`)
-- `ios/` — native SwiftUI app (iOS 17+, XcodeGen, zero third-party deps)
+- `ios/` — native SwiftUI app (iOS 17+, XcodeGen, one third-party dep: `FirebaseMessaging` only)
 - `android/` — native Kotlin / Jetpack Compose app (minSdk 26, Gradle), a
   faithful 1:1 port of iOS: same Core/DesignSystem/Features layout, Firebase-REST
   auth, hermetic in-process mock-backend e2e.
@@ -94,6 +94,17 @@ iOS (`ios/`): `xcodegen generate`, then
   securetoken, Keychain persistence. Google sign-in's iOS OAuth client ID is
   set in project.yml (`GoogleOAuthClientID`).
 
+**iOS dep carve-out — Firebase Messaging only.** The iOS app links
+`FirebaseMessaging` (and its transitive deps: `FirebaseCore`,
+`GoogleUtilities`, `GoogleDataTransport`, `nanopb`, `PromisesObjC`) via
+SPM (`ios/project.yml` → `packages.Firebase`). This is the ONLY
+third-party dep on iOS. Auth remains REST-only — `FirebaseAuth` is
+NOT linked. Future deps require an explicit override of this rule.
+`GoogleService-Info.plist` is gitignored; CI decodes it from
+`GOOGLE_SERVICE_INFO_PLIST_BASE64` (in the protected `release`
+environment) into `ios/Betty/GoogleService-Info.plist` before
+`xcodegen generate`.
+
 Android (`android/`): Kotlin + Jetpack Compose, applicationId `social.betty.android`
 (code/namespace `social.betty`),
 AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
@@ -126,8 +137,13 @@ AGP 8.11 / Kotlin 2.1 / compileSdk 36 / minSdk 26. `./gradlew` (wrapper, Gradle
 - `.github/workflows/ios-testflight.yml` uploads to TestFlight after CI
   succeeds on `main` (cloud signing via ASC API key from the `release`
   environment; no certs in CI).
-- `MARKETING_VERSION` (workflow env + `ios/project.yml`) must match the
-  in-flight version in App Store Connect (app 1636185602) — bump per release.
+- `MARKETING_VERSION` is resolved per-run from App Store Connect by the
+  "Resolve TestFlight version" step (`ios/scripts/asc-marketing-version.py`):
+  `ios/project.yml`'s `MARKETING_VERSION` is the **floor**, and the script
+  patch-bumps past any train ASC reports as released (closed), so a routine
+  patch release needs no edit. A released train rejects new builds with error
+  90186 ("Invalid Pre-Release Train … is closed") — this avoids it. Only bump
+  `ios/project.yml` for a deliberate minor/major (e.g. 1.0.x → 1.1.0).
 - Build numbers are `100 + run_number` (TestFlight history already reaches 28
   from the previous pipeline); never reuse/decrease.
 - Internal testers (group "Betty") get builds automatically after processing.

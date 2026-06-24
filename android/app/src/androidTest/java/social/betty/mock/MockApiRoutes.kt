@@ -161,6 +161,12 @@ private fun BettyMockBackend.registerGroupRoutes() {
             return@api MockHttpResponse.empty(400)
         }
         body.optStringOrNull("description")?.let { if (it.length > 1000) return@api MockHttpResponse.empty(400) }
+        // Spec §1.1: boost_count ≥ 0, boost_multiplier ≥ 1. Defaults 0 / 2.
+        val boostCount = body.optIntOrNull("boost_count") ?: 0
+        val boostMultiplier = body.optIntOrNull("boost_multiplier") ?: 2
+        if (boostCount < 0 || boostMultiplier < 1) {
+            return@api MockHttpResponse.json(jsonOf("error" to "invalid booster config"), status = 400)
+        }
         val id = scenario.nextGroupId
         scenario.nextGroupId += 1
         scenario.groups.add(
@@ -173,6 +179,7 @@ private fun BettyMockBackend.registerGroupRoutes() {
                 allowSneakPeek = body.optBoolOr("allow_sneak_peek", false),
                 groupPlayDeadline = MockWire.parseTime(if (body.has("group_play_deadline") && !body.isNull("group_play_deadline")) body.opt("group_play_deadline") else null),
                 mode = body.optIntOrNull("mode") ?: 0,
+                boostCount = boostCount, boostMultiplier = boostMultiplier,
                 publicAt = if (body.optBoolOr("is_public", false)) Instant.now() else null,
                 members = mutableListOf(MockMember(userId = uid, accessLevel = 0)),
             ),
@@ -262,6 +269,14 @@ private fun BettyMockBackend.registerGroupRoutes() {
         if (!scenario.group(id)!!.isAuthor(uid)) return@api MockHttpResponse.empty(401)
         val body = request.bodyJson ?: JSONObject()
         body.optStringOrNull("description")?.let { if (it.length > 1000) return@api MockHttpResponse.empty(400) }
+        // Spec §1.1: validate booster fields BEFORE persisting anything so a bad request
+        // leaves all state intact (matches betty-api behavior).
+        body.optIntOrNull("boost_count")?.let {
+            if (it < 0) return@api MockHttpResponse.json(jsonOf("error" to "invalid booster config"), status = 400)
+        }
+        body.optIntOrNull("boost_multiplier")?.let {
+            if (it < 1) return@api MockHttpResponse.json(jsonOf("error" to "invalid booster config"), status = 400)
+        }
         // Partial update: only PRESENT keys are written; explicit null clears the two nullable ones.
         scenario.updateGroup(id) { group ->
             if (body.has("welcome_message")) group.welcomeMessage = body.optStringOrNull("welcome_message")
@@ -271,6 +286,8 @@ private fun BettyMockBackend.registerGroupRoutes() {
             if (body.has("allow_sneak_peek") && !body.isNull("allow_sneak_peek")) {
                 (body.opt("allow_sneak_peek") as? Boolean)?.let { group.allowSneakPeek = it }
             }
+            body.optIntOrNull("boost_count")?.let { if (it >= 0) group.boostCount = it }
+            body.optIntOrNull("boost_multiplier")?.let { if (it >= 1) group.boostMultiplier = it }
             group.updatedAt = Instant.now()
         }
         MockHttpResponse.json(MockWire.group(scenario.group(id)!!, scenario))
@@ -403,20 +420,61 @@ private fun BettyMockBackend.registerBetRoutes() {
         val home = body.optIntOrNull("home_team_score") ?: 0
         val away = body.optIntOrNull("away_team_score") ?: 0
         val isUniversal = body.optBoolOr("is_universal", false)
+        val requestedBoosted = body.optBoolOr("boosted", false)
         val game = scenario.game(gameId) ?: return@api MockHttpResponse.empty(500) // unknown game → 500
         if (!game.startDate.isAfter(Instant.now())) return@api MockHttpResponse.empty(423) // already started
+
+        // Spec §1.2: validate booster against the TARGET group (the row that will be marked
+        // boosted). For universal bets the target is `group_id`; siblings stay false.
+        if (requestedBoosted) {
+            val targetGroup = scenario.group(groupId)
+                ?: return@api MockHttpResponse.empty(401)
+            if (targetGroup.boostCount <= 0) {
+                return@api MockHttpResponse.json(jsonOf("error" to "boosters not enabled"), status = 400)
+            }
+            // No-op exemption: when this user already has a boosted bet on this game in this
+            // group, the cap check excludes that bet (§1.2 last bullet).
+            val existing = scenario.bets.firstOrNull {
+                it.userId == uid && it.gameId == gameId && it.groupId == groupId
+            }
+            val used = scenario.boostersUsed(uid, groupId, excludingBetId = existing?.id)
+            if (used >= targetGroup.boostCount) {
+                return@api MockHttpResponse.json(jsonOf("error" to "no boosters remaining"), status = 400)
+            }
+        }
+
+        // Track false→true transitions for the booster_applied emit.
+        var transitionedBet: MockBet? = null
         if (isUniversal) {
             // Upsert into EVERY group of the caller in the game's tournament.
+            // Spec §2.3: only the row whose group_id matches request.group_id is `boosted`;
+            // siblings stay false even if `boosted: true`.
             scenario.groups
                 .filter { it.tournamentId == game.tournamentId && it.isActiveMember(uid) }
-                .forEach { scenario.upsertBet(uid, gameId, it.id, home, away) }
+                .forEach { g ->
+                    val rowBoosted = (g.id == groupId) && requestedBoosted
+                    val previous = scenario.bets.firstOrNull {
+                        it.userId == uid && it.gameId == gameId && it.groupId == g.id
+                    }
+                    val stored = scenario.upsertBet(uid, gameId, g.id, home, away, rowBoosted)
+                    if (rowBoosted && previous?.boosted != true) {
+                        transitionedBet = stored
+                    }
+                }
         } else {
             val group = scenario.group(groupId)
             if (group == null || !group.isActiveMember(uid)) return@api MockHttpResponse.empty(401)
-            scenario.upsertBet(uid, gameId, groupId, home, away)
+            val previous = scenario.bets.firstOrNull {
+                it.userId == uid && it.gameId == gameId && it.groupId == groupId
+            }
+            val stored = scenario.upsertBet(uid, gameId, groupId, home, away, requestedBoosted)
+            if (requestedBoosted && previous?.boosted != true) {
+                transitionedBet = stored
+            }
         }
-        val echo = MockWire.betEcho(uid, gameId, groupId, home, away, isUniversal)
+        val echo = MockWire.betEcho(uid, gameId, groupId, home, away, isUniversal, requestedBoosted)
         pushEvent("bet_placed", echo)
+        transitionedBet?.let { pushEvent("booster_applied", MockWire.bet(it)) }
         // 200 (NOT 201) — echo with id 0 and zero timestamps.
         MockHttpResponse.json(echo)
     }
@@ -430,10 +488,30 @@ private fun BettyMockBackend.registerBetRoutes() {
         if (game != null && !game.startDate.isAfter(Instant.now())) return@api MockHttpResponse.empty(423)
         if (bet.processedAt != null) return@api MockHttpResponse.empty(500) // already evaluated
         val body = request.bodyJson ?: JSONObject()
+        val requestedBoosted = body.optBoolOr("boosted", false)
+
+        // Spec §1.2: validate only on a true→true flip (no-op true→true never fails).
+        if (requestedBoosted && !bet.boosted) {
+            val targetGroup = scenario.group(bet.groupId)
+                ?: return@api MockHttpResponse.empty(401)
+            if (targetGroup.boostCount <= 0) {
+                return@api MockHttpResponse.json(jsonOf("error" to "boosters not enabled"), status = 400)
+            }
+            val used = scenario.boostersUsed(uid, bet.groupId, excludingBetId = bet.id)
+            if (used >= targetGroup.boostCount) {
+                return@api MockHttpResponse.json(jsonOf("error" to "no boosters remaining"), status = 400)
+            }
+        }
+
+        val previousBoosted = bet.boosted
         bet.homeTeamScore = body.optIntOrNull("home_team_score") ?: bet.homeTeamScore
         bet.awayTeamScore = body.optIntOrNull("away_team_score") ?: bet.awayTeamScore
+        bet.boosted = requestedBoosted
         bet.updatedAt = Instant.now()
         pushEvent("bet_updated", MockWire.bet(bet))
+        if (requestedBoosted && !previousBoosted) {
+            pushEvent("booster_applied", MockWire.bet(bet))
+        }
         MockHttpResponse.json(MockWire.bet(bet)) // the DB row, real id/timestamps
     }
 }
@@ -530,11 +608,20 @@ private fun BettyMockBackend.registerTournamentRoutes() {
             val exact = bet.homeTeamScore == home && bet.awayTeamScore == away
             val correctSide = (bet.homeTeamScore > bet.awayTeamScore) == (home > away) &&
                 (bet.homeTeamScore == bet.awayTeamScore) == (home == away)
-            val points = when {
+            val basePoints = when {
                 exact -> group?.exactResultPoints ?: 3
                 correctSide -> group?.correctTeamPoints ?: 1
                 else -> 0
             }
+            // Spec §1.3 live-config-wins: multiply by current `boost_multiplier` iff the
+            // bet is boosted AND boosters are still enabled in the group (count > 0).
+            // Disabling count to 0 mid-tournament silently neutralizes existing boosts (×1).
+            val multiplier = if (bet.boosted && (group?.boostCount ?: 0) > 0) {
+                group?.boostMultiplier ?: 1
+            } else {
+                1
+            }
+            val points = basePoints * multiplier
             bet.userPoints = points
             bet.processedAt = Instant.now()
             scenario.updateMember(bet.groupId, bet.userId) {

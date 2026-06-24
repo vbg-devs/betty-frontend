@@ -52,6 +52,8 @@ function makeGroup(id: number, overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: true,
     correct_team_points: 2,
     exact_result_points: 4,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [],
     ...overrides,
@@ -110,6 +112,10 @@ describe('pages/dashboard', () => {
 
   describe('hero', () => {
     it('links the feedback pill to support and the browse link to public groups', async () => {
+      // The browse link lives inside the hero section, which is `v-if`'d on having
+      // at least one group — seed a group/tournament so that section renders.
+      useTournamentStore().tournaments = [makeTournament(1)];
+      useGroupStore().groups = [makeGroup(1)];
       const wrapper = await mountPage();
       expect(wrapper.find('a.feedback-pill').attributes('href')).toBe('/support');
       expect(wrapper.find('a.hero__browse').attributes('href')).toBe('/dashboard/groups/browse');

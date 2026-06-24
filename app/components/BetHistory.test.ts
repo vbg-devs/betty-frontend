@@ -20,6 +20,7 @@ function makeBet(homeScore: number, awayScore: number): Bet {
     home_team_score: homeScore,
     away_team_score: awayScore,
     user_points: 0,
+    boosted: false,
     processed_at: null,
   };
 }

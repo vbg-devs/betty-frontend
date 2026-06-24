@@ -78,6 +78,34 @@
             </label>
           </div>
 
+          <div class="field__row">
+            <label class="field">
+              <span class="field__label">Boosters per user</span>
+              <input
+                v-model="boostCount"
+                type="number"
+                min="0"
+                placeholder="0"
+                class="field__input"
+              />
+            </label>
+            <label class="field">
+              <span class="field__label">Booster multiplier</span>
+              <input
+                v-model="boostMultiplier"
+                type="number"
+                min="1"
+                placeholder="2"
+                class="field__input"
+                :disabled="!boostersEnabled"
+              />
+            </label>
+          </div>
+          <p class="field__help">
+            Members can apply a booster to multiply a single bet's points. Set count to 0 to
+            disable.
+          </p>
+
           <label class="check">
             <input v-model="peek" type="checkbox" class="check__input" />
             <span class="check__box" aria-hidden="true">
@@ -140,13 +168,26 @@ const description = ref(group.description ?? '');
 const winPoints = ref(String(group.correct_team_points));
 const exactScorePoints = ref(String(group.exact_result_points));
 const peek = ref(group.allow_sneak_peek);
+const boostCount = ref(String(group.boost_count));
+const boostMultiplier = ref(String(group.boost_multiplier));
 const loading = ref(false);
+
+const boostersEnabled = computed(() => {
+  const parsed = parseInt(boostCount.value, 10);
+  return Number.isFinite(parsed) && parsed > 0;
+});
 
 const canSave = computed(() => {
   if (winPoints.value.length === 0) return false;
   if (exactScorePoints.value.length === 0) return false;
   if (Number.isNaN(parseFloat(winPoints.value))) return false;
   if (Number.isNaN(parseFloat(exactScorePoints.value))) return false;
+  if (boostCount.value.length === 0) return false;
+  const count = parseInt(boostCount.value, 10);
+  if (!Number.isFinite(count) || count < 0) return false;
+  if (boostMultiplier.value.length === 0) return false;
+  const mult = parseInt(boostMultiplier.value, 10);
+  if (!Number.isFinite(mult) || mult < 1) return false;
   return true;
 });
 
@@ -156,7 +197,9 @@ const isDirty = computed(() => {
     description.value !== (group.description ?? '') ||
     parseFloat(winPoints.value) !== group.correct_team_points ||
     parseFloat(exactScorePoints.value) !== group.exact_result_points ||
-    peek.value !== group.allow_sneak_peek
+    peek.value !== group.allow_sneak_peek ||
+    parseInt(boostCount.value, 10) !== group.boost_count ||
+    parseInt(boostMultiplier.value, 10) !== group.boost_multiplier
   );
 });
 
@@ -178,6 +221,8 @@ async function save() {
       correct_team_points: parseFloat(winPoints.value),
       exact_result_points: parseFloat(exactScorePoints.value),
       allow_sneak_peek: peek.value,
+      boost_count: parseInt(boostCount.value, 10),
+      boost_multiplier: parseInt(boostMultiplier.value, 10),
     });
     emit('saved');
     emit('close');
@@ -406,6 +451,18 @@ async function save() {
   min-height: 65px;
   line-height: 1.45;
   font-family: inherit;
+}
+
+.field__input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.field__help {
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
+  margin: -10px 0 16px;
 }
 
 .field__count {

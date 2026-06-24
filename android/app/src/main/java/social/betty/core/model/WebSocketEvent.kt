@@ -32,6 +32,7 @@ object WebSocketEventType {
     const val USER_REGISTER = "user_register"
     const val BET_PLACED = "bet_placed"
     const val BET_UPDATED = "bet_updated"
+    const val BOOSTER_APPLIED = "booster_applied"
     const val GROUP_JOINED = "group_joined"
     const val GROUP_LEFT = "group_left"
     const val GROUP_CREATED = "group_created"

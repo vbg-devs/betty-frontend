@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -436,18 +438,26 @@ private fun ChatMessageRow(
                     }
                 }
 
-                // Inline delete confirmation.
+                // Delete confirmation dialog.
                 if (confirmingDelete) {
-                    Row(
-                        modifier = Modifier.padding(top = Space.xxs),
-                        horizontalArrangement = Arrangement.spacedBy(Space.xs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("Delete this message?", style = type.bodyRegular, color = colors.textSecondary)
-                        Spacer(Modifier.weight(1f))
-                        BettyButton(text = "Delete", onClick = onConfirmDelete, variant = BettyButtonVariant.DESTRUCTIVE)
-                        BettyButton(text = "Cancel", onClick = onCancelDelete, variant = BettyButtonVariant.GHOST)
-                    }
+                    AlertDialog(
+                        onDismissRequest = onCancelDelete,
+                        containerColor = colors.surface,
+                        titleContentColor = colors.textPrimary,
+                        textContentColor = colors.textSecondary,
+                        title = { Text("Delete message?", style = type.title3) },
+                        text = { Text("This message will be permanently removed.", style = type.bodyRegular) },
+                        confirmButton = {
+                            TextButton(onClick = onConfirmDelete) {
+                                Text("DELETE", style = type.kicker, color = Palette.alertRed)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = onCancelDelete) {
+                                Text("CANCEL", style = type.kicker, color = colors.textSecondary)
+                            }
+                        },
+                    )
                 }
             }
         }

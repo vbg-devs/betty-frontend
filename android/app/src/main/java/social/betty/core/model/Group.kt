@@ -29,6 +29,10 @@ data class Group(
     @SerialName("allow_sneak_peek") val allowSneakPeek: Boolean = false,
     @SerialName("group_play_deadline") val groupPlayDeadline: Instant? = null,
     val mode: Int = 0,
+    /** Boosters per user in this group. `0` disables boosters; defaults to `0` on new groups. */
+    @SerialName("boost_count") val boostCount: Int = 0,
+    /** Multiplier when a booster is applied. Default `2`; ignored when [boostCount] is 0. */
+    @SerialName("boost_multiplier") val boostMultiplier: Int = 2,
     @SerialName("public_at") val publicAt: Instant? = null,
     @SerialName("created_at") val createdAt: Instant? = null,
     @SerialName("updated_at") val updatedAt: Instant? = null,
@@ -88,6 +92,8 @@ data class PublicGroupItem(
     @SerialName("allow_sneak_peek") val allowSneakPeek: Boolean = false,
     @SerialName("bet_mode") val betMode: Int = 0,
     @SerialName("group_play_deadline") val groupPlayDeadline: Instant? = null,
+    @SerialName("boost_count") val boostCount: Int = 0,
+    @SerialName("boost_multiplier") val boostMultiplier: Int = 2,
     @SerialName("public_at") val publicAt: Instant? = null,
     @SerialName("created_at") val createdAt: Instant? = null,
     @SerialName("member_count") val memberCount: Int = 0,

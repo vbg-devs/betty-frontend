@@ -38,5 +38,6 @@ struct ActivityFeedView: View {
             }
         }
         .navigationTitle("Activity")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

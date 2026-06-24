@@ -195,6 +195,7 @@ ignore it; never decode it as `[String]` non-optional.
   "allow_sneak_peek": true,
   "group_play_deadline": "time|null",
   "mode": 0,
+  "boost_count": 0, "boost_multiplier": 2,
   "is_public": false,
   "public_at": "time|null",
   "created_at": "time", "updated_at": "time",
@@ -206,6 +207,13 @@ Quirks: `is_public` is **always `false` on reads** (`db:"-"` — never scanned f
 DB; it is only a *request* field on `POST /group`). Derive publicness from
 `public_at != null`. The bet-mode field is named `mode` here but `bet_mode` on
 `GroupPlacement` and `PublicGroupItem`.
+
+Booster fields (see "Boosters" subsection in §3.4):
+- `boost_count` — int ≥0. How many boosters each member of this group gets. **0
+  disables boosters in the group.** New groups default to `0`.
+- `boost_multiplier` — int ≥1. Points multiplier applied to a bet with
+  `boosted: true` when the group has boosters enabled. Defaults to `2`. Ignored
+  at evaluation time when `boost_count == 0`.
 
 ### Member (`groups.Member`)
 
@@ -241,10 +249,14 @@ DB; it is only a *request* field on `POST /group`). Derive publicness from
   "tournament_image_url": "string|null", "header_image_url": "string|null",
   "correct_team_points": 1, "exact_result_points": 3, "allow_sneak_peek": true,
   "bet_mode": 0, "group_play_deadline": "time|null",
+  "boost_count": 0, "boost_multiplier": 2,
   "public_at": "time (non-null here)", "created_at": "time",
   "member_count": 12, "is_member": false
 }
 ```
+
+`boost_count` / `boost_multiplier` mirror the `Group` fields — the browse UI uses
+them to hint whether boosters are enabled before joining.
 
 ### GroupPeek (`GET /group/:code`)
 
@@ -264,6 +276,7 @@ DB; it is only a *request* field on `POST /group`). Derive publicness from
   "user_points": null,
   "home_team_score": 2, "away_team_score": 1,
   "is_universal": false,
+  "boosted": false,
   "processed_at": "time|null",
   "created_at": "time", "updated_at": "time"
 }
@@ -271,6 +284,9 @@ DB; it is only a *request* field on `POST /group`). Derive publicness from
 
 `user_points` is `int|null` (null until the game is evaluated). `is_universal` is a
 request-only flag; it is **not stored** and is always `false` in GET responses.
+`boosted` is a per-(user, game, group) flag indicating the user has applied their
+booster to this bet — see the "Boosters" subsection in §3.4 for semantics and
+the per-bet point multiplier at evaluation.
 
 ### Tournament / Pool / Game (`tournaments` package)
 
@@ -410,14 +426,43 @@ Anonymizes the DB row, deletes push tokens, deletes the Firebase account.
 
 #### POST `/user/me/add_push_token`
 
-Request `{ "token": "<fcm-registration-token>" }` → **200 empty body** (also 200 if
-the token already exists). 400 missing/empty token. 500.
+Clients post an **FCM registration token** obtained from Firebase
+Messaging on the device (~163 chars). Raw APNs/GCM device tokens are
+not accepted — the backend dispatches via FCM (`messaging.SendAll`),
+which only addresses FCM tokens.
 
-> Server-side delivery uses **Firebase Cloud Messaging** (`fcmClient`), so the stored
-> token must be an FCM *registration* token — a raw APNs device token will be accepted
-> by this endpoint but will never receive a push. Without the Firebase SDK on iOS this
-> route is effectively dormant; register it anyway behind a flag if/when an FCM bridge
-> is added. (Original audit note "(APNs)" is therefore imprecise.)
+```
+POST /user/me/add_push_token
+{ "token": "<fcm-registration-token>" }
+→ 200 (empty body)
+```
+
+400 missing/empty token. 500. (Also 200 if the token already exists.)
+
+Tokens are soft-deleted (`deleted_at = now()`) when FCM reports them as
+no longer deliverable. Re-registration (after reinstall, restore, or
+explicit `deleteToken()`) goes through the same endpoint and inserts a
+fresh row.
+
+**Push payload shape** (delivered to the device by FCM):
+
+```json
+{
+  "notification": {
+    "title": "⏰ Sweden vs Germany starts in 2h",
+    "body": "You haven't locked in your pick for Office League yet — tap to play."
+  },
+  "data": { "url": "https://betty.social/groups/<groupID>/games/<gameID>" }
+}
+```
+
+The `groupID` is chosen by the backend as the alphabetically-first group
+(by name) in which the user has an unplaced bet for this game.
+
+iOS reads `userInfo["url"]` and routes it through `DeepLink.parse` /
+`Router.handle` (DeepLink case `.bet(gameID:, groupID:)`). Android (when
+push is wired) should mirror this — the data payload is the source of
+truth for deep linking.
 
 #### POST `/user/me/profile-image/upload-url`
 
@@ -451,11 +496,14 @@ Reverts to the Firebase snapshot. 200 → `{ "image_url": "string|null" }`. 503,
   "allow_sneak_peek": true,
   "group_play_deadline": "time|null",
   "mode": 0,
+  "boost_count": 0,              // optional, int ≥0; default 0 (boosters disabled)
+  "boost_multiplier": 2,         // optional, int ≥1; default 2
   "is_public": false
 }
 ```
 
-**201** → `{ "group_id": 7 }`. 400 validation, 500.
+**201** → `{ "group_id": 7 }`. 400 validation (incl. `boost_count < 0` or
+`boost_multiplier < 1`), 500.
 
 #### POST `/join/:code` — join by invite code
 
@@ -508,11 +556,14 @@ nullable ones:
   "description": "string|null (≤1000)",
   "correct_team_points": 2,     // ≥0 here (no binding:required on this route)
   "exact_result_points": 5,     // ≥0
-  "allow_sneak_peek": false
+  "allow_sneak_peek": false,
+  "boost_count": 0,             // int ≥0; 0 disables boosters in the group
+  "boost_multiplier": 2         // int ≥1
 }
 ```
 
-200 → full updated Group. 404 group missing, **401** not author, 400 validation, 500.
+200 → full updated Group. 404 group missing, **401** not author, 400 validation
+(incl. `boost_count < 0` or `boost_multiplier < 1`), 500.
 
 #### POST `/group/:id/join` — join a public group by numeric id
 
@@ -575,26 +626,85 @@ user in N groups gets each bet row repeated N times — **dedupe by `id` client-
 {
   "game_id": 1, "group_id": 1,
   "home_team_score": 2, "away_team_score": 1,
-  "is_universal": false
+  "is_universal": false,
+  "boosted": false
 }
 ```
 
 - `is_universal: true` → the bet is written to **every** group the caller belongs to in
-  the game's tournament (`group_id` then irrelevant).
+  the game's tournament (`group_id` then irrelevant). Combined with `boosted: true`,
+  only the row whose `group_id` matches the request body is marked boosted; sibling
+  rows in the user's other groups are written with `boosted: false`.
+- `boosted` is optional (default `false`). See the "Boosters" subsection below for the
+  per-(user, group) capacity rules.
 - Placing twice for the same game+group upserts the scores (DB unique key).
 - Responses: **200** (NOT 201) → echo of the request with `user_id` filled in. The echo
-  has `id: 0`, zero `created_at`/`updated_at`, `user_points: null` — **the new bet's
-  real `id` is not returned; re-fetch via `GET /bets/bygame/...` before updating it.**
+  has `id: 0`, zero `created_at`/`updated_at`, `user_points: null`, and includes the
+  `boosted` flag — **the new bet's real `id` is not returned; re-fetch via
+  `GET /bets/bygame/...` before updating it.**
 - **423 Locked** game already started, **401** not an active member of `group_id`
-  (non-universal only), 400 malformed JSON, 500 (incl. unknown `game_id`).
+  (non-universal only), 400 malformed JSON, **400 `{"error":"boosters not enabled"}`**
+  if `boosted: true` and the group's `boost_count == 0`, **400
+  `{"error":"no boosters remaining"}`** if `boosted: true` and the user has already
+  consumed `group.boost_count` boosters in this group (the no-op case where this bet
+  is already boosted does not fail this check), 500 (incl. unknown `game_id`).
 
 #### PUT `/bet/:id` — update a prediction
 
-Request: same Bet shape; only `home_team_score`/`away_team_score` are used.
-- 200 → the **DB row** with updated scores (real id/timestamps; `is_universal` false).
-- Sending identical scores is a no-op 200.
-- **404** unknown bet id, **423** game started, **401** bet belongs to someone else,
-  400 malformed, **500** if the bet was already processed/evaluated.
+```json
+{
+  "home_team_score": 2, "away_team_score": 1,
+  "boosted": false
+}
+```
+
+- Only `home_team_score`, `away_team_score`, and `boosted` are used; other fields are
+  ignored.
+- `boosted` is optional (default `false` when omitted). Toggling `boosted` is allowed
+  as long as the bet itself is editable (pre-kickoff, not yet evaluated).
+- 200 → the **DB row** with updated scores and `boosted` (real id/timestamps;
+  `is_universal` false).
+- Sending identical scores and `boosted` is a no-op 200.
+- **404** unknown bet id, **423** game started (covers both score and `boosted` flips),
+  **401** bet belongs to someone else, 400 malformed, **400
+  `{"error":"boosters not enabled"}`** if `boosted: true` and the group's
+  `boost_count == 0`, **400 `{"error":"no boosters remaining"}`** if `boosted: true`
+  and the user is already at capacity in this group (an already-boosted row writing
+  `boosted: true` is a no-op and never trips this check), **500** if the bet was
+  already processed/evaluated.
+
+#### Boosters
+
+A booster is a point multiplier a member can apply to one of their bets in a group
+where boosters are enabled. The feature is opt-in per group (admin sets
+`boost_count > 0`); when off, every bet scores normally.
+
+- **Per-(user, group) scope.** Boosters belong to a `(user, group)` pair. A user in
+  N groups has N independent booster pools, each sized by that group's `boost_count`.
+- **No `remaining_boosters` on the wire.** Clients compute it locally:
+  `remaining(user, group) = max(0, group.boost_count - count(user's bets in group where boosted == true))`.
+  All three clients already load `[Bet]` per group via `GET /bets/bygroup/:group`, so
+  no extra fetch is needed. The server is still the source of truth and enforces the
+  cap on writes.
+- **Live-config-wins.** `boost_count` and `boost_multiplier` are read live from the
+  group at write/eval time. If the admin lowers `boost_count` below current usage,
+  no existing `boosted: true` rows are stripped — the user simply has 0 remaining
+  capacity and can only un-boost. If the admin sets `boost_count` to 0
+  mid-tournament, existing `boosted` flags stay on their rows but contribute a 1×
+  multiplier at evaluation (see §3.10).
+- **No-op-write rule.** A write of `boosted: true` against a row that is already
+  `boosted: true` is allowed even if the user is at capacity. Phrased precisely
+  server-side: *accept `boosted: true` iff this bet is already boosted, OR
+  `count(user's bets in group where boosted == true) < group.boost_count`.*
+- **Universal-bet interaction.** With `is_universal: true, boosted: true`, only the
+  row whose `group_id` matches the request body is marked `boosted: true`. The sibling
+  rows spawned in the user's other groups are written with `boosted: false`. To boost
+  the same game in another group, the user submits separately from that group.
+- **Lock at kickoff.** Once a game starts, `PUT /bet/:id` returns 423 for any change
+  including a `boosted` flip — the booster is locked to whichever bet it sits on.
+- **WebSocket event.** A `false → true` transition on any bet fires
+  `booster_applied` (see §4). `true → true` no-ops and `true → false` un-applies are
+  silent.
 
 ### 3.5 Tournaments & games
 
@@ -693,7 +803,7 @@ missing, **403** not a member, 400, 500.
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. |
+| POST | `/evaluategame` | Body `{ "game_id": 1, "home_team_score": 0, "away_team_score": 0 }` (`game_id` required >0; scores ≥0 allowed here). 200 `null`; **410 Gone** game already processed; 400 invalid; 500. **The admin check in this handler is buggy** (missing `return` — a non-admin call may still evaluate); treat as admin-only and keep it off non-admin UI. **Boosters:** when computing each bet's `user_points`, the server multiplies the base points by `group.boost_multiplier` iff `bet.boosted == true && group.boost_count > 0`. Both fields are read live from the group at eval time (so admin changes between apply and eval take effect). When `boost_count == 0` the multiplier is silently 1× regardless of the `boosted` flag. |
 | PUT | `/rollbackgame/:gameid` | Admin only (properly enforced). Reverts an evaluation. 200 `null`; **401** non-admin; 500. |
 
 ### 3.11 FIFA result polling (admin)
@@ -702,23 +812,25 @@ A background poller maps betty games to FIFA matches and stages results as
 admin-confirmable proposals; confirming applies through the same seam as
 `/evaluategame`. All routes are admin-only (Firebase token + `is_admin`) and
 mounted under `/admin/fifa`. The poller is opt-in (`FIFA_POLL_ENABLED`, default
-off), so deploying never starts polling on its own.
+off), so deploying never starts polling on its own. Wire types live in
+`app/types/index.ts` as the `Fifa*` interfaces (snake_case; mirrored in iOS models
++ both e2e mock backends).
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/admin/fifa/seasons` | Curated season list `{ "seasons": [{ "label", "season_id" }] }`. |
+| GET | `/admin/fifa/seasons` | Curated season dropdown. `{ "seasons": [{ "label", "season_id" }] }`. |
 | POST | `/admin/fifa/competitions` | Link a tournament to a FIFA season. Body `{ "tournament_id", "competition_id" }`. 200 `{ "competition_id", "match_count" }`; **502** FIFA feed unreachable. |
 | GET | `/admin/fifa/competitions/:tournamentId` | `{ "competition_id", "auto_apply", "enabled" }`; 404 unlinked. |
 | PUT | `/admin/fifa/competitions/:tournamentId/auto-apply` | Body `{ "auto_apply": bool }`. |
-| POST | `/admin/fifa/competitions/:tournamentId/confirm-all` | Confirm every unambiguous mapping suggestion. 200 `{ "confirmed", "skipped_ambiguous" }`. |
-| GET | `/admin/fifa/mappings?tournament_id=N` | Suggested game↔match links. |
+| POST | `/admin/fifa/competitions/:tournamentId/confirm-all` | Confirm every unambiguous mapping. 200 `{ "confirmed", "skipped_ambiguous" }`. |
+| GET | `/admin/fifa/mappings?tournament_id=N` | `{ "competition_id", "suggestions": [FifaMappingSuggestion] }`. `confirmed=true` rows already have a confirmed link (hidden from the to-do list). |
 | POST | `/admin/fifa/mappings/:gameId/confirm` | Body `{ "competition_id", "match_id", "orientation_flipped" }`. |
-| POST | `/admin/fifa/mappings/:gameId/reject` | |
-| GET | `/admin/fifa/proposals?status=pending\|applied` | `{ "proposals": [ProposalView] }` (Go may send `null` → treat as `[]`). |
+| POST | `/admin/fifa/mappings/:gameId/reject` | 200 `null`. |
+| GET | `/admin/fifa/proposals?status=pending\|applied` | `{ "proposals": [ProposalView] }` (Go may send `null` → treat as `[]`). Enriched with `game_home_team`/`game_away_team`/`game_start_date`; `prev_*_score` non-null only on corrections; `feed_hash` is informational (not echoed back on confirm). |
 | GET | `/admin/fifa/proposals/count?status=pending` | Pending count for the admin review badge/poll. 200 `{ "count": N }`. Admin only (401 otherwise). |
-| POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; **410** already processed; **409** apply racing. |
+| POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; idempotent (a superseded/already-applied id is a no-op); **410** already processed; **409** apply racing. |
 | POST | `/admin/fifa/proposals/:id/dismiss` | 200 `null`. |
-| GET | `/admin/fifa/unmapped-results` | FIFA-final matches with no mapped betty game. |
+| GET | `/admin/fifa/unmapped-results` | FIFA-final matches with no mapped betty game. `{ "unmapped": [FifaUnmappedResult] }`. |
 
 **ProposalView** (`GET /admin/fifa/proposals` items) — a staged result enriched
 with the betty game's teams + kickoff; the score is already oriented to betty
@@ -769,8 +881,9 @@ yet (parity follow-up).
 | `ping` | `null` |
 | `test` | string (dev only) |
 | `user_register` | full User object of the new signup (incl. email — see privacy note above) |
-| `bet_placed` | Bet (request echo: `id` 0, zero timestamps, `user_id` set) |
-| `bet_updated` | Bet (request echo: real `id`, scores; zero timestamps) |
+| `bet_placed` | Bet (request echo: `id` 0, zero timestamps, `user_id` set; includes the new `boosted` field) |
+| `bet_updated` | Bet (request echo: real `id`, scores; zero timestamps; includes `boosted`) |
+| `booster_applied` | Bet — the updated bet row, fired when `boosted` transitions from `false` to `true` (on `POST /bet` with `boosted: true`, or `PUT /bet/:id` flipping the flag on). NOT emitted on un-apply (`true → false`), no-op writes (`true → true`), or at game evaluation. Same echo shape as `bet_placed` / `bet_updated`. |
 | `group_joined` | `{ "group": { "id": 1, "name": "..." }, "who": "<user name>" }` |
 | `group_left` | `null` |
 | `group_created` | `null` |

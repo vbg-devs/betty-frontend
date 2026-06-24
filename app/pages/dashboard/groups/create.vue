@@ -52,6 +52,29 @@
             />
           </div>
           <div class="form-row">
+            <input
+              v-model="boostCount"
+              type="number"
+              min="0"
+              placeholder="Boosters per user (0 disables)"
+              class="form-input form-input--with-icon icon--award"
+            />
+          </div>
+          <div class="form-row">
+            <input
+              v-model="boostMultiplier"
+              type="number"
+              min="1"
+              placeholder="Booster multiplier"
+              class="form-input form-input--with-icon icon--target"
+              :disabled="!boostersEnabled"
+            />
+          </div>
+          <p class="form-help">
+            Members can apply a booster to multiply a single bet's points. Set count to 0 to
+            disable.
+          </p>
+          <div class="form-row">
             <label>
               <input v-model="peak" type="checkbox" /> Allow peeking (this will allow all members of
               the group to see the bets placed by others before the game has started)
@@ -84,15 +107,26 @@ const message = ref('');
 const winPoints = ref('');
 const exactScorePoints = ref('');
 const peak = ref(false);
+const boostCount = ref('0');
+const boostMultiplier = ref('2');
 const selectedTournament = ref<Tournament | null>(null);
 const loading = ref(false);
 
 const tournaments = computed(() => tournamentStore.running);
 
+const boostersEnabled = computed(() => {
+  const parsed = parseInt(boostCount.value, 10);
+  return Number.isFinite(parsed) && parsed > 0;
+});
+
 const canSave = computed(() => {
   if (name.value.length === 0) return false;
   if (winPoints.value.length === 0) return false;
   if (exactScorePoints.value.length === 0) return false;
+  const count = parseInt(boostCount.value, 10);
+  if (!Number.isFinite(count) || count < 0) return false;
+  const mult = parseInt(boostMultiplier.value, 10);
+  if (!Number.isFinite(mult) || mult < 1) return false;
   return true;
 });
 
@@ -109,6 +143,8 @@ async function create() {
     correct_team_points: parseFloat(winPoints.value),
     exact_result_points: parseFloat(exactScorePoints.value),
     allow_sneak_peek: peak.value,
+    boost_count: parseInt(boostCount.value, 10),
+    boost_multiplier: parseInt(boostMultiplier.value, 10),
     group_play_deadline: selectedTournament.value.start_date,
     welcome_message: message.value,
     mode: 0,
@@ -145,5 +181,17 @@ async function create() {
 .selected-tournament {
   margin-bottom: 10px;
   font-weight: 600;
+}
+
+.form-help {
+  font-size: 12px;
+  color: #6b7280;
+  margin: -6px 0 14px;
+  line-height: 1.4;
+}
+
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

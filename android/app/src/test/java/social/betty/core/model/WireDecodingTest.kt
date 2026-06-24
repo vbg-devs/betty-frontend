@@ -1,5 +1,6 @@
 package social.betty.core.model
 
+import kotlinx.serialization.json.decodeFromJsonElement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -46,6 +47,42 @@ class WireDecodingTest {
     }
 
     @Test
+    fun `group defaults booster fields to 0 and 2 when missing on the wire`() {
+        // Pre-feature backend won't return boost_count / boost_multiplier — must still decode.
+        val group = BettyJson.decodeFromString<Group>(
+            """{"id":1,"name":"G","tournament_id":7,"invite_code":"abc","is_public":false,
+                "public_at":null,"members":null}""",
+        )
+        assertEquals(0, group.boostCount)
+        assertEquals(2, group.boostMultiplier)
+    }
+
+    @Test
+    fun `group decodes booster fields when present`() {
+        val group = BettyJson.decodeFromString<Group>(
+            """{"id":1,"name":"G","tournament_id":7,"invite_code":"abc","is_public":false,
+                "public_at":null,"boost_count":3,"boost_multiplier":5,"members":null}""",
+        )
+        assertEquals(3, group.boostCount)
+        assertEquals(5, group.boostMultiplier)
+    }
+
+    @Test
+    fun `public group item decodes booster fields and defaults when missing`() {
+        val withFields = BettyJson.decodeFromString<PublicGroupItem>(
+            """{"id":1,"name":"P","tournament_id":7,"boost_count":2,"boost_multiplier":4}""",
+        )
+        assertEquals(2, withFields.boostCount)
+        assertEquals(4, withFields.boostMultiplier)
+
+        val missing = BettyJson.decodeFromString<PublicGroupItem>(
+            """{"id":1,"name":"P","tournament_id":7}""",
+        )
+        assertEquals(0, missing.boostCount)
+        assertEquals(2, missing.boostMultiplier)
+    }
+
+    @Test
     fun `tournament detail keeps flat pools and games - status is nullable`() {
         val t = BettyJson.decodeFromString<Tournament>(
             """{"id":1,"name":"T","start_date":"2026-06-01T00:00:00Z","end_date":"2026-06-30T00:00:00Z",
@@ -72,6 +109,19 @@ class WireDecodingTest {
         assertNull(bet.userPoints)
         assertFalse(bet.isProcessed)
         assertEquals("me", bet.userId)
+        // Missing boosted on a pre-feature response defaults to false.
+        assertFalse(bet.boosted)
+    }
+
+    @Test
+    fun `bet decodes boosted flag when present`() {
+        val bet = BettyJson.decodeFromString<Bet>(
+            """{"id":7,"user_id":"me","game_id":10,"group_id":1,"user_points":4,
+                "home_team_score":2,"away_team_score":1,"is_universal":false,
+                "boosted":true,"processed_at":null}""",
+        )
+        assertTrue(bet.boosted)
+        assertEquals(4, bet.userPoints)
     }
 
     @Test
@@ -95,5 +145,23 @@ class WireDecodingTest {
         val empty = BettyJson.decodeFromString<PublicGroupListResponse>("""{"items":null,"next_cursor":""}""")
         assertTrue(empty.items.isEmpty())
         assertEquals("", empty.nextCursor)
+    }
+
+    @Test
+    fun `websocket envelope round-trips booster_applied with a Bet payload`() {
+        // booster_applied: payload is the updated Bet (echo shape).
+        val envelope = BettyJson.decodeFromString<WebSocketEnvelope>(
+            """{"type":"booster_applied","message":{
+                "id":42,"user_id":"alex","game_id":11,"group_id":1,
+                "home_team_score":2,"away_team_score":1,
+                "is_universal":false,"boosted":true,
+                "user_points":null,"processed_at":null}}""",
+        )
+        assertEquals(WebSocketEventType.BOOSTER_APPLIED, envelope.type)
+        // The message decodes as a Bet with the boosted flag set.
+        val bet = BettyJson.decodeFromJsonElement<Bet>(envelope.message!!)
+        assertEquals(42, bet.id)
+        assertTrue(bet.boosted)
+        assertEquals(11, bet.gameId)
     }
 }

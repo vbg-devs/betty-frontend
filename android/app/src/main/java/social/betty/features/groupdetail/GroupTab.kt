@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -206,6 +208,8 @@ private fun NeedActionStrip(
                 placedHome = ownBet?.homeTeamScore ?: 0,
                 placedAway = ownBet?.awayTeamScore ?: 0,
                 awardedPoints = GroupGameCardLogic.awardedPoints(game, bets, myId),
+                awardedBoosted = GroupGameCardLogic.awardedBoosted(game, bets, myId),
+                placedBoosted = ownBet?.boosted == true,
                 betCount = betCount(bets, game.id),
                 onTap = { onOpenBet(game.id) },
                 now = now,
@@ -579,16 +583,30 @@ private fun LeaveButton(group: Group) {
     var confirming by remember { mutableStateOf(false) }
     var isLeaving by remember { mutableStateOf(false) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        if (confirming) {
-            Text(
-                text = "Are you sure you want to leave ${group.name}?",
-                style = BettyTheme.type.bodyRegular,
-                color = BettyTheme.colors.textSecondary,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                BettyButton(
-                    text = "Leave",
+    BettyButton(
+        text = "Leave group",
+        onClick = { confirming = true },
+        variant = BettyButtonVariant.DESTRUCTIVE,
+        block = true,
+        modifier = Modifier.testTag("group-leave"),
+    )
+
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { if (!isLeaving) confirming = false },
+            containerColor = BettyTheme.colors.surface,
+            titleContentColor = BettyTheme.colors.textPrimary,
+            textContentColor = BettyTheme.colors.textSecondary,
+            title = { Text("Leave group?", style = BettyTheme.type.title3) },
+            text = {
+                Text(
+                    text = "Are you sure you want to leave ${group.name}?",
+                    style = BettyTheme.type.bodyRegular,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isLeaving,
                     onClick = onClick@{
                         if (isLeaving) return@onClick
                         isLeaving = true
@@ -603,28 +621,25 @@ private fun LeaveButton(group: Group) {
                             }
                         }
                     },
-                    variant = BettyButtonVariant.DESTRUCTIVE,
-                    loading = isLeaving,
-                    block = true,
-                    modifier = Modifier.weight(1f),
-                )
-                BettyButton(
-                    text = "Cancel",
-                    onClick = { confirming = false },
-                    variant = BettyButtonVariant.OUTLINE,
-                    block = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        } else {
-            BettyButton(
-                text = "Leave group",
-                onClick = { confirming = true },
-                variant = BettyButtonVariant.DESTRUCTIVE,
-                block = true,
-                modifier = Modifier.testTag("group-leave"),
-            )
-        }
+                ) {
+                    Text(
+                        text = if (isLeaving) "LEAVING…" else "LEAVE",
+                        style = BettyTheme.type.kicker,
+                        color = Palette.alertRed,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(enabled = !isLeaving, onClick = { confirming = false }) {
+                    Text(
+                        text = "CANCEL",
+                        style = BettyTheme.type.kicker,
+                        color = BettyTheme.colors.textSecondary,
+                    )
+                }
+            },
+            modifier = Modifier.testTag("group-leave-confirm"),
+        )
     }
 }
 

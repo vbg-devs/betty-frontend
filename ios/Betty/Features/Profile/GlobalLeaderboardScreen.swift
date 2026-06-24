@@ -30,6 +30,7 @@ struct GlobalLeaderboardScreen: View {
             .refreshable { await reload() }
         }
         .navigationTitle("Leaderboard")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             if env.tournamentStore.tournaments.isEmpty {
                 try? await env.tournamentStore.load()

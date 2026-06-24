@@ -21,6 +21,7 @@ struct AboutView: View {
             }
         }
         .navigationTitle("About")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var hero: some View {

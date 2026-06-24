@@ -40,6 +40,7 @@ function makeBet(userId: string, gameId: number, overrides: Partial<Bet> = {}): 
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     ...overrides,
   };
@@ -185,6 +186,40 @@ describe('Game', () => {
       ];
       const wrapper = await mountSuspended(Game, { props: { game: finishedGame(), bets } });
       expect(wrapper.find('.awarded-points').text()).toBe('1P');
+    });
+
+    describe('booster rocket', () => {
+      it('shows a rocket next to the awarded score for a boosted finished win', async () => {
+        const wrapper = await mountSuspended(Game, {
+          props: {
+            game: finishedGame(),
+            bets: [makeBet(me.id, 10, { user_points: 4, boosted: true })],
+          },
+        });
+        expect(wrapper.find('.awarded-points').text()).toContain('4P');
+        expect(wrapper.find('.awarded-points__rocket').exists()).toBe(true);
+      });
+
+      it('does not show the rocket when the boosted bet scored zero', async () => {
+        const wrapper = await mountSuspended(Game, {
+          props: {
+            game: finishedGame(),
+            bets: [makeBet(me.id, 10, { user_points: 0, boosted: true })],
+          },
+        });
+        expect(wrapper.find('.awarded-points').text()).toContain('0P');
+        expect(wrapper.find('.awarded-points__rocket').exists()).toBe(false);
+      });
+
+      it('does not show the rocket when the bet is not boosted', async () => {
+        const wrapper = await mountSuspended(Game, {
+          props: {
+            game: finishedGame(),
+            bets: [makeBet(me.id, 10, { user_points: 3, boosted: false })],
+          },
+        });
+        expect(wrapper.find('.awarded-points__rocket').exists()).toBe(false);
+      });
     });
   });
 

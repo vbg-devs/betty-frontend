@@ -88,6 +88,26 @@ struct CreateGroupSheet: View {
                     }
                 }
 
+                VStack(alignment: .leading, spacing: Space.xs) {
+                    HStack(alignment: .top, spacing: Space.s) {
+                        GroupFormField(label: "Boosters per user") {
+                            GroupFormTextField(placeholder: "0", text: $form.boostCount, keyboard: .numberPad)
+                                .accessibilityIdentifier("createGroup.form.boostCountField")
+                        }
+                        GroupFormField(label: "Booster multiplier") {
+                            GroupFormTextField(placeholder: "2", text: $form.boostMultiplier, keyboard: .numberPad)
+                                .accessibilityIdentifier("createGroup.form.boostMultiplierField")
+                                .disabled(form.isMultiplierDisabled)
+                                .opacity(form.isMultiplierDisabled ? 0.55 : 1)
+                        }
+                    }
+                    Text("Members can apply a booster to multiply a single bet's points. Set count to 0 to disable.")
+                        .font(.betty(12, .regular))
+                        .foregroundStyle(theme.colors.textSecondary)
+                        .lineSpacing(2)
+                        .accessibilityIdentifier("createGroup.form.boostHelp")
+                }
+
                 GroupFormCheckRow(
                     title: "Allow sneak peek",
                     subtitle: "Members can see each other's bets before the game starts.",

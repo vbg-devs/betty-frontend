@@ -45,6 +45,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: false,
     correct_team_points: 1,
     exact_result_points: 3,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: [makeMember(1)],
     ...overrides,

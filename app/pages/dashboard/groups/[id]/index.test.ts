@@ -97,6 +97,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
     allow_sneak_peek: false,
     correct_team_points: 1,
     exact_result_points: 3,
+    boost_count: 0,
+    boost_multiplier: 2,
     public_at: null,
     members: defaultMembers(),
     ...overrides,
@@ -169,6 +171,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     home_team_score: 2,
     away_team_score: 1,
     user_points: 0,
+    boosted: false,
     processed_at: null,
     ...overrides,
   };

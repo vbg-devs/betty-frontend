@@ -59,6 +59,7 @@ private data class RowMeta(
 private fun rowMeta(type: String): RowMeta = when (type) {
     WebSocketEventType.BET_PLACED -> RowMeta("● NEW BET", FeedAccent.ORANGE)
     WebSocketEventType.BET_UPDATED -> RowMeta("● BET UPDATED", FeedAccent.ORANGE)
+    WebSocketEventType.BOOSTER_APPLIED -> RowMeta("🚀 BOOSTER", FeedAccent.ORANGE)
     WebSocketEventType.GAME_STARTING_SOON -> RowMeta("● KICKING OFF", FeedAccent.YELLOW)
     WebSocketEventType.EVALUATE_GAME -> RowMeta("★ FULL TIME", FeedAccent.CREAM)
     WebSocketEventType.USER_EXACT_SCORE -> RowMeta("★ EXACT SCORE", FeedAccent.GREEN)
@@ -84,6 +85,8 @@ fun ActivityRow(
     gameById: (Int) -> Game?,
     teamById: (Int) -> Team?,
     groupNameById: (Int) -> String?,
+    /** Resolves a `(groupId, userId)` pair to a display name (nickname || name). */
+    memberDisplayName: (Int, String) -> String? = { _, _ -> null },
     currentUserId: String?,
     onLoadGame: suspend (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -105,6 +108,7 @@ fun ActivityRow(
                 gameById = gameById,
                 teamById = teamById,
                 groupNameById = groupNameById,
+                memberDisplayName = memberDisplayName,
                 currentUserId = currentUserId,
                 onLoadGame = onLoadGame,
             )
@@ -122,6 +126,7 @@ private fun FeedBody(
     gameById: (Int) -> Game?,
     teamById: (Int) -> Team?,
     groupNameById: (Int) -> String?,
+    memberDisplayName: (Int, String) -> String?,
     currentUserId: String?,
     onLoadGame: suspend (Int) -> Unit,
 ) {
@@ -138,6 +143,13 @@ private fun FeedBody(
             update = true,
             gameById = gameById,
             teamById = teamById,
+            onLoadGame = onLoadGame,
+        )
+        WebSocketEventType.BOOSTER_APPLIED -> FeedBoosterItem(
+            msg = message,
+            gameById = gameById,
+            teamById = teamById,
+            memberDisplayName = memberDisplayName,
             onLoadGame = onLoadGame,
         )
         WebSocketEventType.GAME_STARTING_SOON -> FeedKickoffItem(
@@ -246,6 +258,51 @@ private fun FeedBetItem(
         }
     }
     // Renders nothing until game is available (web parity).
+}
+
+/**
+ * `booster_applied` — "🚀 **{user_name}** boosted **{home_team}** vs **{away_team}**".
+ * Payload is the full `Bet` (echo shape). Lazily loads the game so team names are present;
+ * renders nothing while pending. Actor name resolved from the group's members.
+ */
+@Composable
+private fun FeedBoosterItem(
+    msg: ActivityMessage,
+    gameById: (Int) -> Game?,
+    teamById: (Int) -> Team?,
+    memberDisplayName: (Int, String) -> String?,
+    onLoadGame: suspend (Int) -> Unit,
+) {
+    val payload = msg.message?.jsonObject
+    val gameId = runCatching { payload?.get("game_id")?.jsonPrimitive?.int ?: 0 }.getOrDefault(0)
+    val groupId = runCatching { payload?.get("group_id")?.jsonPrimitive?.int ?: 0 }.getOrDefault(0)
+    val userId = runCatching { payload?.get("user_id")?.jsonPrimitive?.content ?: "" }.getOrDefault("")
+
+    val game = if (gameId != 0) gameById(gameId) else null
+    LaunchedEffect(gameId) {
+        if (gameId != 0 && gameById(gameId) == null) {
+            onLoadGame(gameId)
+        }
+    }
+
+    if (game != null) {
+        val home = teamById(game.homeTeamId)
+        val away = teamById(game.awayTeamId)
+        val actor = memberDisplayName(groupId, userId)?.takeIf { it.isNotEmpty() } ?: "Someone"
+        val colors = BettyTheme.colors
+        Text(
+            text = buildAnnotatedString {
+                append("🚀 ")
+                withStyle(SpanStyle(fontWeight = FontWeight(800))) { append(actor) }
+                append(" boosted ")
+                withStyle(SpanStyle(fontWeight = FontWeight(800))) { append(home?.name ?: "") }
+                append(" vs ")
+                withStyle(SpanStyle(fontWeight = FontWeight(800))) { append(away?.name ?: "") }
+            },
+            style = BettyTheme.type.body,
+            color = colors.textPrimary,
+        )
+    }
 }
 
 /**
