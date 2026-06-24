@@ -346,6 +346,22 @@ struct ProfileView: View {
                         linkRow("Admin")
                     }
                     .accessibilityIdentifier("profile.links.admin")
+                    NavigationLink(value: Destination.adminFIFAProposals) {
+                        HStack {
+                            Text("FIFA results")
+                                .font(.bettyBody)
+                                .foregroundStyle(theme.colors.textPrimary)
+                            if env.adminProposals.pendingCount > 0 {
+                                CountPill(count: env.adminProposals.pendingCount, isActive: true)
+                                    .accessibilityIdentifier("profile.links.adminFIFA.badge")
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(theme.colors.textSecondary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier("profile.links.adminFIFA")
                 }
             }
         }

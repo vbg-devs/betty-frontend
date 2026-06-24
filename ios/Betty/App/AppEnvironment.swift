@@ -27,6 +27,9 @@ final class AppEnvironment {
     let live: LiveUpdateCoordinator
     let push: PushRegistrationService
 
+    /// Admin-only live pending-proposal count for the FIFA review badge + toast.
+    let adminProposals: AdminProposalsStore
+
     /// True under BETTY_UITEST=1 (DEBUG only) — views may disable OS affordances that
     /// XCUITest cannot drive (e.g. the Automatic Strong Password cover view).
     let isUITest: Bool
@@ -92,6 +95,9 @@ final class AppEnvironment {
                 try await userStore.addPushToken(token)
             })
         }
+        self.adminProposals = AdminProposalsStore(fetchCount: { [api] in
+            try await api.fifaPendingProposalsCount()
+        })
     }
 
     #if DEBUG
@@ -153,6 +159,7 @@ final class AppEnvironment {
             router.replayPendingDeepLink()
             await push.registerIfNeeded()
         }
+        syncAdminProposalsPolling()
     }
 
     /// CompleteProfile finished (`needsProfile` flipped false) — run the deferred
@@ -178,6 +185,7 @@ final class AppEnvironment {
         gameStore.clear()
         betStore.clear()
         router.reset()
+        adminProposals.reset()
         isBootstrapped = false
         bootFailed = false
     }
@@ -202,11 +210,43 @@ final class AppEnvironment {
         if ForegroundRefreshPolicy.shouldReloadTeams(isLoaded: teamStore.isLoaded, loadedAt: teamStore.loadedAt) {
             try? await teamStore.load()
         }
+        syncAdminProposalsPolling()
     }
 
     /// Background: close the socket (broadcast-only — nothing is lost that a foreground
     /// refresh doesn't recover).
     func onScenePhaseBackground() {
         socket.disconnect()
+        adminProposals.stopPolling()
+    }
+
+    /// Raise a toast when the FIFA poller stages new results for review, with a confirm
+    /// action that opens the proposals screen.
+    private func notifyNewProposals(_ count: Int) {
+        toasts.confirm(
+            title: "New FIFA results",
+            question: "\(count) result\(count == 1 ? "" : "s") ready to review."
+        ) { [weak self] in
+            guard let self else { return }
+            self.router.selectedTab = .profile
+            // Don't stack a duplicate copy when the proposals screen is already on top
+            // (the toast can fire on a later poll while the admin is already reviewing).
+            if self.router.profilePath.last != .adminFIFAProposals {
+                self.router.profilePath.append(.adminFIFAProposals)
+            }
+        }
+    }
+
+    /// Poll the pending-proposal count for admins (idempotent), or reset it for everyone
+    /// else. The count endpoint is admin-guarded, so non-admins never poll it.
+    private func syncAdminProposalsPolling() {
+        guard auth.isSignedIn, userStore.isAdmin else {
+            adminProposals.reset()
+            return
+        }
+        adminProposals.onNewProposals = { [weak self] count in
+            self?.notifyNewProposals(count)
+        }
+        adminProposals.startPolling()
     }
 }

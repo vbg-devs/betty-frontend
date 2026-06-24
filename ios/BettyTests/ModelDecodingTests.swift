@@ -460,3 +460,80 @@ import Testing
         #expect(LargestRemainder.percentages(home: 0, away: 0, tie: 0) == (0, 0, 0))
     }
 }
+
+/// `FIFAProposal` enrichment fields, with a focus on the optional kickoff: the date must
+/// degrade gracefully (absent / Go zero time / malformed → nil) and a single bad row must
+/// never abort the whole `[FIFAProposal]` decode.
+@Suite struct FIFAProposalDecodingTests {
+    private let decoder = JSONCoding.makeDecoder()
+
+    private func proposalJSON(id: Int = 1, kind: String = "initial", prevHome: String = "null",
+                              prevAway: String = "null", startDate: String? = "2026-06-20T17:00:00Z") -> String {
+        var fields = [
+            "\"id\": \(id)",
+            "\"game_id\": 808",
+            "\"match_id\": \"400021440\"",
+            "\"home_team_score\": 2",
+            "\"away_team_score\": 1",
+            "\"kind\": \"\(kind)\"",
+            "\"status\": \"pending\"",
+            "\"source\": \"proposal\"",
+            "\"prev_home_score\": \(prevHome)",
+            "\"prev_away_score\": \(prevAway)",
+            "\"game_home_team\": \"Netherlands\"",
+            "\"game_away_team\": \"Sweden\"",
+        ]
+        if let startDate {
+            fields.append("\"game_start_date\": \"\(startDate)\"")
+        }
+        return "{\(fields.joined(separator: ", "))}"
+    }
+
+    @Test func decodesEnrichedProposalWithKickoff() throws {
+        let p = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON().utf8))
+        #expect(p.id == 1)
+        #expect(p.gameHomeTeam == "Netherlands")
+        #expect(p.homeTeamScore == 2)
+        #expect(p.gameStartDate != nil)
+        #expect(p.prevHomeScore == nil)
+    }
+
+    @Test func correctionAndRollbackCarryPrevScores() throws {
+        let correction = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON(kind: "correction", prevHome: "1", prevAway: "0").utf8))
+        #expect(correction.prevHomeScore == 1)
+        #expect(correction.prevAwayScore == 0)
+
+        let rollback = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON(kind: "rollback", prevHome: "3", prevAway: "2").utf8))
+        #expect(rollback.kind == "rollback")
+        #expect(rollback.prevHomeScore == 3)
+        #expect(rollback.prevAwayScore == 2)
+    }
+
+    @Test func missingKickoffDecodesToNil() throws {
+        let p = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON(startDate: nil).utf8))
+        #expect(p.gameStartDate == nil)
+    }
+
+    @Test func goZeroTimeKickoffDecodesToNil() throws {
+        // Go's zero time parses as a real (year 1) date, but means "no kickoff" — it must
+        // not render as a sentinel; the model maps it to nil.
+        let p = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON(startDate: "0001-01-01T00:00:00Z").utf8))
+        #expect(p.gameStartDate == nil)
+    }
+
+    @Test func malformedKickoffDecodesToNilWithoutThrowing() throws {
+        let p = try decoder.decode(FIFAProposal.self, from: Data(proposalJSON(startDate: "not-a-date").utf8))
+        #expect(p.gameStartDate == nil)
+        #expect(p.id == 1) // the rest of the row still decoded
+    }
+
+    @Test func oneMalformedDateDoesNotAbortTheWholeArray() throws {
+        let good = proposalJSON()
+        let bad = proposalJSON(id: 2, startDate: "garbage")
+        let array = "[\(good), \(bad)]"
+        let proposals = try decoder.decode([FIFAProposal].self, from: Data(array.utf8))
+        #expect(proposals.count == 2) // a single bad date no longer fails the list
+        #expect(proposals[0].gameStartDate != nil)
+        #expect(proposals[1].gameStartDate == nil)
+    }
+}

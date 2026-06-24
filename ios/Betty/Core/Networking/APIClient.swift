@@ -297,6 +297,36 @@ final class APIClient {
         try await requestVoid(.rollbackGame(gameID: gameID))
     }
 
+    // MARK: - FIFA admin (result proposals)
+
+    /// `GET /admin/fifa/proposals?status=` (admin) — staged FIFA results to review,
+    /// enriched with the betty game's team names + kickoff. `null` proposals -> [].
+    func fifaProposals(status: String) async throws -> [FIFAProposal] {
+        struct Response: Decodable { let proposals: [FIFAProposal]? }
+        let response: Response = try await request(.fifaProposals(status: status))
+        return response.proposals ?? []
+    }
+
+    /// `POST /admin/fifa/proposals/:id/confirm` (admin) — applies the result through the
+    /// same seam as manual evaluation; throws `.gone` (410) when already processed,
+    /// `.conflict` (409) when another apply is racing the game.
+    func confirmFIFAProposal(id: Int) async throws {
+        try await requestVoid(.confirmFIFAProposal(id: id))
+    }
+
+    /// `POST /admin/fifa/proposals/:id/dismiss` (admin).
+    func dismissFIFAProposal(id: Int) async throws {
+        try await requestVoid(.dismissFIFAProposal(id: id))
+    }
+
+    /// `GET /admin/fifa/proposals/count?status=pending` (admin) — pending count for the
+    /// review badge/poll (no list, no FIFA call).
+    func fifaPendingProposalsCount() async throws -> Int {
+        struct Response: Decodable { let count: Int }
+        let response: Response = try await request(.fifaProposalsCount)
+        return response.count
+    }
+
     // MARK: - Reference data
 
     /// `GET /teams` — all tournaments; filter by `tournamentID` client-side. 404 -> [].

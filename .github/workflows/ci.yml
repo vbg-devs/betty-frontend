@@ -234,7 +234,7 @@ jobs:
           - name: shard1
             classes: LiveE2ETests GroupJoinInviteE2ETests CompleteProfileE2ETests GroupDetailMoreE2ETests AuthBootFailureE2ETests
           - name: shard2
-            classes: TournamentsDetailE2ETests TournamentsAdminE2ETests GroupDetailLeaderboardE2ETests GroupDetailNonAuthorCoverE2ETests ProfileAdminE2ETests
+            classes: TournamentsDetailE2ETests TournamentsAdminE2ETests GroupDetailLeaderboardE2ETests GroupDetailNonAuthorCoverE2ETests ProfileAdminE2ETests FIFAProposalsE2ETests
           - name: shard3
             classes: ChatMoreE2ETests HomeE2ETests AuthSignInValidationE2ETests AuthSessionE2ETests GroupDetailGamesE2ETests GroupCreateE2ETests
           - name: shard4
