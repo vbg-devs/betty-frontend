@@ -21,7 +21,12 @@ export const useGroupStore = defineStore('group', () => {
 
   async function create(payload: Record<string, unknown>) {
     const { authFetch } = useApi();
-    return authFetch<{ group_id: number }>('/group', { method: 'POST', body: payload });
+    const data = await authFetch<{ group_id: number }>('/group', {
+      method: 'POST',
+      body: payload,
+    });
+    saEvent('group_created');
+    return data;
   }
 
   async function join(code: string) {

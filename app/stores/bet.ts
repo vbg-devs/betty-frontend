@@ -9,6 +9,7 @@ export const useBetStore = defineStore('bet', () => {
     const { authFetch } = useApi();
     const data = await authFetch<Bet>('/bet', { method: 'POST', body: payload });
     bets.value.push(Object.freeze(data) as Bet);
+    saEvent('bet_placed');
     return data;
   }
 
@@ -19,6 +20,7 @@ export const useBetStore = defineStore('bet', () => {
     if (index > -1) {
       bets.value[index] = Object.freeze(data) as Bet;
     }
+    saEvent('bet_updated');
     return data;
   }
 
