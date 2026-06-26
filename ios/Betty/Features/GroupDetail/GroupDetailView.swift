@@ -184,19 +184,17 @@ struct GroupDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: Space.xs) {
-                Text("\(group.members.count) MEMBERS")
-                    .kicker(heroTextSecondary(group))
                 if !allGames.isEmpty {
-                    Text("·").foregroundStyle(heroTextSecondary(group))
                     Text("\(completeGames.count) OF \(allGames.count) GAMES")
                         .kicker(heroTextSecondary(group))
+                        .lineLimit(1)
+                    Text("·").foregroundStyle(heroTextSecondary(group))
                 }
-                Text("·").foregroundStyle(heroTextSecondary(group))
                 Text(tournamentEnded ? "○ FINAL" : "● ACTIVE")
                     .kicker(tournamentEnded ? heroTextSecondary(group) : theme.colors.accentPositive)
             }
 
-            HStack(spacing: Space.s) {
+            HStack(alignment: .top, spacing: Space.s) {
                 if tournamentEnded {
                     championTile
                     finishTile(group)
@@ -320,12 +318,14 @@ struct GroupDetailView: View {
                 Text("\(percent)")
                     .font(.bettyDisplayXL)
                     .foregroundStyle(theme.colors.textPrimary)
+                    .lineLimit(1)
                     .minimumScaleFactor(0.5)
                 Text("%")
                     .font(.betty(28, .heavy))
                     .foregroundStyle(theme.colors.textPrimary.opacity(0.75))
             }
             ProgressBarView(progress: Double(percent))
+                .frame(height: 13)
         }
     }
 
@@ -368,7 +368,7 @@ struct GroupDetailView: View {
             content()
         }
         .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 140, maxHeight: .infinity, alignment: .topLeading)
         .background(background, in: RoundedRectangle(cornerRadius: Radius.sharp))
     }
 
