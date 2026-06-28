@@ -378,13 +378,31 @@ async function doLink() {
   }
 }
 
-async function toggleAutoApply() {
+// Gate the toggle behind a confirm: enabling auto-apply distributes points
+// automatically, so a mistaken flip is costly. v-model has already flipped
+// autoApply to the intended state, so hold the committed state until confirmed
+// (the confirm dialog has no cancel callback) and only commit on confirm.
+function toggleAutoApply() {
   if (selectedTournamentId.value === null) return;
+  const desired = autoApply.value;
+  autoApply.value = !desired; // keep showing the committed state while confirming
+  confirmDialog({
+    question: desired
+      ? 'Turn ON auto-apply? FIFA results will be applied and distribute points automatically, with no manual review.'
+      : 'Turn OFF auto-apply? New FIFA results will wait for manual confirmation.',
+    confirmLabel: desired ? 'Turn on' : 'Turn off',
+    onConfirm: () => saveAutoApply(desired),
+  });
+}
+
+async function saveAutoApply(desired: boolean) {
+  if (selectedTournamentId.value === null) return;
+  autoApply.value = desired; // optimistic
   try {
-    await fifaStore.setAutoApply({ tournament_id: selectedTournamentId.value, auto_apply: autoApply.value });
-    notify({ title: 'Saved', message: `Auto-apply ${autoApply.value ? 'on' : 'off'}.`, state: 'success' });
+    await fifaStore.setAutoApply({ tournament_id: selectedTournamentId.value, auto_apply: desired });
+    notify({ title: 'Saved', message: `Auto-apply ${desired ? 'on' : 'off'}.`, state: 'success' });
   } catch (err) {
-    autoApply.value = !autoApply.value; // revert optimistic toggle
+    autoApply.value = !desired; // revert
     notify({ title: 'Could not save', message: `${err}`, state: 'error' });
   }
 }
