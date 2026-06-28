@@ -238,3 +238,21 @@ export interface FifaUnmappedResult {
   away_score: number;
   start_time: string;
 }
+
+// Result of slot-linking every knockout fixture by (round, kickoff).
+export interface FifaKnockoutLinkResult {
+  linked: number;
+  skipped: number;
+}
+
+// A confirmed-mapped FIFA final that betty has not settled and has no pending
+// proposal for (e.g. an extra-time knockout whose detail will not reconcile), so
+// it needs manual attention.
+export interface FifaUnsettledFinal {
+  competition_id: string;
+  game_id: number;
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  start_time: string;
+}

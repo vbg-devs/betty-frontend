@@ -1,9 +1,11 @@
 import type {
+  FifaKnockoutLinkResult,
   FifaLinkResult,
   FifaMappings,
   FifaResultProposal,
   FifaSeason,
   FifaUnmappedResult,
+  FifaUnsettledFinal,
 } from '~/types';
 
 // Admin-only store for the FIFA result-polling tooling. Each action calls the
@@ -15,6 +17,7 @@ export const useFifaStore = defineStore('fifa', () => {
   const suggestions = ref<FifaMappings['suggestions']>([]);
   const proposals = ref<FifaResultProposal[]>([]);
   const unmapped = ref<FifaUnmappedResult[]>([]);
+  const unsettledFinals = ref<FifaUnsettledFinal[]>([]);
 
   async function loadSeasons() {
     const { authFetch } = useApi();
@@ -138,6 +141,29 @@ export const useFifaStore = defineStore('fifa', () => {
     );
   }
 
+  // Link every knockout fixture to its FIFA match by (round, kickoff) in one
+  // backend call, so knockout games map even while their teams are still "TBD"
+  // (name-based mapping can't reach those). Returns how many linked vs skipped.
+  async function linkKnockoutSlots(tournamentId: number) {
+    const { authFetch } = useApi();
+    return authFetch<FifaKnockoutLinkResult>(
+      `/admin/fifa/competitions/${tournamentId}/link-knockout-slots`,
+      { method: 'POST' },
+    );
+  }
+
+  // Mapped FIFA finals betty has not settled and has no pending proposal for
+  // (e.g. an extra-time knockout whose detail will not reconcile), surfaced so an
+  // admin can settle them by hand.
+  async function loadUnsettledFinals() {
+    const { authFetch } = useApi();
+    const data = await authFetch<{ unsettled: FifaUnsettledFinal[] }>(
+      '/admin/fifa/unsettled-finals',
+    );
+    unsettledFinals.value = data.unsettled ?? [];
+    return unsettledFinals.value;
+  }
+
   function reset() {
     competitionId.value = '';
     suggestions.value = [];
@@ -149,6 +175,7 @@ export const useFifaStore = defineStore('fifa', () => {
     suggestions,
     proposals,
     unmapped,
+    unsettledFinals,
     loadSeasons,
     linkCompetition,
     loadCompetition,
@@ -157,11 +184,13 @@ export const useFifaStore = defineStore('fifa', () => {
     confirmMapping,
     rejectMapping,
     confirmAllMappings,
+    linkKnockoutSlots,
     loadProposals,
     clearProposals,
     confirmProposal,
     dismissProposal,
     loadUnmapped,
+    loadUnsettledFinals,
     reset,
   };
 });

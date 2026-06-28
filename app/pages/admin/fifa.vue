@@ -93,7 +93,14 @@
           >
             {{ confirmingAll ? 'Confirming…' : `Confirm all (${confirmableCount})` }}
           </button>
+          <button class="btn btn--ghost" :disabled="linkingKnockout" @click="linkKnockout">
+            {{ linkingKnockout ? 'Linking…' : 'Link knockout fixtures' }}
+          </button>
         </div>
+        <p class="panel__note">
+          ○ Knockout games map by round + kickoff, so they link even while their teams are still TBD
+          (name matching can't reach those). Results auto-apply once played if auto-apply is on.
+        </p>
 
         <div v-if="suggestions.length > 0" class="rows">
           <div v-for="s in suggestions" :key="s.game_id" class="row">
@@ -201,6 +208,27 @@
           </div>
         </div>
       </section>
+
+      <!-- ===== Unsettled finals (mapped but stuck) ===== -->
+      <section v-if="activeTab === 'linking' && unsettledFinals.length > 0" class="section">
+        <div class="section-head">
+          <span class="kicker kicker--accent">○ NEEDS ATTENTION</span>
+          <h2 class="section-head__title">UNSETTLED FINALS.</h2>
+        </div>
+        <p class="tab-empty__copy">
+          FIFA reports these as final but betty has not settled them and has no pending proposal
+          (e.g. an extra-time knockout whose detail could not be reconciled). Settle them manually.
+        </p>
+        <div class="rows">
+          <div v-for="f in unsettledFinals" :key="f.match_id" class="row">
+            <div class="row__main">
+              <span class="teams">{{ f.home_team }} <span class="vs">v</span> {{ f.away_team }}</span>
+              <span class="when">{{ fmtKickoff(f.start_time) }}</span>
+              <span class="mono mono--dim">#{{ f.game_id }} → {{ f.match_id }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </template>
 
     <section v-else class="empty-section">
@@ -237,6 +265,7 @@ const mappingsLoaded = ref(false);
 const activeTab = ref<'proposals' | 'linking'>('proposals');
 const proposalTab = ref<'pending' | 'applied'>('pending');
 const confirmingAll = ref(false);
+const linkingKnockout = ref(false);
 // Guards confirm/dismiss/reject against double-submit while a mutation is in flight.
 const busy = ref(false);
 
@@ -251,6 +280,7 @@ const proposals = computed(() =>
   [...fifaStore.proposals].sort((a, b) => a.game_start_date.localeCompare(b.game_start_date)),
 );
 const unmapped = computed(() => fifaStore.unmapped);
+const unsettledFinals = computed(() => fifaStore.unsettledFinals);
 const seasons = computed(() => fifaStore.seasons);
 const isLinked = computed(() => fifaStore.competitionId.length > 0);
 
@@ -276,6 +306,7 @@ onMounted(() => {
   fifaStore.loadSeasons().catch(() => {});
   fifaStore.loadProposals('pending').catch(() => {});
   fifaStore.loadUnmapped().catch(() => {});
+  fifaStore.loadUnsettledFinals().catch(() => {});
 });
 
 // Map a season id back to the dropdown: select it if known, else fall to the
@@ -347,13 +378,31 @@ async function doLink() {
   }
 }
 
-async function toggleAutoApply() {
+// Gate the toggle behind a confirm: enabling auto-apply distributes points
+// automatically, so a mistaken flip is costly. v-model has already flipped
+// autoApply to the intended state, so hold the committed state until confirmed
+// (the confirm dialog has no cancel callback) and only commit on confirm.
+function toggleAutoApply() {
   if (selectedTournamentId.value === null) return;
+  const desired = autoApply.value;
+  autoApply.value = !desired; // keep showing the committed state while confirming
+  confirmDialog({
+    question: desired
+      ? 'Turn ON auto-apply? FIFA results will be applied and distribute points automatically, with no manual review.'
+      : 'Turn OFF auto-apply? New FIFA results will wait for manual confirmation.',
+    confirmLabel: desired ? 'Turn on' : 'Turn off',
+    onConfirm: () => saveAutoApply(desired),
+  });
+}
+
+async function saveAutoApply(desired: boolean) {
+  if (selectedTournamentId.value === null) return;
+  autoApply.value = desired; // optimistic
   try {
-    await fifaStore.setAutoApply({ tournament_id: selectedTournamentId.value, auto_apply: autoApply.value });
-    notify({ title: 'Saved', message: `Auto-apply ${autoApply.value ? 'on' : 'off'}.`, state: 'success' });
+    await fifaStore.setAutoApply({ tournament_id: selectedTournamentId.value, auto_apply: desired });
+    notify({ title: 'Saved', message: `Auto-apply ${desired ? 'on' : 'off'}.`, state: 'success' });
   } catch (err) {
-    autoApply.value = !autoApply.value; // revert optimistic toggle
+    autoApply.value = !desired; // revert
     notify({ title: 'Could not save', message: `${err}`, state: 'error' });
   }
 }
@@ -400,6 +449,37 @@ async function doConfirmAll() {
     notify({ title: 'Could not confirm all', message: `${err}`, state: 'error' });
   } finally {
     confirmingAll.value = false;
+  }
+}
+
+function linkKnockout() {
+  if (selectedTournamentId.value === null) return;
+  confirmDialog({
+    question: 'Link all knockout fixtures to their FIFA match by round + kickoff?',
+    onConfirm: () => doLinkKnockout(),
+  });
+}
+
+async function doLinkKnockout() {
+  if (selectedTournamentId.value === null) return;
+  linkingKnockout.value = true;
+  try {
+    const res = await fifaStore.linkKnockoutSlots(selectedTournamentId.value);
+    notify({
+      title: 'Knockout fixtures linked',
+      message: `${res.linked} linked, ${res.skipped} skipped.`,
+      state: 'success',
+    });
+    // Reload separately: a refresh failure must not surface as a link failure.
+    try {
+      await fifaStore.loadMappings(selectedTournamentId.value);
+    } catch {
+      // best-effort; the linking already succeeded
+    }
+  } catch (err) {
+    notify({ title: 'Could not link knockout fixtures', message: `${err}`, state: 'error' });
+  } finally {
+    linkingKnockout.value = false;
   }
 }
 

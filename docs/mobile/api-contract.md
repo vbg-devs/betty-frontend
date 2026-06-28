@@ -823,6 +823,7 @@ off), so deploying never starts polling on its own. Wire types live in
 | GET | `/admin/fifa/competitions/:tournamentId` | `{ "competition_id", "auto_apply", "enabled" }`; 404 unlinked. |
 | PUT | `/admin/fifa/competitions/:tournamentId/auto-apply` | Body `{ "auto_apply": bool }`. |
 | POST | `/admin/fifa/competitions/:tournamentId/confirm-all` | Confirm every unambiguous mapping. 200 `{ "confirmed", "skipped_ambiguous" }`. |
+| POST | `/admin/fifa/competitions/:tournamentId/link-knockout-slots` | Link every knockout fixture to its FIFA match by (round, kickoff), so knockout games map even while their teams are still "TBD". Skips games already linked and contested/ambiguous slots. 200 `{ "linked", "skipped" }`. |
 | GET | `/admin/fifa/mappings?tournament_id=N` | `{ "competition_id", "suggestions": [FifaMappingSuggestion] }`. `confirmed=true` rows already have a confirmed link (hidden from the to-do list). |
 | POST | `/admin/fifa/mappings/:gameId/confirm` | Body `{ "competition_id", "match_id", "orientation_flipped" }`. |
 | POST | `/admin/fifa/mappings/:gameId/reject` | 200 `null`. |
@@ -831,6 +832,7 @@ off), so deploying never starts polling on its own. Wire types live in
 | POST | `/admin/fifa/proposals/:id/confirm` | Applies the result (same seam as `/evaluategame`). 200 `null`; idempotent (a superseded/already-applied id is a no-op); **410** already processed; **409** apply racing. |
 | POST | `/admin/fifa/proposals/:id/dismiss` | 200 `null`. |
 | GET | `/admin/fifa/unmapped-results` | FIFA-final matches with no mapped betty game. `{ "unmapped": [FifaUnmappedResult] }`. |
+| GET | `/admin/fifa/unsettled-finals` | Mapped FIFA finals betty has not settled and has no pending proposal for (e.g. an extra-time knockout whose detail will not reconcile). `{ "unsettled": [FifaUnsettledFinal] }`. |
 
 **ProposalView** (`GET /admin/fifa/proposals` items) — a staged result enriched
 with the betty game's teams + kickoff; the score is already oriented to betty
