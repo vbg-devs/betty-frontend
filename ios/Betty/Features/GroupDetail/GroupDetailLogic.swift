@@ -139,7 +139,11 @@ nonisolated enum GroupGameDaySchedule {
         var nextUpcomingKey: String?
         for entry in sorted {
             let components = calendar.dateComponents([.year, .month, .day], from: entry.game.startDate)
-            let key = "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"
+            let dayKey = "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"
+            // Group-stage pools (Group A/B/C…) on the same day share one bucket; knockout
+            // rounds bucket per pool so two rounds the same day aren't merged into one header.
+            let isGroupStage = entry.poolName.contains("Group")
+            let key = isGroupStage ? "\(dayKey)#group" : "\(dayKey)#\(entry.poolName)"
             if let index = groups.firstIndex(where: { $0.key == key }) {
                 if !groups[index].poolNames.contains(entry.poolName) {
                     groups[index].poolNames.append(entry.poolName)

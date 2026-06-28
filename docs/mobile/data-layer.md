@@ -365,11 +365,17 @@ them by `user_points` descending. `myBet` = first bet with my uid.
 ### 6.4 Day grouping of games (`Pools.vue` `gameGroups`)
 
 1. Flatten all pools' games, tagging each with its `poolName`; sort by `start_date` ascending.
-2. Group by *calendar day* (key from year/month/day components).
+2. Group by *(calendar day, pool bucket)*. Pool bucket: every group-stage pool (name contains
+   `"Group"` — e.g. "Group A", "Group B") shares one bucket so multiple groups playing the
+   same day stay in one block; every other pool gets its own bucket so two different
+   knockout rounds the same day (e.g. Round of 32 + Round of 16) are rendered as two
+   separate day-groups instead of merging into "Round of 32 & Round of 16".
 3. Group title: `Today` / `Tomorrow` / else a relative distance between the start-of-day of
    the game and start-of-day now with suffix (date-fns `formatDistance … addSuffix`, e.g.
    "in 3 days"; on iOS use `RelativeDateTimeFormatter` `.named`).
-4. Group display name: the distinct pool names of that day joined with `" & "`.
+4. Group display name: the distinct pool names of that day's bucket joined with `" & "`
+   (knockout buckets always hold a single pool; group-stage buckets may join several
+   "Group X" names).
 5. The first group containing a game with `start_date >= now` is flagged `isNextUpcoming`
    (web auto-scrolls to it when the games tab opens).
 6. Per-game annotations: `hasBet` (a bet by me for this game exists), bet count, and my placed

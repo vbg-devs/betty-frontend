@@ -129,7 +129,11 @@ const gameGroups = computed(() => {
 
   allGames.value.forEach((game: any) => {
     const date = new Date(game.start_date);
-    const key = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
+    const dayKey = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
+    const isGroupStage = (game.poolName ?? '').includes('Group');
+    // Group-stage pools (Group A/B/C…) on the same day collapse into one block;
+    // knockout rounds get their own block so two rounds the same day aren't merged.
+    const key = isGroupStage ? `${dayKey}-group` : `${dayKey}-${game.poolName}`;
     let group = groups.find((g: any) => g.key === key);
 
     if (!group) {

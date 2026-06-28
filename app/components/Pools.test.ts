@@ -152,7 +152,9 @@ describe('Pools', () => {
       expect(wrapper.find('.pool__title').text()).toBe('Quarter-final - Tomorrow');
     });
 
-    it('combines the pool names of a mixed-pool day in start order', async () => {
+    it('splits different knockout rounds on the same day into their own day-groups', async () => {
+      // Two knockout rounds on the same day must NOT collapse into one
+      // "Round of 16 & Quarter-final - Tomorrow" header — each gets its own block.
       const wrapper = await mountPools({
         pools: [
           makePool(1, 'Round of 16', [makeGame({ id: 1, start_date: '2026-06-16T15:00:00' })]),
@@ -160,15 +162,32 @@ describe('Pools', () => {
         ],
       });
       const groups = wrapper.findAll('.day-group');
-      expect(groups).toHaveLength(1);
-      expect(groups[0]!.find('.pool__title').text()).toBe('Quarter-final & Round of 16 - Tomorrow');
+      expect(groups).toHaveLength(2);
+      // Quarter-final (09:00) appears first by kickoff order.
+      expect(groups[0]!.find('.pool__title').text()).toBe('Quarter-final - Tomorrow');
+      expect(groups[1]!.find('.pool__title').text()).toBe('Round of 16 - Tomorrow');
     });
 
-    it('shows only the day title when a mixed-pool day includes a group pool', async () => {
+    it('splits a group-stage pool and a knockout pool on the same day into separate buckets', async () => {
       const wrapper = await mountPools({
         pools: [
           makePool(1, 'Group A', [makeGame({ id: 1, start_date: '2026-06-16T15:00:00' })]),
           makePool(2, 'Knockout', [makeGame({ id: 2, start_date: '2026-06-16T09:00:00' })]),
+        ],
+      });
+      const groups = wrapper.findAll('.day-group');
+      expect(groups).toHaveLength(2);
+      expect(groups[0]!.find('.pool__title').text()).toBe('Knockout - Tomorrow');
+      expect(groups[1]!.find('.pool__title').text()).toBe('Tomorrow');
+    });
+
+    it('keeps multiple group-stage pools on the same day in one bucket', async () => {
+      // Group A + Group B same day still collapse — group-stage pools share a bucket so
+      // the day header doesn't repeat per pool letter.
+      const wrapper = await mountPools({
+        pools: [
+          makePool(1, 'Group A', [makeGame({ id: 1, start_date: '2026-06-16T15:00:00' })]),
+          makePool(2, 'Group B', [makeGame({ id: 2, start_date: '2026-06-16T09:00:00' })]),
         ],
       });
       const groups = wrapper.findAll('.day-group');

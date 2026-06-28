@@ -99,7 +99,9 @@ private func makePool(id: Int, name: String, games: [Game]) -> PoolGames {
         #expect(days.first?.headerText == "Quarter-final - Tomorrow")
     }
 
-    @Test func combinesMixedPoolNamesInStartOrder() throws {
+    @Test func splitsDifferentKnockoutRoundsOnTheSameDayIntoTheirOwnBuckets() throws {
+        // Two knockout rounds on the same day get their own day-bucket each (preserving
+        // start-order), instead of collapsing into one "Quarter-final & Round of 16" header.
         let pools = [
             makePool(id: 1, name: "Round of 16", games: [
                 try makeGame(id: 1, start: "2026-06-16T15:00:00Z"),
@@ -109,16 +111,36 @@ private func makePool(id: Int, name: String, games: [Game]) -> PoolGames {
             ]),
         ]
         let days = TournamentSchedule.days(pools: pools, now: now, calendar: utc)
-        #expect(days.count == 1)
-        #expect(days.first?.headerText == "Quarter-final & Round of 16 - Tomorrow")
+        #expect(days.count == 2)
+        #expect(days[0].headerText == "Quarter-final - Tomorrow")
+        #expect(days[1].headerText == "Round of 16 - Tomorrow")
     }
 
-    @Test func showsOnlyDayTitleWhenMixedDayIncludesAGroupPool() throws {
+    @Test func groupStageAndKnockoutSameDaySplitIntoSeparateBuckets() throws {
+        // Group-stage pool + knockout pool same day: two separate buckets — the group-stage
+        // header shows the day title only, the knockout header prefixes the pool name.
         let pools = [
             makePool(id: 1, name: "Group A", games: [
                 try makeGame(id: 1, start: "2026-06-16T15:00:00Z"),
             ]),
             makePool(id: 2, name: "Knockout", games: [
+                try makeGame(id: 2, poolID: 2, start: "2026-06-16T09:00:00Z"),
+            ]),
+        ]
+        let days = TournamentSchedule.days(pools: pools, now: now, calendar: utc)
+        #expect(days.count == 2)
+        #expect(days[0].headerText == "Knockout - Tomorrow")
+        #expect(days[1].headerText == "Tomorrow")
+    }
+
+    @Test func multipleGroupStagePoolsSameDayShareOneBucket() throws {
+        // Several Group X pools playing the same day still collapse into one block —
+        // group-stage pools share a bucket so the day header doesn't repeat per pool letter.
+        let pools = [
+            makePool(id: 1, name: "Group A", games: [
+                try makeGame(id: 1, start: "2026-06-16T15:00:00Z"),
+            ]),
+            makePool(id: 2, name: "Group B", games: [
                 try makeGame(id: 2, poolID: 2, start: "2026-06-16T09:00:00Z"),
             ]),
         ]
@@ -172,6 +194,8 @@ private func makePool(id: Int, name: String, games: [Game]) -> PoolGames {
             ]),
         ]
         let days = TournamentSchedule.days(pools: pools, now: now, calendar: utc)
+        // Group-stage + knockout same day now split into two buckets (Knockout first by
+        // kickoff). Each entry still carries its pool name through to tap payloads.
         #expect(days.flatMap(\.entries).map(\.poolName) == ["Knockout", "Group A"])
     }
 }

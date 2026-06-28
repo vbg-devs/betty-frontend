@@ -99,11 +99,18 @@ object GameSchedule {
                 )
             }
 
-        val byDay = annotated.groupBy { it.game.startDate?.atZone(zone)?.toLocalDate() ?: LocalDate.MIN }
-        val sortedDays = byDay.keys.sortedBy { it }
+        // Bucket by (day, poolBucket): group-stage pools (Group A/B/C…) on the same day share
+        // one bucket; knockout rounds bucket per pool so two rounds the same day aren't merged
+        // into one header. LinkedHashMap preserves order of first appearance after the sort.
+        val byBucket = linkedMapOf<Pair<LocalDate, String>, MutableList<GameAnnotation>>()
+        for (entry in annotated) {
+            val day = entry.game.startDate?.atZone(zone)?.toLocalDate() ?: LocalDate.MIN
+            val bucket = if (entry.poolName.contains("Group")) "group" else entry.poolName
+            byBucket.getOrPut(day to bucket) { mutableListOf() }.add(entry)
+        }
         var nextFlagged = false
-        return sortedDays.map { day ->
-            val games = byDay.getValue(day)
+        return byBucket.map { (key, games) ->
+            val (day, _) = key
             val isNext = !nextFlagged && games.any { (it.game.startDate ?: Instant.EPOCH) >= now }
             if (isNext) nextFlagged = true
             DayGroup(

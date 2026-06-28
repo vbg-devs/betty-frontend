@@ -8,7 +8,10 @@ private let calendar = GroupDetailFixtures.utcCalendar
 
 @Suite("Day-grouped schedule (Pools.vue gameGroups pins)")
 struct GroupGameDayScheduleTests {
-    @Test func flattensAcrossPoolsAndSortsByKickoff() {
+    @Test func flattensAcrossPoolsAndSplitsDifferentKnockoutRoundsSameDay() {
+        // Two knockout rounds on the same day must NOT collapse into one header
+        // ("Round of 16 & Quarter-final - Tomorrow") — they get their own day-group each,
+        // preserving start-order so the earlier round appears first.
         let poolA = PoolGames(
             pool: GroupDetailFixtures.pool(id: 1, name: "Quarter-final"),
             games: [GroupDetailFixtures.game(id: 2, start: GroupDetailFixtures.date("2026-06-06T18:00:00Z"))]
@@ -18,11 +21,12 @@ struct GroupGameDayScheduleTests {
             games: [GroupDetailFixtures.game(id: 1, start: GroupDetailFixtures.date("2026-06-06T12:00:00Z"))]
         )
         let groups = GroupGameDaySchedule.build(pools: [poolA, poolB], now: now, calendar: calendar)
-        #expect(groups.count == 1)
-        #expect(groups[0].games.map(\.id) == [1, 2])
-        // Pool names in order of first appearance after sorting.
-        #expect(groups[0].poolNames == ["Round of 16", "Quarter-final"])
-        #expect(groups[0].headerText == "Round of 16 & Quarter-final - Tomorrow")
+        #expect(groups.count == 2)
+        #expect(groups.flatMap { $0.games.map(\.id) } == [1, 2])
+        #expect(groups[0].poolNames == ["Round of 16"])
+        #expect(groups[1].poolNames == ["Quarter-final"])
+        #expect(groups[0].headerText == "Round of 16 - Tomorrow")
+        #expect(groups[1].headerText == "Quarter-final - Tomorrow")
     }
 
     @Test func dayTitles() {
@@ -57,7 +61,9 @@ struct GroupGameDayScheduleTests {
         #expect(groups[0].headerText == "Quarter-final - Tomorrow")
     }
 
-    @Test func mixedDayWithGroupPoolInJoinedNameShowsTitleOnly() {
+    @Test func groupStageAndKnockoutSameDaySplitIntoSeparateBuckets() {
+        // A group-stage pool and a knockout pool on the same day are two separate buckets:
+        // the group-stage header shows the day title only, the knockout header prefixes.
         let pools = [
             PoolGames(
                 pool: GroupDetailFixtures.pool(id: 1, name: "Group B"),
@@ -69,7 +75,29 @@ struct GroupGameDayScheduleTests {
             ),
         ]
         let groups = GroupGameDaySchedule.build(pools: pools, now: now, calendar: calendar)
-        #expect(groups[0].poolNames == ["Group B", "Quarter-final"])
+        #expect(groups.count == 2)
+        #expect(groups[0].poolNames == ["Group B"])
+        #expect(groups[0].headerText == "Tomorrow")
+        #expect(groups[1].poolNames == ["Quarter-final"])
+        #expect(groups[1].headerText == "Quarter-final - Tomorrow")
+    }
+
+    @Test func multipleGroupStagePoolsSameDayShareOneBucket() {
+        // Group A + Group B on the same day still collapse into one block — group-stage
+        // pools share the "group" bucket so the day header doesn't repeat per pool letter.
+        let pools = [
+            PoolGames(
+                pool: GroupDetailFixtures.pool(id: 1, name: "Group A"),
+                games: [GroupDetailFixtures.game(id: 1, start: GroupDetailFixtures.date("2026-06-06T12:00:00Z"))]
+            ),
+            PoolGames(
+                pool: GroupDetailFixtures.pool(id: 2, name: "Group B"),
+                games: [GroupDetailFixtures.game(id: 2, start: GroupDetailFixtures.date("2026-06-06T18:00:00Z"))]
+            ),
+        ]
+        let groups = GroupGameDaySchedule.build(pools: pools, now: now, calendar: calendar)
+        #expect(groups.count == 1)
+        #expect(groups[0].poolNames == ["Group A", "Group B"])
         #expect(groups[0].headerText == "Tomorrow")
     }
 
