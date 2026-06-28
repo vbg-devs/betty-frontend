@@ -209,6 +209,17 @@ enum MockWire {
         ]
     }
 
+    static func fifaUnsettledFinal(_ f: MockFIFAUnsettledFinal) -> [String: Any] {
+        [
+            "competition_id": f.competitionID,
+            "game_id": f.gameID,
+            "match_id": f.matchID,
+            "home_team": f.homeTeam,
+            "away_team": f.awayTeam,
+            "start_time": time(f.startTime),
+        ]
+    }
+
     static func game(_ g: MockGame) -> [String: Any] {
         [
             "id": g.id,

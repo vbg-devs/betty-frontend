@@ -64,3 +64,44 @@ nonisolated struct FIFAProposal: Decodable, Identifiable, Hashable, Sendable {
         }
     }
 }
+
+/// A confirmed-mapped FIFA final betty has not settled and has no pending proposal for
+/// (e.g. an extra-time knockout whose detail will not reconcile), surfaced so an admin
+/// can settle it by hand. Wire shape: betty-api `GET /admin/fifa/unsettled-finals`.
+nonisolated struct FIFAUnsettledFinal: Decodable, Identifiable, Hashable, Sendable {
+    let competitionID: String
+    let gameID: Int
+    let matchID: String
+    let homeTeam: String
+    let awayTeam: String
+    /// Kickoff (UTC). Optional: a missing/Go-zero/unparseable time degrades to nil
+    /// instead of throwing and aborting the whole `[FIFAUnsettledFinal]` decode.
+    let startTime: Date?
+
+    /// FIFA match id is unique per match, so it is a stable SwiftUI list identity.
+    var id: String { matchID }
+
+    enum CodingKeys: String, CodingKey {
+        case competitionID = "competition_id"
+        case gameID = "game_id"
+        case matchID = "match_id"
+        case homeTeam = "home_team"
+        case awayTeam = "away_team"
+        case startTime = "start_time"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        competitionID = try c.decodeIfPresent(String.self, forKey: .competitionID) ?? ""
+        gameID = try c.decode(Int.self, forKey: .gameID)
+        matchID = try c.decode(String.self, forKey: .matchID)
+        homeTeam = try c.decodeIfPresent(String.self, forKey: .homeTeam) ?? ""
+        awayTeam = try c.decodeIfPresent(String.self, forKey: .awayTeam) ?? ""
+        let rawStart = (try? c.decodeIfPresent(String.self, forKey: .startTime)) ?? nil
+        if let rawStart, !rawStart.hasPrefix("0001-") {
+            startTime = JSONCoding.parseRFC3339(rawStart)
+        } else {
+            startTime = nil
+        }
+    }
+}

@@ -327,6 +327,14 @@ final class APIClient {
         return response.count
     }
 
+    /// `GET /admin/fifa/unsettled-finals` (admin) — mapped FIFA finals betty has not
+    /// settled and has no pending proposal for. `null` -> [].
+    func fifaUnsettledFinals() async throws -> [FIFAUnsettledFinal] {
+        struct Response: Decodable { let unsettled: [FIFAUnsettledFinal]? }
+        let response: Response = try await request(.fifaUnsettledFinals)
+        return response.unsettled ?? []
+    }
+
     // MARK: - Reference data
 
     /// `GET /teams` — all tournaments; filter by `tournamentID` client-side. 404 -> [].

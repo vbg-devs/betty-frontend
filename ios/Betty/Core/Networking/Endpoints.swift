@@ -81,6 +81,7 @@ extension Endpoint {
         "/admin/fifa/proposals/count",
         query: [URLQueryItem(name: "status", value: "pending")]
     )
+    static let fifaUnsettledFinals = Endpoint.get("/admin/fifa/unsettled-finals")
 
     // MARK: Reference data
 

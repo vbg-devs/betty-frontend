@@ -537,3 +537,38 @@ import Testing
         #expect(proposals[1].gameStartDate == nil)
     }
 }
+
+/// `FIFAUnsettledFinal` (`GET /admin/fifa/unsettled-finals`): snake_case mapping and the
+/// optional kickoff degrading gracefully, mirroring the proposal kickoff handling.
+@Suite struct FIFAUnsettledFinalDecodingTests {
+    private let decoder = JSONCoding.makeDecoder()
+
+    private func unsettledJSON(startTime: String? = "2026-06-28T02:00:00Z") -> String {
+        var fields = [
+            "\"competition_id\": \"285023\"",
+            "\"game_id\": 834",
+            "\"match_id\": \"400021495\"",
+            "\"home_team\": \"Jordan\"",
+            "\"away_team\": \"Argentina\"",
+        ]
+        if let startTime {
+            fields.append("\"start_time\": \"\(startTime)\"")
+        }
+        return "{\(fields.joined(separator: ", "))}"
+    }
+
+    @Test func decodesEnrichedFields() throws {
+        let f = try decoder.decode(FIFAUnsettledFinal.self, from: Data(unsettledJSON().utf8))
+        #expect(f.id == "400021495") // Identifiable id == match_id
+        #expect(f.gameID == 834)
+        #expect(f.homeTeam == "Jordan")
+        #expect(f.awayTeam == "Argentina")
+        #expect(f.startTime != nil)
+    }
+
+    @Test func missingOrMalformedKickoffDecodesToNil() throws {
+        #expect(try decoder.decode(FIFAUnsettledFinal.self, from: Data(unsettledJSON(startTime: nil).utf8)).startTime == nil)
+        #expect(try decoder.decode(FIFAUnsettledFinal.self, from: Data(unsettledJSON(startTime: "0001-01-01T00:00:00Z").utf8)).startTime == nil)
+        #expect(try decoder.decode(FIFAUnsettledFinal.self, from: Data(unsettledJSON(startTime: "garbage").utf8)).startTime == nil)
+    }
+}

@@ -16,6 +16,13 @@ final class FIFAProposalsE2ETests: BettyUITestCase {
                 gameStartDate: Date().addingTimeInterval(-3600)
             ),
         ]
+        scenario.fifaUnsettledFinals = [
+            MockFIFAUnsettledFinal(
+                gameID: DefaultScenario.liveGameID, matchID: "400021528",
+                homeTeam: "Croatia", awayTeam: "Brazil",
+                startTime: Date().addingTimeInterval(3600)
+            ),
+        ]
         return scenario
     }
 
@@ -44,5 +51,13 @@ final class FIFAProposalsE2ETests: BettyUITestCase {
             backend.requests(method: "POST", pathPrefix: "/api/v1/admin/fifa/proposals/1/confirm").isEmpty,
             "confirm should POST to the backend"
         )
+    }
+
+    func testAdminSeesUnsettledFinalsHeadsUp() {
+        openFIFAResults()
+        // The unsettled-finals heads-up renders the FIFA matchup from the wire fields.
+        waitFor(app.otherElements["admin.fifa.unsettled.400021528"])
+        XCTAssertTrue(staticText(containing: "Croatia").exists)
+        XCTAssertTrue(staticText(containing: "Brazil").exists)
     }
 }
