@@ -2,7 +2,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { setActivePinia, createPinia } from 'pinia';
-import type { FifaMappingSuggestion, FifaResultProposal, FifaUnmappedResult } from '~/types';
+import type {
+  FifaMappingSuggestion,
+  FifaResultProposal,
+  FifaUnmappedResult,
+  FifaUnsettledFinal,
+} from '~/types';
 
 const { authFetch } = vi.hoisted(() => ({ authFetch: vi.fn() }));
 mockNuxtImport('useApi', () => () => ({ authFetch }));
@@ -245,6 +250,48 @@ describe('useFifaStore', () => {
         method: 'POST',
       });
       expect(result.confirmed).toBe(50);
+    });
+  });
+
+  describe('linkKnockoutSlots()', () => {
+    it('POSTs to the link-knockout-slots endpoint and returns the counts', async () => {
+      authFetch.mockResolvedValue({ linked: 28, skipped: 4 });
+      const store = useFifaStore();
+
+      const result = await store.linkKnockoutSlots(9);
+
+      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/competitions/9/link-knockout-slots', {
+        method: 'POST',
+      });
+      expect(result).toEqual({ linked: 28, skipped: 4 });
+    });
+  });
+
+  describe('loadUnsettledFinals()', () => {
+    it('GETs unsettled finals and stores them', async () => {
+      const f: FifaUnsettledFinal = {
+        competition_id: '285023',
+        game_id: 834,
+        match_id: '400021495',
+        home_team: 'Jordan',
+        away_team: 'Argentina',
+        start_time: '2026-06-28T02:00:00Z',
+      };
+      authFetch.mockResolvedValue({ unsettled: [f] });
+      const store = useFifaStore();
+
+      const result = await store.loadUnsettledFinals();
+
+      expect(authFetch).toHaveBeenCalledWith('/admin/fifa/unsettled-finals');
+      expect(result).toEqual([f]);
+      expect(store.unsettledFinals).toEqual([f]);
+    });
+
+    it('tolerates a missing unsettled array', async () => {
+      authFetch.mockResolvedValue({});
+      const store = useFifaStore();
+      await store.loadUnsettledFinals();
+      expect(store.unsettledFinals).toEqual([]);
     });
   });
 });
