@@ -13,6 +13,9 @@ final class FIFAProposalsModel {
 
     private(set) var tab: Tab = .pending
     private(set) var proposals: [FIFAProposal] = []
+    /// Mapped FIFA finals betty has not settled (no result, no pending proposal), e.g.
+    /// an extra-time knockout whose detail will not reconcile. A read-only heads-up.
+    private(set) var unsettled: [FIFAUnsettledFinal] = []
     private(set) var isLoading = false
     private(set) var loadFailed = false
     /// The proposal currently being confirmed/dismissed (disables row actions).
@@ -40,6 +43,12 @@ final class FIFAProposalsModel {
             guard token == loadToken else { return }
             loadFailed = true
         }
+    }
+
+    /// Load the unsettled-finals heads-up. Best-effort: a failure leaves the list empty
+    /// rather than blocking the proposals screen (it is a secondary, informational list).
+    func loadUnsettled() async {
+        unsettled = (try? await api.fifaUnsettledFinals()) ?? []
     }
 
     /// Confirm (apply) a pending proposal, then drop it from the list. Rethrows

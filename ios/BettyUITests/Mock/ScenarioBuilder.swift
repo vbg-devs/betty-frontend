@@ -191,6 +191,17 @@ struct MockFIFAProposal {
     var gameStartDate: Date
 }
 
+/// A mapped FIFA final betty has not settled and has no pending proposal for, exactly as
+/// the betty-api `GET /admin/fifa/unsettled-finals` wire shape.
+struct MockFIFAUnsettledFinal {
+    var competitionID: String = "285023"
+    var gameID: Int
+    var matchID: String
+    var homeTeam: String
+    var awayTeam: String
+    var startTime: Date
+}
+
 /// The whole mock-backend state. Routes resolve from it, mutations (POST /bet, join,
 /// message, ...) write back into it, so subsequent GETs reflect every change.
 struct MockScenario {
@@ -205,6 +216,7 @@ struct MockScenario {
     var countries: [MockCountry] = []
     var arenas: [MockArena] = []
     var fifaProposals: [MockFIFAProposal] = []
+    var fifaUnsettledFinals: [MockFIFAUnsettledFinal] = []
 
     /// `accounts:signInWithIdp` signs in this user (defaults to the first user).
     var idpUserID: String?

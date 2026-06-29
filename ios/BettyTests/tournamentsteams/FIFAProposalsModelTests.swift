@@ -147,6 +147,34 @@ private func proposalsBody(_ rows: [(id: Int, status: String)]) -> String {
         #expect(model.tab == .applied)
         #expect(model.proposals.map(\.id) == [1])
     }
+
+    @Test func loadUnsettledPopulatesTheList() async throws {
+        let (model, transport) = makeModel()
+        transport.handler = { request in
+            MockTransport.json(
+                """
+                {"unsettled": [{"competition_id": "285023", "game_id": 834,
+                  "match_id": "400021495", "home_team": "Jordan",
+                  "away_team": "Argentina", "start_time": "2026-06-28T02:00:00Z"}]}
+                """,
+                url: request.url
+            )
+        }
+
+        await model.loadUnsettled()
+
+        #expect(model.unsettled.map(\.matchID) == ["400021495"])
+        #expect(transport.requests.contains {
+            $0.url?.path.hasSuffix("/admin/fifa/unsettled-finals") == true
+        })
+    }
+
+    @Test func loadUnsettledSwallowsErrorsAndLeavesListEmpty() async throws {
+        let (model, transport) = makeModel()
+        transport.handler = { request in MockTransport.json("", status: 500, url: request.url) }
+        await model.loadUnsettled()
+        #expect(model.unsettled.isEmpty)
+    }
 }
 
 /// A transport that parks the first request whose path contains `gatePath` until

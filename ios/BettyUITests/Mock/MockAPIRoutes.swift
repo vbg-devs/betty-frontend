@@ -635,6 +635,12 @@ extension BettyMockBackend {
             return .json(["proposals": proposals])
         }
 
+        api("GET", "/admin/fifa/unsettled-finals") { _, _, uid, scenario in
+            guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
+            let unsettled = scenario.fifaUnsettledFinals.map { MockWire.fifaUnsettledFinal($0) }
+            return .json(["unsettled": unsettled])
+        }
+
         api("POST", "/admin/fifa/proposals/:id/confirm") { _, params, uid, scenario in
             guard scenario.user(uid)?.isAdmin == true else { return .empty(401) }
             guard let id = Int(params["id"] ?? ""), let proposal = scenario.fifaProposal(id) else {

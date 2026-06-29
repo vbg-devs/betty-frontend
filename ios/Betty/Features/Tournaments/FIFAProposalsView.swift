@@ -26,6 +26,7 @@ struct FIFAProposalsView: View {
                 let created = FIFAProposalsModel(api: env.api)
                 model = created
                 await created.load(tab: .pending)
+                await created.loadUnsettled()
             }
         }
     }
@@ -38,12 +39,64 @@ struct FIFAProposalsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.xl) {
                     hero
+                    unsettledSection(model)
                     tabs(model)
                     list(model)
                 }
                 .padding(Space.m)
             }
         }
+    }
+
+    // MARK: - Unsettled finals (mapped but stuck)
+
+    @ViewBuilder
+    private func unsettledSection(_ model: FIFAProposalsModel) -> some View {
+        if !model.unsettled.isEmpty {
+            VStack(alignment: .leading, spacing: Space.s) {
+                Text("○ NEEDS ATTENTION")
+                    .kicker(Palette.alertRed)
+                Text("Final on FIFA but not settled in Betty, with no pending proposal (e.g. an extra-time knockout whose detail could not be reconciled). Settle these manually.")
+                    .font(.bettySubhead)
+                    .foregroundStyle(theme.colors.textMuted)
+                ForEach(model.unsettled) { item in
+                    unsettledRow(item)
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("admin.fifa.unsettled")
+        }
+    }
+
+    private func unsettledRow(_ item: FIFAUnsettledFinal) -> some View {
+        VStack(alignment: .leading, spacing: Space.xxs) {
+            HStack(spacing: Space.s) {
+                Text(item.homeTeam)
+                    .font(.bettyHeadline)
+                    .foregroundStyle(theme.colors.textPrimary)
+                    .lineLimit(1)
+                Text("v")
+                    .font(.bettySubhead)
+                    .foregroundStyle(theme.colors.textMuted)
+                Text(item.awayTeam)
+                    .font(.bettyHeadline)
+                    .foregroundStyle(theme.colors.textPrimary)
+                    .lineLimit(1)
+            }
+            if let start = item.startTime {
+                Text(kickoffText(start))
+                    .font(.bettySubhead)
+                    .foregroundStyle(theme.colors.textMuted)
+            }
+            Text("FIFA match \(item.matchID)")
+                .font(.bettySubhead)
+                .foregroundStyle(theme.colors.textMuted)
+        }
+        .padding(Space.s)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: Radius.sharp))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("admin.fifa.unsettled.\(item.matchID)")
     }
 
     private var hero: some View {
