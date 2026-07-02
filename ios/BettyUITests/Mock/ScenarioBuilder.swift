@@ -88,6 +88,11 @@ struct MockGame {
     var updatedAt: Date?
     /// nil = not final, 1 = finished (matches the nullable wire int).
     var status: Int?
+    /// Live (tentative) score columns — nil unless the game is live/full-time per the feed.
+    var liveHomeTeamScore: Int?
+    var liveAwayTeamScore: Int?
+    /// nil/0 = not live, 1 = live, 2 = full-time (per feed, not yet settled).
+    var liveStatus: Int?
 }
 
 struct MockTournament {

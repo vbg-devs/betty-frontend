@@ -51,6 +51,12 @@ enum LiveWire {
         ["game_id": gameID, "home_team_score": home, "away_team_score": away]
     }
 
+    /// `live_score_update` — in-progress score from the FIFA feed. `live_status` is
+    /// 1 (live) or 2 (full-time per the feed, before Betty settles).
+    static func liveScoreUpdate(gameID: Int, home: Int, away: Int, liveStatus: Int) -> [String: Any] {
+        ["game_id": gameID, "home_team_score": home, "away_team_score": away, "live_status": liveStatus]
+    }
+
     /// `group_joined` — `who: nil` sends the empty string the web falls back from.
     static func groupJoined(groupID: Int, name: String, who: String?) -> [String: Any] {
         ["group": ["id": groupID, "name": name], "who": who ?? ""]

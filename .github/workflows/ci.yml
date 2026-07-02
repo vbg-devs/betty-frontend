@@ -242,7 +242,7 @@ jobs:
           - name: shard5
             classes: GroupDetailE2ETests ChatActivityE2ETests GroupBrowseE2ETests AuthLandingE2ETests SmokeTests AppStoreScreenshots
           - name: shard6
-            classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests
+            classes: TournamentsE2ETests ProfileE2ETests ChatReactionsE2ETests ProfileAccountE2ETests AuthDeepLinkE2ETests LiveScoreE2ETests
     env:
       XCODE_VERSION: "26.5"
       SIMULATOR_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
