@@ -42,4 +42,38 @@ final class LiveScoreE2ETests: LiveE2EBase {
         // Still LIVE after the update.
         XCTAssertTrue(app.staticTexts["LIVE"].firstMatch.exists)
     }
+
+    /// Screenshot generator (not an assertion test) — run with
+    /// TEST_RUNNER_BETTY_SCREENSHOTS=1 and export the .keepAlways attachments.
+    func testCaptureLiveScoreScreenshots() {
+        try? XCTSkipUnless(
+            ProcessInfo.processInfo.environment["BETTY_SCREENSHOTS"] == "1",
+            "Screenshot generator — run with TEST_RUNNER_BETTY_SCREENSHOTS=1"
+        )
+        guard ProcessInfo.processInfo.environment["BETTY_SCREENSHOTS"] == "1" else { return }
+
+        launchApp()
+        openGroup("Sunday Legends")
+        let detail = GroupDetailScreen(app: app)
+        waitFor(detail.gamesTab, timeout: 15).tap()
+
+        let board = LiveScoreboardScreen(app: app)
+        scrollTo(board.team("Spain"))
+        waitFor(app.staticTexts["LIVE"].firstMatch, timeout: 10)
+        snap("01_live_badge")
+
+        // Push a full-time frame → the card flips to the neutral FT badge.
+        waitForWebSocketClient()
+        pushWS(type: "live_score_update",
+               message: LiveWire.liveScoreUpdate(gameID: DefaultScenario.liveGameID, home: 2, away: 1, liveStatus: 2))
+        waitFor(app.staticTexts["FT"].firstMatch, timeout: 15)
+        snap("02_full_time_badge")
+    }
+
+    private func snap(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
 }
