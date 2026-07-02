@@ -85,13 +85,22 @@ nonisolated struct Game: Decodable, Identifiable, Hashable, Sendable {
     let startDate: Date
     let updatedAt: Date?
     let status: Int?
+    let liveHomeTeamScore: Int?
+    let liveAwayTeamScore: Int?
+    let liveStatus: Int?
 
     var isFinished: Bool { status == 1 }
 
-    /// LIVE window: not finished, kicked off, and within 150 minutes of kickoff.
-    func isLive(at now: Date = Date()) -> Bool {
-        !isFinished && now > startDate && now < startDate.addingTimeInterval(150 * 60)
+    /// Display precedence (spec §7, identical across clients).
+    var displayState: GameDisplayState {
+        if status == 1 { return .finished }
+        if liveStatus == 2 { return .fullTime }
+        if liveStatus == 1 { return .live }
+        return .scheduled
     }
+
+    func isLive(at _: Date = Date()) -> Bool { displayState == .live }
+    var isFullTime: Bool { displayState == .fullTime }
 
     enum CodingKeys: String, CodingKey {
         case id, status
@@ -103,7 +112,14 @@ nonisolated struct Game: Decodable, Identifiable, Hashable, Sendable {
         case awayTeamScore = "away_team_score"
         case startDate = "start_date"
         case updatedAt = "updated_at"
+        case liveHomeTeamScore = "live_home_team_score"
+        case liveAwayTeamScore = "live_away_team_score"
+        case liveStatus = "live_status"
     }
+}
+
+nonisolated enum GameDisplayState: Hashable, Sendable {
+    case finished, fullTime, live, scheduled
 }
 
 /// Body for `PUT /game/:id` — both fields `binding:"required"`, so a 0 score is rejected
