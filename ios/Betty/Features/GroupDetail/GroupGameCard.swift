@@ -58,9 +58,14 @@ struct GroupGameCard: View {
 
     private var infoRow: some View {
         HStack {
-            if game.isLive() {
+            switch game.displayState {
+            case .live:
                 LiveBadge()
-            } else {
+            case .fullTime:
+                FTBadge()
+            case .finished:
+                Text("Finished").kicker(theme.colors.textMuted)
+            case .scheduled:
                 Text(GroupGameDateLabel.text(for: game).uppercased())
                     .kicker(theme.colors.textMuted)
             }
@@ -68,16 +73,24 @@ struct GroupGameCard: View {
         }
     }
 
+    private var displayHome: Int? {
+        (game.displayState == .live || game.displayState == .fullTime) ? game.liveHomeTeamScore : game.homeTeamScore
+    }
+
+    private var displayAway: Int? {
+        (game.displayState == .live || game.displayState == .fullTime) ? game.liveAwayTeamScore : game.awayTeamScore
+    }
+
     private var teamsRow: some View {
         HStack(alignment: .top, spacing: Space.xs) {
             teamColumn(env.teamStore.byID(game.homeTeamID))
             VStack(spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    scoreLabel(game.homeTeamScore)
+                    scoreLabel(displayHome)
                     Text("-")
                         .font(.betty(18, .regular))
                         .foregroundStyle(theme.colors.textSecondary)
-                    scoreLabel(game.awayTeamScore)
+                    scoreLabel(displayAway)
                 }
                 if betted {
                     HStack(alignment: .center, spacing: 4) {

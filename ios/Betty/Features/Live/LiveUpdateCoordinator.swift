@@ -65,6 +65,8 @@ final class LiveUpdateCoordinator {
         case .betPlaced(let bet), .betUpdated(let bet):
             await refreshBetMatrix(for: bet)
             betActivityCount += 1
+        case .liveScoreUpdate(let payload):
+            tournamentStore.applyLiveScore(payload)
         default:
             break // informational only (feed renders them; no store state changes)
         }

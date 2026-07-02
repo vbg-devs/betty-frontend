@@ -40,6 +40,17 @@ struct LiveBadge: View {
     }
 }
 
+/// Neutral full-time tag — match over per the feed, before Betty settles.
+struct FTBadge: View {
+    @Environment(ThemeStore.self) private var theme
+    var body: some View {
+        Text("FT")
+            .font(.bettyKicker)
+            .kerning(1.4)
+            .foregroundStyle(theme.colors.textMuted)
+    }
+}
+
 /// Yellow bg / ink text — finished groups ("ENDED" / "JUST ENDED").
 struct EndedBadge: View {
     var text: String = "ENDED"

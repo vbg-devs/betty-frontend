@@ -29,6 +29,22 @@ final class TournamentStore {
         details[id]
     }
 
+    /// Applies a live_score_update to the matching game across every cached detail,
+    /// in place (spec §7 realtime). Unknown games are ignored.
+    func applyLiveScore(_ payload: WSLiveScoreUpdate) {
+        for (tid, detail) in details {
+            guard let games = detail.games, games.contains(where: { $0.id == payload.gameID }) else { continue }
+            let next = games.map { g -> Game in
+                guard g.id == payload.gameID else { return g }
+                return g.withLiveScore(
+                    home: payload.homeTeamScore,
+                    away: payload.awayTeamScore,
+                    liveStatus: payload.liveStatus)
+            }
+            details[tid] = detail.withGames(next)
+        }
+    }
+
     func clear() {
         tournaments = []
         details = [:]

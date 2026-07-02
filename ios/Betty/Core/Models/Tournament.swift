@@ -22,6 +22,12 @@ nonisolated struct Tournament: Decodable, Identifiable, Hashable, Sendable {
         return endDate >= now
     }
 
+    /// Returns a copy with a replaced `games` array (all other fields unchanged).
+    func withGames(_ games: [Game]) -> Tournament {
+        Tournament(id: id, name: name, imageURL: imageURL, startDate: startDate,
+                   endDate: endDate, categoryID: categoryID, pools: pools, games: games)
+    }
+
     // MARK: client-side joins
 
     func games(inPool poolID: Int) -> [Game] {
@@ -50,6 +56,20 @@ nonisolated struct Tournament: Decodable, Identifiable, Hashable, Sendable {
         categoryID = try c.decodeIfPresent(Int.self, forKey: .categoryID) ?? 0
         pools = try c.decodeIfPresent([Pool].self, forKey: .pools)
         games = try c.decodeIfPresent([Game].self, forKey: .games)
+    }
+
+    /// Memberwise init (the custom `init(from:)` above suppresses the synthesized one).
+    /// Used by `withGames(_:)` to return an updated copy.
+    init(id: Int, name: String, imageURL: String?, startDate: Date, endDate: Date?,
+         categoryID: Int, pools: [Pool]?, games: [Game]?) {
+        self.id = id
+        self.name = name
+        self.imageURL = imageURL
+        self.startDate = startDate
+        self.endDate = endDate
+        self.categoryID = categoryID
+        self.pools = pools
+        self.games = games
     }
 }
 
@@ -101,6 +121,15 @@ nonisolated struct Game: Decodable, Identifiable, Hashable, Sendable {
 
     func isLive(at _: Date = Date()) -> Bool { displayState == .live }
     var isFullTime: Bool { displayState == .fullTime }
+
+    /// Returns a copy carrying a new live scoreline (all other fields unchanged).
+    func withLiveScore(home: Int, away: Int, liveStatus: Int) -> Game {
+        Game(id: id, tournamentID: tournamentID, poolID: poolID,
+             homeTeamID: homeTeamID, awayTeamID: awayTeamID,
+             homeTeamScore: homeTeamScore, awayTeamScore: awayTeamScore,
+             startDate: startDate, updatedAt: updatedAt, status: status,
+             liveHomeTeamScore: home, liveAwayTeamScore: away, liveStatus: liveStatus)
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, status
