@@ -94,6 +94,9 @@ export interface Game {
   away_team_score: number | null;
   start_date: string;
   status: number;
+  live_home_team_score?: number | null;
+  live_away_team_score?: number | null;
+  live_status?: number | null;
   pool_id: number;
   pool?: Pool;
 }

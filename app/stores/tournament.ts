@@ -41,5 +41,31 @@ export const useTournamentStore = defineStore('tournament', () => {
     return frozen;
   }
 
-  return { tournaments, details, all, running, byId, detailsById, load, loadDetails };
+  function applyLiveScore(payload: {
+    game_id: number;
+    home_team_score: number;
+    away_team_score: number;
+    live_status: number;
+  }) {
+    for (let i = 0; i < details.value.length; i++) {
+      const detail = details.value[i] as any;
+      const games = detail.games || [];
+      const gi = games.findIndex((g: any) => g.id === payload.game_id);
+      if (gi === -1) continue;
+      // details are frozen; rebuild the games array and the detail object.
+      const nextGames = games.map((g: any) =>
+        g.id === payload.game_id
+          ? {
+              ...g,
+              live_home_team_score: payload.home_team_score,
+              live_away_team_score: payload.away_team_score,
+              live_status: payload.live_status,
+            }
+          : g,
+      );
+      details.value.splice(i, 1, Object.freeze({ ...detail, games: nextGames }) as Tournament);
+    }
+  }
+
+  return { tournaments, details, all, running, byId, detailsById, load, loadDetails, applyLiveScore };
 });
