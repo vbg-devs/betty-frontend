@@ -35,6 +35,8 @@
     <template v-else>
       <div class="game__information">
         <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
+        <span v-else-if="isFullTime" class="ft-badge">FT</span>
+        <span v-else-if="game.status === 1" class="game__date">Finished</span>
         <span v-else class="game__date">{{ startDate }}</span>
       </div>
       <div class="teams">
@@ -46,9 +48,9 @@
         </div>
         <div>
           <div class="score">
-            <div class="score__label">{{ game.home_team_score }}</div>
+            <div class="score__label">{{ isLive || isFullTime ? liveHome : game.home_team_score }}</div>
             <div class="score__divider">-</div>
-            <div class="score__label">{{ game.away_team_score }}</div>
+            <div class="score__label">{{ isLive || isFullTime ? liveAway : game.away_team_score }}</div>
           </div>
           <div v-if="betted" class="my-score">
             <div class="score score--small" aria-label="Your bet" data-balloon-pos="up">
@@ -94,9 +96,9 @@ import {
   isToday,
   isTomorrow,
   differenceInHours,
-  isAfter,
   formatDistanceStrict,
 } from 'date-fns';
+import { gameDisplayState } from '~/composables/useGameDisplay';
 
 const {
   game = {} as Record<string, any>,
@@ -156,16 +158,11 @@ const startDate = computed(() => {
   return format(sd, 'EEE dd MMM HH:mm');
 });
 
-const isLive = computed(() => {
-  if (game.status === 1) return false;
-
-  const start = new Date(game.start_date);
-  if (!isAfter(new Date(), start)) return false;
-
-  const liveUntil = new Date(start);
-  liveUntil.setMinutes(liveUntil.getMinutes() + 150);
-  return isAfter(liveUntil, new Date());
-});
+const displayState = computed(() => gameDisplayState(game as any));
+const isLive = computed(() => displayState.value === 'live');
+const isFullTime = computed(() => displayState.value === 'full_time');
+const liveHome = computed(() => game.live_home_team_score ?? game.home_team_score);
+const liveAway = computed(() => game.live_away_team_score ?? game.away_team_score);
 </script>
 
 <style scoped>
@@ -321,6 +318,14 @@ const isLive = computed(() => {
   display: inline-flex;
   align-items: center;
   color: var(--orange);
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.ft-badge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted-strong);
   font-weight: 800;
   letter-spacing: 1.4px;
 }

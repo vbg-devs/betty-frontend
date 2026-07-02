@@ -313,6 +313,24 @@ describe('ActivityFeed', () => {
       window.removeEventListener('game-evaluated', listener);
     });
 
+    it('calls tournamentStore.applyLiveScore on a live_score_update frame', async () => {
+      const tournamentStore = useTournamentStore();
+      const spy = vi.spyOn(tournamentStore, 'applyLiveScore');
+      await mountFeed();
+
+      send(lastSocket(), {
+        type: 'live_score_update',
+        message: { game_id: 11, home_team_score: 2, away_team_score: 1, live_status: 1 },
+      });
+
+      expect(spy).toHaveBeenCalledWith({
+        game_id: 11,
+        home_team_score: 2,
+        away_team_score: 1,
+        live_status: 1,
+      });
+    });
+
     it('does not dispatch game-evaluated for other event types', async () => {
       await mountFeed();
       const listener = vi.fn();

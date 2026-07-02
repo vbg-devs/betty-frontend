@@ -211,6 +211,7 @@ import type { ActivityMessage } from '~/types';
 type FeedMessage = ActivityMessage & { message: Record<string, any> };
 
 const messageStore = useMessageStore();
+const tournamentStore = useTournamentStore();
 
 const list = computed(() => messageStore.all as FeedMessage[]);
 
@@ -244,6 +245,9 @@ onMounted(() => {
     if (evt.type === 'ping') return;
     if (evt.type === 'evaluate_game') {
       window.dispatchEvent(new Event('game-evaluated'));
+    }
+    if (evt.type === 'live_score_update' && evt.message) {
+      tournamentStore.applyLiveScore(evt.message);
     }
     evt.id = msgIndex;
     messageStore.add({ ...evt, timeStamp: new Date() });
