@@ -17,7 +17,7 @@
           {{ homeTeam?.name }}
         </div>
         <div class="game__column">
-          {{ game.home_team_score }}
+          {{ isLive || isFullTime ? liveHome : game.home_team_score }}
         </div>
       </div>
       <div class="game__row">
@@ -28,7 +28,7 @@
           {{ awayTeam?.name }}
         </div>
         <div class="game__column">
-          {{ game.away_team_score }}
+          {{ isLive || isFullTime ? liveAway : game.away_team_score }}
         </div>
       </div>
     </template>

@@ -337,6 +337,22 @@ describe('Game', () => {
       expect(wrapper.find('.game__information').exists()).toBe(false);
     });
 
+    it('shows the live score (not the final columns) for a live game', async () => {
+      const wrapper = await mountSuspended(Game, {
+        props: {
+          game: makeGame(-0.5, {
+            live_status: 1,
+            live_home_team_score: 1,
+            live_away_team_score: 0,
+          }),
+          alternative: true,
+        },
+      });
+      const rows = wrapper.findAll('.game__row');
+      expect(rows[0]!.text()).toContain('1');
+      expect(rows[1]!.text()).toContain('0');
+    });
+
     it('renders both team logos with their real teams', async () => {
       const wrapper = await mountSuspended(Game, {
         props: { game: finishedGame(), alternative: true },
