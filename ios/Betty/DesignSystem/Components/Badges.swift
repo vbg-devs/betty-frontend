@@ -13,7 +13,8 @@ struct YouBadge: View {
     }
 }
 
-/// Pulsing orange blob + "LIVE" — the 150-minute kickoff window indicator.
+/// Pulsing orange blob + "LIVE" — shown while the FIFA-feed `live_status` says the match
+/// is in progress (display precedence spec §7).
 struct LiveBadge: View {
     @State private var pulsing = false
 

@@ -9,6 +9,10 @@
     @click="emit('click-game', game)"
   >
     <template v-if="alternative">
+      <div v-if="isLive || isFullTime" class="game__status">
+        <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
+        <span v-else class="ft-badge">FT</span>
+      </div>
       <div class="game__row">
         <div class="game__column">
           <TeamLogo :team="homeTeam" class="team__logo" />
@@ -17,7 +21,7 @@
           {{ homeTeam?.name }}
         </div>
         <div class="game__column">
-          {{ isLive || isFullTime ? liveHome : game.home_team_score }}
+          {{ displayHomeScore }}
         </div>
       </div>
       <div class="game__row">
@@ -28,7 +32,7 @@
           {{ awayTeam?.name }}
         </div>
         <div class="game__column">
-          {{ isLive || isFullTime ? liveAway : game.away_team_score }}
+          {{ displayAwayScore }}
         </div>
       </div>
     </template>
@@ -36,7 +40,6 @@
       <div class="game__information">
         <span v-if="isLive" class="live-badge"> <span class="live-badge__blob"></span>LIVE </span>
         <span v-else-if="isFullTime" class="ft-badge">FT</span>
-        <span v-else-if="game.status === 1" class="game__date">Finished</span>
         <span v-else class="game__date">{{ startDate }}</span>
       </div>
       <div class="teams">
@@ -48,9 +51,9 @@
         </div>
         <div>
           <div class="score">
-            <div class="score__label">{{ isLive || isFullTime ? liveHome : game.home_team_score }}</div>
+            <div class="score__label">{{ displayHomeScore }}</div>
             <div class="score__divider">-</div>
-            <div class="score__label">{{ isLive || isFullTime ? liveAway : game.away_team_score }}</div>
+            <div class="score__label">{{ displayAwayScore }}</div>
           </div>
           <div v-if="betted" class="my-score">
             <div class="score score--small" aria-label="Your bet" data-balloon-pos="up">
@@ -163,6 +166,9 @@ const isLive = computed(() => displayState.value === 'live');
 const isFullTime = computed(() => displayState.value === 'full_time');
 const liveHome = computed(() => game.live_home_team_score ?? game.home_team_score);
 const liveAway = computed(() => game.live_away_team_score ?? game.away_team_score);
+// Betty's settlement score is authoritative once finished, even if a live score lingers.
+const displayHomeScore = computed(() => (isLive.value || isFullTime.value ? liveHome.value : game.home_team_score));
+const displayAwayScore = computed(() => (isLive.value || isFullTime.value ? liveAway.value : game.away_team_score));
 </script>
 
 <style scoped>
@@ -339,6 +345,12 @@ const liveAway = computed(() => game.live_away_team_score ?? game.away_team_scor
   box-shadow: 0 0 0 0 rgba(255, 90, 58, 1);
   animation: pulse-orange 2s infinite;
   display: inline-block;
+}
+
+.game__status {
+  display: flex;
+  padding-bottom: 4px;
+  font-size: 11px;
 }
 
 .game__row {

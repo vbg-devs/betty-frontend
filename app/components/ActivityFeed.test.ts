@@ -91,6 +91,7 @@ describe('ActivityFeed', () => {
     // mountSuspended renders inside the shared Nuxt app, so reset its pinia state
     store = useMessageStore();
     store.clearAll();
+    useTournamentStore().details = [];
   });
 
   afterEach(() => {
@@ -316,6 +317,26 @@ describe('ActivityFeed', () => {
     it('calls tournamentStore.applyLiveScore on a live_score_update frame', async () => {
       const tournamentStore = useTournamentStore();
       const spy = vi.spyOn(tournamentStore, 'applyLiveScore');
+      try {
+        await mountFeed();
+
+        send(lastSocket(), {
+          type: 'live_score_update',
+          message: { game_id: 11, home_team_score: 2, away_team_score: 1, live_status: 1 },
+        });
+
+        expect(spy).toHaveBeenCalledWith({
+          game_id: 11,
+          home_team_score: 2,
+          away_team_score: 1,
+          live_status: 1,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it('does not add live_score_update frames to the activity feed', async () => {
       await mountFeed();
 
       send(lastSocket(), {
@@ -323,12 +344,11 @@ describe('ActivityFeed', () => {
         message: { game_id: 11, home_team_score: 2, away_team_score: 1, live_status: 1 },
       });
 
-      expect(spy).toHaveBeenCalledWith({
-        game_id: 11,
-        home_team_score: 2,
-        away_team_score: 1,
-        live_status: 1,
-      });
+      expect(store.all).toHaveLength(0);
+
+      send(lastSocket(), { type: 'group_created', message: {} });
+      expect(store.all).toHaveLength(1);
+      expect(store.all[0]!.id).toBe(0);
     });
 
     it('does not dispatch game-evaluated for other event types', async () => {

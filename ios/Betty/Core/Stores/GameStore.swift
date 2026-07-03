@@ -41,6 +41,16 @@ final class GameStore {
         return game
     }
 
+    /// Patches a cached game's live score in place (`live_score_update`); no-op if the
+    /// game isn't cached (mirrors `TournamentStore.applyLiveScore`'s cache-only semantics).
+    func applyLiveScore(_ payload: WSLiveScoreUpdate) {
+        guard let index = games.firstIndex(where: { $0.id == payload.gameID }) else { return }
+        games[index] = games[index].withLiveScore(
+            home: payload.homeTeamScore,
+            away: payload.awayTeamScore,
+            liveStatus: payload.liveStatus)
+    }
+
     private func upsert(_ game: Game) {
         if let index = games.firstIndex(where: { $0.id == game.id }) {
             games[index] = game

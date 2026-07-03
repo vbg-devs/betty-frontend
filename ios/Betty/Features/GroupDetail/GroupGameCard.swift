@@ -64,7 +64,7 @@ struct GroupGameCard: View {
             case .fullTime:
                 FTBadge()
             case .finished:
-                Text("Finished").kicker(theme.colors.textMuted)
+                Text(GroupGameDateLabel.text(for: game)).kicker(theme.colors.textMuted)
             case .scheduled:
                 Text(GroupGameDateLabel.text(for: game).uppercased())
                     .kicker(theme.colors.textMuted)
@@ -73,12 +73,16 @@ struct GroupGameCard: View {
         }
     }
 
+    /// Falls back to the settled score when the live feed hasn't populated a live score yet
+    /// (mirrors web `Game.vue`'s `game.live_home_team_score ?? game.home_team_score`).
     private var displayHome: Int? {
-        (game.displayState == .live || game.displayState == .fullTime) ? game.liveHomeTeamScore : game.homeTeamScore
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.homeTeamScore }
+        return game.liveHomeTeamScore ?? game.homeTeamScore
     }
 
     private var displayAway: Int? {
-        (game.displayState == .live || game.displayState == .fullTime) ? game.liveAwayTeamScore : game.awayTeamScore
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.awayTeamScore }
+        return game.liveAwayTeamScore ?? game.awayTeamScore
     }
 
     private var teamsRow: some View {

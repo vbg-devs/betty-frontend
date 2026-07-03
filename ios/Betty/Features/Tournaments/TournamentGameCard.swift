@@ -62,16 +62,28 @@ struct TournamentGameCard: View {
         }
     }
 
+    /// Falls back to the settled score when the live feed hasn't populated a live score yet
+    /// (mirrors `GroupGameCard.displayHome`/web `Game.vue`'s `?? game.home_team_score`).
+    private var displayHome: Int? {
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.homeTeamScore }
+        return game.liveHomeTeamScore ?? game.homeTeamScore
+    }
+
+    private var displayAway: Int? {
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.awayTeamScore }
+        return game.liveAwayTeamScore ?? game.awayTeamScore
+    }
+
     private var scoreRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(scoreText(game.homeTeamScore))
+            Text(scoreText(displayHome))
                 .font(.bettyScore)
                 .displayKerning(28)
                 .foregroundStyle(theme.colors.textPrimary)
             Text("-")
                 .font(.betty(18))
                 .foregroundStyle(theme.colors.textSecondary)
-            Text(scoreText(game.awayTeamScore))
+            Text(scoreText(displayAway))
                 .font(.bettyScore)
                 .displayKerning(28)
                 .foregroundStyle(theme.colors.textPrimary)

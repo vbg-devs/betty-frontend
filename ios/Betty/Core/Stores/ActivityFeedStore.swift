@@ -26,7 +26,15 @@ final class ActivityFeedStore {
     }
 
     func add(_ event: BettyEvent) {
-        if case .ping = event { return }
+        switch event {
+        case .ping, .liveScoreUpdate:
+            // .liveScoreUpdate drives the live scoreline in place (LiveUpdateCoordinator);
+            // too frequent (per FIFA-feed poll) to also show as an activity row without
+            // evicting real activity from the capped feed. Web parity: see ActivityFeed.vue.
+            return
+        default:
+            break
+        }
         entries.append(Entry(id: nextID, event: event, timestamp: Date()))
         nextID += 1
         if entries.count > capacity {

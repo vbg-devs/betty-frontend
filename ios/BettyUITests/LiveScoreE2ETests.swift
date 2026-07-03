@@ -45,12 +45,11 @@ final class LiveScoreE2ETests: LiveE2EBase {
 
     /// Screenshot generator (not an assertion test) — run with
     /// TEST_RUNNER_BETTY_SCREENSHOTS=1 and export the .keepAlways attachments.
-    func testCaptureLiveScoreScreenshots() {
-        try? XCTSkipUnless(
+    func testCaptureLiveScoreScreenshots() throws {
+        try XCTSkipUnless(
             ProcessInfo.processInfo.environment["BETTY_SCREENSHOTS"] == "1",
             "Screenshot generator — run with TEST_RUNNER_BETTY_SCREENSHOTS=1"
         )
-        guard ProcessInfo.processInfo.environment["BETTY_SCREENSHOTS"] == "1" else { return }
 
         launchApp()
         openGroup("Sunday Legends")

@@ -47,14 +47,17 @@ export const useTournamentStore = defineStore('tournament', () => {
     away_team_score: number;
     live_status: number;
   }) {
+    // payload arrives from an untyped WS JSON frame, so game_id may not actually be a
+    // number at runtime (e.g. a numeric string) — coerce before comparing against Game.id.
+    const gameId = Number(payload.game_id);
     for (let i = 0; i < details.value.length; i++) {
-      const detail = details.value[i] as any;
-      const games = detail.games || [];
-      const gi = games.findIndex((g: any) => g.id === payload.game_id);
+      const detail = details.value[i] as Tournament;
+      const games = detail.games ?? [];
+      const gi = games.findIndex((g) => g.id === gameId);
       if (gi === -1) continue;
       // details are frozen; rebuild the games array and the detail object.
-      const nextGames = games.map((g: any) =>
-        g.id === payload.game_id
+      const nextGames = games.map((g) =>
+        g.id === gameId
           ? {
               ...g,
               live_home_team_score: payload.home_team_score,

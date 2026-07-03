@@ -246,8 +246,11 @@ onMounted(() => {
     if (evt.type === 'evaluate_game') {
       window.dispatchEvent(new Event('game-evaluated'));
     }
-    if (evt.type === 'live_score_update' && evt.message) {
-      tournamentStore.applyLiveScore(evt.message);
+    if (evt.type === 'live_score_update') {
+      // Drives the live scoreline in place; too frequent (per FIFA-feed poll) to also
+      // show as an activity row without evicting real activity from the capped feed.
+      if (evt.message) tournamentStore.applyLiveScore(evt.message);
+      return;
     }
     evt.id = msgIndex;
     messageStore.add({ ...evt, timeStamp: new Date() });
