@@ -232,6 +232,9 @@ enum MockWire {
             "start_date": time(g.startDate),
             "updated_at": time(g.updatedAt),
             "status": orNull(g.status), // int|null
+            "live_home_team_score": orNull(g.liveHomeTeamScore), // int|null
+            "live_away_team_score": orNull(g.liveAwayTeamScore), // int|null
+            "live_status": orNull(g.liveStatus), // int|null — 0/null=not live, 1=live, 2=full-time
         ]
     }
 

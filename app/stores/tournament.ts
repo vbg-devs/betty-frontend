@@ -41,5 +41,34 @@ export const useTournamentStore = defineStore('tournament', () => {
     return frozen;
   }
 
-  return { tournaments, details, all, running, byId, detailsById, load, loadDetails };
+  function applyLiveScore(payload: {
+    game_id: number;
+    home_team_score: number;
+    away_team_score: number;
+    live_status: number;
+  }) {
+    // payload arrives from an untyped WS JSON frame, so game_id may not actually be a
+    // number at runtime (e.g. a numeric string) — coerce before comparing against Game.id.
+    const gameId = Number(payload.game_id);
+    for (let i = 0; i < details.value.length; i++) {
+      const detail = details.value[i] as Tournament;
+      const games = detail.games ?? [];
+      const gi = games.findIndex((g) => g.id === gameId);
+      if (gi === -1) continue;
+      // details are frozen; rebuild the games array and the detail object.
+      const nextGames = games.map((g) =>
+        g.id === gameId
+          ? {
+              ...g,
+              live_home_team_score: payload.home_team_score,
+              live_away_team_score: payload.away_team_score,
+              live_status: payload.live_status,
+            }
+          : g,
+      );
+      details.value.splice(i, 1, Object.freeze({ ...detail, games: nextGames }) as Tournament);
+    }
+  }
+
+  return { tournaments, details, all, running, byId, detailsById, load, loadDetails, applyLiveScore };
 });

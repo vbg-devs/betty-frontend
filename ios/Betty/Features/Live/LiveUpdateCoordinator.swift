@@ -10,6 +10,8 @@ import Observation
 ///   scores), and reloads the loaded group's bet matrix (evaluated `user_points`).
 /// - `bet_placed` / `bet_updated` (native improvement over the web's 10 s poll): reloads
 ///   the bet matrix when the bet targets the loaded group (or is universal).
+/// - `live_score_update`: patches the live score in place in both `TournamentStore` and
+///   `GameStore`'s caches — no network round-trip, the payload carries the values.
 ///
 /// There are NO message-board events on the wire — chat stays on its 10 s poll.
 ///
@@ -65,6 +67,9 @@ final class LiveUpdateCoordinator {
         case .betPlaced(let bet), .betUpdated(let bet):
             await refreshBetMatrix(for: bet)
             betActivityCount += 1
+        case .liveScoreUpdate(let payload):
+            tournamentStore.applyLiveScore(payload)
+            gameStore.applyLiveScore(payload)
         default:
             break // informational only (feed renders them; no store state changes)
         }

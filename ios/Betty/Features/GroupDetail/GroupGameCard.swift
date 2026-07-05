@@ -58,9 +58,14 @@ struct GroupGameCard: View {
 
     private var infoRow: some View {
         HStack {
-            if game.isLive() {
+            switch game.displayState {
+            case .live:
                 LiveBadge()
-            } else {
+            case .fullTime:
+                FTBadge()
+            case .finished:
+                Text(GroupGameDateLabel.text(for: game)).kicker(theme.colors.textMuted)
+            case .scheduled:
                 Text(GroupGameDateLabel.text(for: game).uppercased())
                     .kicker(theme.colors.textMuted)
             }
@@ -68,16 +73,28 @@ struct GroupGameCard: View {
         }
     }
 
+    /// Falls back to the settled score when the live feed hasn't populated a live score yet
+    /// (mirrors web `Game.vue`'s `game.live_home_team_score ?? game.home_team_score`).
+    private var displayHome: Int? {
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.homeTeamScore }
+        return game.liveHomeTeamScore ?? game.homeTeamScore
+    }
+
+    private var displayAway: Int? {
+        guard game.displayState == .live || game.displayState == .fullTime else { return game.awayTeamScore }
+        return game.liveAwayTeamScore ?? game.awayTeamScore
+    }
+
     private var teamsRow: some View {
         HStack(alignment: .top, spacing: Space.xs) {
             teamColumn(env.teamStore.byID(game.homeTeamID))
             VStack(spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    scoreLabel(game.homeTeamScore)
+                    scoreLabel(displayHome)
                     Text("-")
                         .font(.betty(18, .regular))
                         .foregroundStyle(theme.colors.textSecondary)
-                    scoreLabel(game.awayTeamScore)
+                    scoreLabel(displayAway)
                 }
                 if betted {
                     HStack(alignment: .center, spacing: 4) {

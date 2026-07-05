@@ -101,6 +101,15 @@ private struct HomeGameRow: View {
             Text("\(home) – \(away)")
                 .font(.betty(17, .black).monospacedDigit())
                 .foregroundStyle(theme.colors.textSecondary)
+        } else if game.isFullTime,
+                  let home = game.liveHomeTeamScore ?? game.homeTeamScore,
+                  let away = game.liveAwayTeamScore ?? game.awayTeamScore {
+            HStack(spacing: 6) {
+                Text("\(home) – \(away)")
+                    .font(.betty(17, .black).monospacedDigit())
+                    .foregroundStyle(theme.colors.textSecondary)
+                FTBadge()
+            }
         } else if game.isLive() {
             LiveBadge()
         } else if let bet = entry.ownBet {

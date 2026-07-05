@@ -306,7 +306,10 @@ the per-bet point multiplier at evaluation.
   "home_team_id": 1, "away_team_id": 2,
   "home_team_score": 0, "away_team_score": 0,   // non-null ints, always present
   "start_date": "time", "updated_at": "time|null",
-  "status": null                                  // int|null
+  "status": null,                                 // int|null
+  "live_home_team_score": null,                   // int|null — current in-progress home score
+  "live_away_team_score": null,                   // int|null — current in-progress away score
+  "live_status": null                             // int|null — 0/null=not live, 1=live, 2=full-time (per feed, not yet settled)
 }
 ```
 
@@ -893,6 +896,7 @@ yet (parity follow-up).
 | `evaluate_game` | `{ "game_id": 1, "home_team_score": 2, "away_team_score": 1 }` — the web app treats this as "full time / refresh scores" |
 | `user_exact_score` | `{ "game_id": 1, "user_ids": ["uid", ...] }` |
 | `game_starting_soon` | `{ "Games": [ { "id": 1, "start_date": "time" }, ... ] }` — note the **capital-G `"Games"`** key (struct field has no json tag) |
+| `live_score_update` | `{ "game_id": 1, "home_team_score": 1, "away_team_score": 0, "live_status": 1 }` — in-progress score from the FIFA feed (auto-forwarded from `betty_events.live_score_update`). `live_status` is `1` (live) or `2` (full-time per the feed, before Betty settles). Clients find the game by `game_id` and update its live fields in place. **Display precedence:** `status==1` → final score (no badge); else `live_status==2` → live score + FT; else `live_status==1` → live score + LIVE; else scheduled. |
 
 ---
 

@@ -81,6 +81,21 @@ nonisolated struct WSGameStartingSoon: Decodable, Hashable, Sendable {
     }
 }
 
+/// `live_score_update`: `{ "game_id": 1, "home_team_score": 1, "away_team_score": 0, "live_status": 1 }`
+nonisolated struct WSLiveScoreUpdate: Decodable, Hashable, Sendable {
+    let gameID: Int
+    let homeTeamScore: Int
+    let awayTeamScore: Int
+    let liveStatus: Int
+
+    enum CodingKeys: String, CodingKey {
+        case gameID = "game_id"
+        case homeTeamScore = "home_team_score"
+        case awayTeamScore = "away_team_score"
+        case liveStatus = "live_status"
+    }
+}
+
 /// Typed WebSocket event. Unknown types decode as `.unknown` so the activity feed can
 /// still render them generically (the web shows the raw type uppercased).
 nonisolated enum BettyEvent: Hashable, Sendable {
@@ -99,6 +114,7 @@ nonisolated enum BettyEvent: Hashable, Sendable {
     case evaluateGame(WSEvaluateGame)
     case userExactScore(WSExactScore)
     case gameStartingSoon(WSGameStartingSoon)
+    case liveScoreUpdate(WSLiveScoreUpdate)
     case unknown(type: String, message: JSONValue?)
 
     var typeName: String {
@@ -116,6 +132,7 @@ nonisolated enum BettyEvent: Hashable, Sendable {
         case .evaluateGame: "evaluate_game"
         case .userExactScore: "user_exact_score"
         case .gameStartingSoon: "game_starting_soon"
+        case .liveScoreUpdate: "live_score_update"
         case .unknown(let type, _): type
         }
     }
@@ -165,6 +182,8 @@ nonisolated enum BettyEvent: Hashable, Sendable {
             return payload(WSExactScore.self).map { .userExactScore($0) } ?? fallback()
         case "game_starting_soon":
             return payload(WSGameStartingSoon.self).map { .gameStartingSoon($0) } ?? fallback()
+        case "live_score_update":
+            return payload(WSLiveScoreUpdate.self).map { .liveScoreUpdate($0) } ?? fallback()
         default:
             return fallback()
         }

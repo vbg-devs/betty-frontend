@@ -13,7 +13,8 @@ struct YouBadge: View {
     }
 }
 
-/// Pulsing orange blob + "LIVE" — the 150-minute kickoff window indicator.
+/// Pulsing orange blob + "LIVE" — shown while the FIFA-feed `live_status` says the match
+/// is in progress (display precedence spec §7).
 struct LiveBadge: View {
     @State private var pulsing = false
 
@@ -37,6 +38,17 @@ struct LiveBadge: View {
                 .kerning(1.4)
                 .foregroundStyle(Palette.orange)
         }
+    }
+}
+
+/// Neutral full-time tag — match over per the feed, before Betty settles.
+struct FTBadge: View {
+    @Environment(ThemeStore.self) private var theme
+    var body: some View {
+        Text("FT")
+            .font(.bettyKicker)
+            .kerning(1.4)
+            .foregroundStyle(theme.colors.textMuted)
     }
 }
 

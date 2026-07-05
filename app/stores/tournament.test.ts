@@ -236,4 +236,30 @@ describe('useTournamentStore', () => {
       expect(store.details.map((d) => d.id)).toEqual([1]);
     });
   });
+
+  describe('applyLiveScore', () => {
+    it('applyLiveScore updates the matching game live fields in place', () => {
+      const store = useTournamentStore();
+      store.details = [
+        Object.freeze({
+          id: 1,
+          games: [
+            { id: 10, status: null, live_status: null },
+            { id: 11, status: null, live_status: null },
+          ],
+        }),
+      ] as any;
+
+      store.applyLiveScore({ game_id: 11, home_team_score: 2, away_team_score: 1, live_status: 1 });
+
+      const detail = store.detailsById(1) as any;
+      const g11 = detail.games.find((g: any) => g.id === 11);
+      expect(g11.live_home_team_score).toBe(2);
+      expect(g11.live_away_team_score).toBe(1);
+      expect(g11.live_status).toBe(1);
+      // Unrelated game untouched.
+      const g10 = detail.games.find((g: any) => g.id === 10);
+      expect(g10.live_status).toBeNull();
+    });
+  });
 });

@@ -108,26 +108,46 @@ describe('Game', () => {
   });
 
   describe('live badge', () => {
-    it('shows LIVE for an in-progress game within 150 minutes of kickoff', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-0.5) } });
+    it('shows LIVE and the live score when live_status===1', async () => {
+      const wrapper = await mountSuspended(Game, {
+        props: {
+          game: makeGame(-0.5, { live_status: 1, live_home_team_score: 1, live_away_team_score: 0 }),
+        },
+      });
       expect(wrapper.find('.live-badge').exists()).toBe(true);
+      expect(wrapper.find('.ft-badge').exists()).toBe(false);
       expect(wrapper.find('.game__date').exists()).toBe(false);
+      const scores = wrapper.findAll('.score__label').map((n) => n.text());
+      expect(scores.slice(0, 2)).toEqual(['1', '0']);
     });
 
-    it('does not show LIVE once the 150-minute window has passed', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(-3) } });
+    it('shows FT and the live score when live_status===2 and not settled', async () => {
+      const wrapper = await mountSuspended(Game, {
+        props: {
+          game: makeGame(-2, { live_status: 2, live_home_team_score: 2, live_away_team_score: 1 }),
+        },
+      });
+      expect(wrapper.find('.ft-badge').exists()).toBe(true);
       expect(wrapper.find('.live-badge').exists()).toBe(false);
+      const scores = wrapper.findAll('.score__label').map((n) => n.text());
+      expect(scores.slice(0, 2)).toEqual(['2', '1']);
+    });
+
+    it('does not show LIVE/FT for an upcoming game (no live_status)', async () => {
+      const wrapper = await mountSuspended(Game, { props: { game: makeGame(1) } });
+      expect(wrapper.find('.live-badge').exists()).toBe(false);
+      expect(wrapper.find('.ft-badge').exists()).toBe(false);
       expect(wrapper.find('.game__date').exists()).toBe(true);
     });
 
-    it('does not show LIVE for an upcoming game', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: makeGame(1) } });
+    it('finished (status===1) beats live_status: no badge, shows final score', async () => {
+      const wrapper = await mountSuspended(Game, {
+        props: { game: finishedGame({ live_status: 2, live_home_team_score: 9, live_away_team_score: 9 }) },
+      });
       expect(wrapper.find('.live-badge').exists()).toBe(false);
-    });
-
-    it('does not show LIVE for a finished game', async () => {
-      const wrapper = await mountSuspended(Game, { props: { game: finishedGame() } });
-      expect(wrapper.find('.live-badge').exists()).toBe(false);
+      expect(wrapper.find('.ft-badge').exists()).toBe(false);
+      const scores = wrapper.findAll('.score__label').map((n) => n.text());
+      expect(scores.slice(0, 2)).toEqual(['3', '1']);
     });
   });
 
@@ -315,6 +335,22 @@ describe('Game', () => {
       expect(rows[1]!.text()).toContain('England');
       expect(rows[1]!.text()).toContain('1');
       expect(wrapper.find('.game__information').exists()).toBe(false);
+    });
+
+    it('shows the live score (not the final columns) for a live game', async () => {
+      const wrapper = await mountSuspended(Game, {
+        props: {
+          game: makeGame(-0.5, {
+            live_status: 1,
+            live_home_team_score: 1,
+            live_away_team_score: 0,
+          }),
+          alternative: true,
+        },
+      });
+      const rows = wrapper.findAll('.game__row');
+      expect(rows[0]!.text()).toContain('1');
+      expect(rows[1]!.text()).toContain('0');
     });
 
     it('renders both team logos with their real teams', async () => {
